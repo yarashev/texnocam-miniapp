@@ -1,0 +1,13 @@
+{
+  "name": "texnocam-miniapp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=24.15"
+  }
+}
