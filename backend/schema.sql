@@ -131,3 +131,14 @@ INSERT OR IGNORE INTO settings(key, value) VALUES
   ('exchange_auto_enabled', 'true'),
   ('exchange_last_valid_rate', ''),
   ('exchange_last_valid_date', '');
+CREATE TABLE IF NOT EXISTS support_threads (
+  customer_telegram_id TEXT PRIMARY KEY,
+  is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0,1)),
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS support_message_links (
+  admin_message_id INTEGER PRIMARY KEY,
+  customer_telegram_id TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS support_message_links_customer_idx ON support_message_links(customer_telegram_id, created_at);

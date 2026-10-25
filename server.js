@@ -83,13 +83,126 @@ async function telegramApi(method, payload) {
   if (!response.ok || !result.ok) throw new Error(`Telegram API ${method} failed`);
   return result.result;
 }
+
+function telegramAppUrl() {
+  return (process.env.RENDER_EXTERNAL_URL || "https://texnocam-miniapp.onrender.com").replace(/\/$/, "") + "/";
+}
+function telegramMenuMarkup() {
+  return {
+    keyboard: [
+      [{ text: "🛍 Katalog", web_app: { url: telegramAppUrl() } }],
+      [{ text: "📷 EZVIZ kameralar" }, { text: "📹 Video tavsiyalar" }],
+      [{ text: "📰 Yangiliklar" }, { text: "💬 Admin bilan aloqa" }]
+    ],
+    resize_keyboard: true,
+    is_persistent: true,
+    input_field_placeholder: "Menyudan tanlang"
+  };
+}
+async function sendBotMenu(chatId, text) {
+  await telegramApi("sendMessage", { chat_id: chatId, text, reply_markup: telegramMenuMarkup() });
+}
+function shortTelegramText(text, limit = 3900) {
+  const value = String(text || "");
+  return value.length > limit ? value.slice(0, limit - 24) + "\n…davomi katalogda" : value;
+}
+async function handleTelegramUpdate(update) {
+  const message = update.message;
+  const chat = message && message.chat;
+  if (!message || !chat || chat.type !== "private") return;
+  const senderId = String(message.from && message.from.id || "");
+  const superAdminId = String(process.env.SUPER_ADMIN_TELEGRAM_ID || "");
+  const incomingText = String(message.text || "").trim();
+  const match = incomingText.match(/^\/(start|help|menu|catalog|camera|videos|news|support|stop)(?:@\w+)?(?:\s|$)/i);
+  const command = match ? match[1].toLowerCase() : "";
+
+  if (superAdminId && senderId === superAdminId && message.reply_to_message && message.reply_to_message.message_id) {
+    const link = db.prepare("SELECT customer_telegram_id FROM support_message_links WHERE admin_message_id = ?").get(message.reply_to_message.message_id);
+    if (link) {
+      if (command === "stop" || incomingText.toLowerCase() === "/close") {
+        db.prepare("UPDATE support_threads SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE customer_telegram_id = ?").run(link.customer_telegram_id);
+        await telegramApi("sendMessage", { chat_id: link.customer_telegram_id, text: "Admin bilan suhbat yakunlandi. Yana yozish uchun ‘💬 Admin bilan aloqa’ tugmasini bosing." });
+        await telegramApi("sendMessage", { chat_id: chat.id, text: "Suhbat yopildi." });
+        return;
+      }
+      await telegramApi("copyMessage", { chat_id: link.customer_telegram_id, from_chat_id: chat.id, message_id: message.message_id });
+      await telegramApi("sendMessage", { chat_id: chat.id, text: "Javob mijozga yuborildi." });
+      return;
+    }
+  }
+
+  if (command === "start" || command === "menu") {
+    const firstName = String(message.from && message.from.first_name || "").trim();
+    await sendBotMenu(chat.id, "Assalomu alaykum" + (firstName ? ", " + firstName : "") + "! UzCam botiga xush kelibsiz. Katalogni oching yoki kerakli bo‘limni tanlang.");
+    return;
+  }
+  if (command === "help") {
+    await sendBotMenu(chat.id, "Kerakli bo‘limni pastdagi menyudan tanlang. Buyurtma katalog ichida rasmiylashtiriladi. Admin bilan bog‘lanish uchun ‘💬 Admin bilan aloqa’ tugmasini bosing.");
+    return;
+  }
+  if (command === "catalog" || incomingText === "🛍 Katalog") {
+    await telegramApi("sendMessage", { chat_id: chat.id, text: "Kameralar, kabellar va elektronika katalogini oching:", reply_markup: { inline_keyboard: [[{ text: "Katalogni ochish", web_app: { url: telegramAppUrl() } }]] } });
+    return;
+  }
+  if (command === "camera" || incomingText === "📷 EZVIZ kameralar") {
+    const content = getHomeContent();
+    const product = listPublicProducts().find(item => item.id === content.hero.productId);
+    const price = product ? new Intl.NumberFormat("uz-UZ").format(product.price_uzs) + " so‘m" : "Narx katalogda";
+    const lines = [content.hero.eyebrow, content.hero.title, content.hero.description, product ? product.brand + " " + product.name + " · " + price : "", "Katalogni ochib mavjud kameralarni ko‘ring."].filter(Boolean);
+    await telegramApi("sendMessage", { chat_id: chat.id, text: shortTelegramText(lines.join("\n")), reply_markup: { inline_keyboard: [[{ text: "Kameralarni ko‘rish", web_app: { url: telegramAppUrl() } }]] } });
+    return;
+  }
+  if (command === "videos" || incomingText === "📹 Video tavsiyalar") {
+    const videos = getHomeContent().videos.filter(item => item.active);
+    const text = videos.length ? "📹 Video tavsiyalar\n\n" + videos.map((item, index) => (index + 1) + ". " + item.title + (item.description ? "\n" + item.description : "") + "\n" + item.url).join("\n\n") : "Hozircha video tavsiyalar joylanmagan. Yangilari qo‘shilganda shu bo‘limda ko‘rinadi.";
+    await sendBotMenu(chat.id, shortTelegramText(text));
+    return;
+  }
+  if (command === "news" || incomingText === "📰 Yangiliklar") {
+    const news = getHomeContent().news.filter(item => item.active);
+    const text = news.length ? "📰 UzCam yangiliklari\n\n" + news.map((item, index) => (index + 1) + ". " + item.title + "\n" + item.body).join("\n\n") : "Hozircha yangi e’lon yo‘q. Yangiliklar qo‘shilganda shu bo‘limda ko‘rinadi.";
+    await sendBotMenu(chat.id, shortTelegramText(text));
+    return;
+  }
+  if (command === "support" || incomingText === "💬 Admin bilan aloqa") {
+    if (!superAdminId) {
+      await telegramApi("sendMessage", { chat_id: chat.id, text: "Admin bilan aloqa hozir sozlanmagan. Iltimos, keyinroq urinib ko‘ring." });
+      return;
+    }
+    db.prepare("INSERT INTO support_threads(customer_telegram_id, is_active, updated_at) VALUES (?, 1, CURRENT_TIMESTAMP) ON CONFLICT(customer_telegram_id) DO UPDATE SET is_active = 1, updated_at = CURRENT_TIMESTAMP").run(senderId);
+    await sendBotMenu(chat.id, "Admin bilan suhbat boshlandi. Xabaringizni shu yerga yozing. Suhbatni tugatish uchun /stop yuboring.");
+    await telegramApi("sendMessage", { chat_id: superAdminId, text: "💬 Yangi mijoz murojaati\nIsm: " + [message.from && message.from.first_name, message.from && message.from.last_name].filter(Boolean).join(" ") + "\nUsername: " + (message.from && message.from.username ? "@" + message.from.username : "yo‘q") + "\nTelegram ID: " + senderId + "\nMijoz xabariga javob berish uchun uning yuborgan nusxasiga Reply qiling." });
+    return;
+  }
+  if (command === "stop") {
+    db.prepare("UPDATE support_threads SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE customer_telegram_id = ?").run(senderId);
+    await sendBotMenu(chat.id, "Admin bilan suhbat yakunlandi. Yana bog‘lanish uchun menyudan aloqa tugmasini bosing.");
+    return;
+  }
+
+  const activeThread = db.prepare("SELECT is_active FROM support_threads WHERE customer_telegram_id = ?").get(senderId);
+  if (activeThread && activeThread.is_active && superAdminId) {
+    try {
+      await telegramApi("sendMessage", { chat_id: superAdminId, text: "📩 Mijoz xabari\nIsm: " + [message.from && message.from.first_name, message.from && message.from.last_name].filter(Boolean).join(" ") + "\nUsername: " + (message.from && message.from.username ? "@" + message.from.username : "yo‘q") + "\nTelegram ID: " + senderId + "\nQuyidagi xabarga Reply qilib javob yuboring." });
+      const copied = await telegramApi("copyMessage", { chat_id: superAdminId, from_chat_id: chat.id, message_id: message.message_id });
+      db.prepare("INSERT OR REPLACE INTO support_message_links(admin_message_id, customer_telegram_id, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)").run(copied.message_id, senderId);
+      await telegramApi("sendMessage", { chat_id: chat.id, text: "Xabaringiz adminga yetkazildi. Javobni shu bot orqali olasiz." });
+    } catch (error) {
+      console.error("Telegram support relay failed:", error.message);
+      await telegramApi("sendMessage", { chat_id: chat.id, text: "Xabarni adminga yuborib bo‘lmadi. Iltimos, matn ko‘rinishida qayta yuboring." });
+    }
+    return;
+  }
+  await sendBotMenu(chat.id, "Kerakli bo‘limni menyudan tanlang. Yordam uchun /help yuboring.");
+}
+
 async function configureTelegramWebhook() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const publicUrl = process.env.RENDER_EXTERNAL_URL;
   if (!token || !publicUrl) return;
   try {
     await telegramApi("setWebhook", { url: `${publicUrl.replace(/\/$/, "")}/telegram/webhook`, secret_token: telegramWebhookSecret(), allowed_updates: ["message"] });
-    await telegramApi("setMyCommands", { commands: [{ command: "start", description: "UzCam katalogini ochish" }, { command: "help", description: "Yordam" }] });
+    await telegramApi("setMyCommands", { commands: [{ command: "start", description: "UzCam bosh menyusi" }, { command: "catalog", description: "Mahsulotlar katalogi" }, { command: "camera", description: "EZVIZ kameralar" }, { command: "videos", description: "Video tavsiyalar" }, { command: "news", description: "Yangiliklar" }, { command: "support", description: "Admin bilan aloqa" }, { command: "stop", description: "Suhbatni yakunlash" }, { command: "help", description: "Yordam" }] });
     console.info("Telegram webhook configured");
   } catch (error) { console.error("Telegram webhook setup failed:", error.message); }
 }
@@ -107,18 +220,7 @@ const server = http.createServer(async (req, res) => {
     if (!expected.length || supplied.length !== expected.length || !timingSafeEqual(expected, supplied)) { res.writeHead(401).end(); return; }
     try {
       const update = await readJson(req);
-      const message = update.message;
-      const chat = message?.chat;
-      if (message && chat?.type === "private") {
-        const firstName = String(message.from?.first_name || "").trim();
-        const command = String(message.text || "").trim();
-        const isCommand = /^\/(start|help)(?:@\w+)?(?:\s|$)/i.test(command);
-        const text = isCommand
-          ? `Assalomu alaykum${firstName ? ", " + firstName : ""}! UzCam’ga xush kelibsiz. Kameralar, kabellar va elektronika katalogini ochish uchun tugmani bosing.`
-          : "UzCam katalogini ochish yoki buyurtma berish uchun quyidagi tugmani bosing.";
-        const appUrl = `${(process.env.RENDER_EXTERNAL_URL || "https://texnocam-miniapp.onrender.com").replace(/\/$/, "")}/`;
-        await telegramApi("sendMessage", { chat_id: chat.id, text, reply_markup: { inline_keyboard: [[{ text: "Katalogni ochish", web_app: { url: appUrl } }]] } });
-      }
+      await handleTelegramUpdate(update);
       sendJson(res, 200, { ok: true }); return;
     } catch (error) { console.error("Telegram webhook update failed:", error.message); sendJson(res, 500, { error: "Update handling failed" }); return; }
   }
