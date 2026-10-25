@@ -11,6 +11,81 @@ export const db = new DatabaseSync(path.join(dataDir, 'texnocam.sqlite'));
 db.exec('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;');
 db.exec(fs.readFileSync(path.join(here, 'schema.sql'), 'utf8'));
 
+function allowUnknownSupplierPrices() {
+  const columns = db.prepare('PRAGMA table_info(products)').all();
+  if (!columns.some(column => ['source_price', 'source_currency'].some(name => column.name === name && column.notnull))) return;
+
+  db.exec('PRAGMA foreign_keys = OFF;');
+  try {
+    const migration = [
+      'BEGIN IMMEDIATE;',
+      'CREATE TABLE products_migrated (',
+      '  id INTEGER PRIMARY KEY,',
+      '  model TEXT NOT NULL UNIQUE,',
+      '  name TEXT NOT NULL,',
+      '  brand TEXT NOT NULL,',
+      '  category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,',
+      "  description TEXT NOT NULL DEFAULT '',",
+      "  image_path TEXT NOT NULL DEFAULT '',",
+      '  source_price REAL CHECK (source_price IS NULL OR source_price >= 0),',
+      "  source_currency TEXT CHECK (source_currency IS NULL OR source_currency IN ('UZS','USD','CNY','EUR')),",
+      '  rate_used REAL,',
+      '  sale_price_uzs INTEGER NOT NULL CHECK (sale_price_uzs >= 0),',
+      '  is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0,1)),',
+      '  created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,',
+      '  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,',
+      '  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP',
+      ');',
+      'INSERT INTO products_migrated SELECT * FROM products;',
+      'DROP TABLE products;',
+      'ALTER TABLE products_migrated RENAME TO products;',
+      'CREATE INDEX products_category_active_idx ON products(category_id, is_active);',
+      'CREATE INDEX products_brand_model_idx ON products(brand, model);',
+      'COMMIT;'
+    ].join('\n');
+    db.exec(migration);
+  } catch (error) {
+    try { db.exec('ROLLBACK;'); } catch {}
+    throw error;
+  } finally {
+    db.exec('PRAGMA foreign_keys = ON;');
+  }
+}
+
+function seedCatalog() {
+  if (db.prepare('SELECT 1 FROM products LIMIT 1').get()) return;
+  const catalog = JSON.parse(fs.readFileSync(path.join(here, 'catalog.json'), 'utf8'));
+  db.exec('BEGIN IMMEDIATE;');
+  try {
+    const insertCategory = db.prepare('INSERT OR IGNORE INTO categories(name) VALUES (?)');
+    const categoryId = db.prepare('SELECT id FROM categories WHERE name = ?');
+    const insertProduct = db.prepare([
+      'INSERT OR IGNORE INTO products',
+      '  (id, model, name, brand, category_id, description, image_path, source_price,',
+      '   source_currency, rate_used, sale_price_uzs, is_active)',
+      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)'
+    ].join('\n'));
+    for (const product of catalog.products) insertCategory.run(product.category);
+    for (const product of catalog.products) {
+      insertProduct.run(
+        product.id, product.model, product.name, product.brand,
+        categoryId.get(product.category).id, product.description, product.image,
+        product.source_price, product.source_currency, product.rate_used, product.sale_price_uzs
+      );
+    }
+    db.prepare('INSERT OR IGNORE INTO exchange_rates(currency, rate_to_uzs, effective_date, source) VALUES (?, ?, ?, ?)')
+      .run(catalog.exchange_rate.currency, catalog.exchange_rate.rate_to_uzs, catalog.exchange_rate.effective_date, catalog.exchange_rate.source);
+    db.prepare("UPDATE settings SET value = ? WHERE key = 'markup_percent'").run(String(catalog.markup_percent));
+    db.exec('COMMIT;');
+  } catch (error) {
+    try { db.exec('ROLLBACK;'); } catch {}
+    throw error;
+  }
+}
+
+allowUnknownSupplierPrices();
+seedCatalog();
+
 export function listPublicProducts() {
   return db.prepare(`
     SELECT p.id, p.model, p.name, p.brand, c.name AS category,
