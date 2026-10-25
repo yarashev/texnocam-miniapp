@@ -166,7 +166,7 @@ async function handleTelegramUpdate(update) {
   }
   if (command === "support" || incomingText === "💬 Admin bilan aloqa") {
     if (!superAdminId) {
-      await telegramApi("sendMessage", { chat_id: chat.id, text: "Admin bilan aloqa hozir sozlanmagan. Iltimos, keyinroq urinib ko‘ring." });
+      await sendBotMenu(chat.id, "Admin bilan aloqa hozir sozlanmagan. Iltimos, keyinroq urinib ko‘ring.");
       return;
     }
     db.prepare("INSERT INTO support_threads(customer_telegram_id, is_active, updated_at) VALUES (?, 1, CURRENT_TIMESTAMP) ON CONFLICT(customer_telegram_id) DO UPDATE SET is_active = 1, updated_at = CURRENT_TIMESTAMP").run(senderId);
@@ -186,14 +186,14 @@ async function handleTelegramUpdate(update) {
       await telegramApi("sendMessage", { chat_id: superAdminId, text: "📩 Mijoz xabari\nIsm: " + [message.from && message.from.first_name, message.from && message.from.last_name].filter(Boolean).join(" ") + "\nUsername: " + (message.from && message.from.username ? "@" + message.from.username : "yo‘q") + "\nTelegram ID: " + senderId + "\nQuyidagi xabarga Reply qilib javob yuboring." });
       const copied = await telegramApi("copyMessage", { chat_id: superAdminId, from_chat_id: chat.id, message_id: message.message_id });
       db.prepare("INSERT OR REPLACE INTO support_message_links(admin_message_id, customer_telegram_id, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)").run(copied.message_id, senderId);
-      await telegramApi("sendMessage", { chat_id: chat.id, text: "Xabaringiz adminga yetkazildi. Javobni shu bot orqali olasiz." });
+      await sendBotMenu(chat.id, "Xabaringiz adminga yetkazildi. Javobni shu bot orqali olasiz.");
     } catch (error) {
       console.error("Telegram support relay failed:", error.message);
-      await telegramApi("sendMessage", { chat_id: chat.id, text: "Xabarni adminga yuborib bo‘lmadi. Iltimos, matn ko‘rinishida qayta yuboring." });
+      await sendBotMenu(chat.id, "Xabarni adminga yuborib bo‘lmadi. Iltimos, qayta urinib ko‘ring.");
     }
     return;
   }
-  await sendBotMenu(chat.id, "Kerakli bo‘limni menyudan tanlang. Yordam uchun /help yuboring.");
+  await sendBotMenu(chat.id, "Assalomu alaykum! Sizga qanday yordam beray? Katalog, kamera tavsiyasi, videolar yoki yangiliklar uchun pastdagi menyudan tanlang. Admin bilan gaplashish uchun ‘💬 Admin bilan aloqa’ tugmasini bosing.");
 }
 
 async function configureTelegramWebhook() {
