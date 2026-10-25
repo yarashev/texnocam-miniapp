@@ -226,6 +226,51 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (pathname.startsWith("/api/")) {
+    if (pathname === "/api/staff") {
+      const actor = getAdminSession(req);
+      if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin xodimlarni boshqaradi" }); return; }
+      if (req.method === "GET") {
+        const staff = db.prepare("SELECT telegram_id, username, full_name, role, is_active, created_at FROM users WHERE role IN ('super_admin','admin','worker') ORDER BY CASE role WHEN 'super_admin' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END, full_name, telegram_id").all();
+        sendJson(res, 200, { staff }); return;
+      }
+      if (req.method === "POST") {
+        try {
+          const body = await readJson(req);
+          const telegramId = String(body.telegramId || "").trim();
+          const fullName = cleanText(body.fullName, 100);
+          const role = String(body.role || "");
+          if (!/^\d{5,20}$/.test(telegramId)) { sendJson(res, 400, { error: "Telegram ID faqat raqamlardan iborat bo‘lsin" }); return; }
+          if (!["admin", "worker"].includes(role)) { sendJson(res, 400, { error: "Rolni Admin yoki Ishchi qilib tanlang" }); return; }
+          if (telegramId === String(process.env.SUPER_ADMIN_TELEGRAM_ID || "")) { sendJson(res, 409, { error: "Super Admin akkauntini bu yerdan o‘zgartirib bo‘lmaydi" }); return; }
+          const existingStaff = db.prepare("SELECT role FROM users WHERE telegram_id = ?").get(telegramId);
+          if (existingStaff && existingStaff.role === "super_admin") { sendJson(res, 409, { error: "Boshqa Super Admin akkauntini bu yerdan o‘zgartirib bo‘lmaydi" }); return; }
+          db.prepare("INSERT INTO users(telegram_id, full_name, role) VALUES (?, ?, ?) ON CONFLICT(telegram_id) DO UPDATE SET full_name = CASE WHEN excluded.full_name <> '' THEN excluded.full_name ELSE users.full_name END, role = excluded.role, is_active = 1, updated_at = CURRENT_TIMESTAMP").run(telegramId, fullName, role);
+          const user = db.prepare("SELECT telegram_id, username, full_name, role, is_active, created_at FROM users WHERE telegram_id = ?").get(telegramId);
+          db.prepare("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'create_or_promote', 'staff', ?, ?)").run(actor.id, telegramId, JSON.stringify({ role }));
+          sendJson(res, 201, { staff: user }); return;
+        } catch (error) { sendJson(res, 400, { error: error.message || "Xodimni qo‘shib bo‘lmadi" }); return; }
+      }
+      res.writeHead(405).end(); return;
+    }
+    const staffMatch = pathname.match(/^\/api\/staff\/(\d{5,20})$/);
+    if (staffMatch && req.method === "PATCH") {
+      const actor = getAdminSession(req);
+      if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin xodimlar ruxsatini o‘zgartiradi" }); return; }
+      const telegramId = staffMatch[1];
+      if (telegramId === String(process.env.SUPER_ADMIN_TELEGRAM_ID || "")) { sendJson(res, 409, { error: "Super Admin akkauntini o‘zgartirib bo‘lmaydi" }); return; }
+      try {
+        const body = await readJson(req);
+        const current = db.prepare("SELECT id, role, is_active FROM users WHERE telegram_id = ?").get(telegramId);
+        if (!current || !["admin", "worker"].includes(current.role)) { sendJson(res, 404, { error: "Xodim topilmadi" }); return; }
+        const role = body.role === undefined ? current.role : String(body.role);
+        const isActive = body.isActive === undefined ? current.is_active : (body.isActive === true || body.isActive === 1 ? 1 : body.isActive === false || body.isActive === 0 ? 0 : -1);
+        if (!["admin", "worker"].includes(role) || ![0, 1].includes(isActive)) { sendJson(res, 400, { error: "Rol yoki faol holat noto‘g‘ri" }); return; }
+        db.prepare("UPDATE users SET role = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE telegram_id = ?").run(role, isActive, telegramId);
+        db.prepare("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'staff', ?, ?)").run(actor.id, telegramId, JSON.stringify({ role, isActive }));
+        const staff = db.prepare("SELECT telegram_id, username, full_name, role, is_active, created_at FROM users WHERE telegram_id = ?").get(telegramId);
+        sendJson(res, 200, { staff }); return;
+      } catch (error) { sendJson(res, 400, { error: error.message || "Xodim ruxsatini yangilab bo‘lmadi" }); return; }
+    }
     if (pathname === "/api/home-content" && req.method === "GET") { sendJson(res, 200, { content: getHomeContent() }); return; }
     if (pathname === "/api/home-content" && req.method === "PUT") {
       const actor = getAdminSession(req);
