@@ -44,14 +44,98 @@ async function readJson(req) {
   for await (const chunk of req) { body += chunk; if (body.length > 10000) throw new Error("Request too large"); }
   return JSON.parse(body || "{}");
 }
+
+const DEFAULT_HOME_CONTENT = { hero: { eyebrow: "EZVIZ · aqlli videokuzatuv", title: "Uyingizni EZVIZ bilan himoyalang", description: "CS-H1C (1080P) — uy va biznes uchun aqlli kamera.", productId: 1, buttonText: "Kameralarni ko‘rish" }, videos: [], news: [] };
+function cleanText(value, max) { return String(value || "").trim().slice(0, max); }
+function normalizeHomeContent(input) {
+  if (!input || typeof input !== "object") throw new Error("Kontent formati noto‘g‘ri");
+  const hero = input.hero || {};
+  const productId = Number(hero.productId);
+  if (!Number.isSafeInteger(productId) || !db.prepare("SELECT 1 FROM products WHERE id = ? AND is_active = 1").get(productId)) throw new Error("Promo uchun faol mahsulot tanlang");
+  const videos = (Array.isArray(input.videos) ? input.videos : []).slice(0, 6).map(item => {
+    let url; try { url = new URL(String(item.url || "")); } catch { throw new Error("YouTube havolasini tekshiring"); }
+    if (url.protocol !== "https:" || !["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtu.be"].includes(url.hostname)) throw new Error("Faqat YouTube havolasini kiriting");
+    const videoId = url.hostname.includes("youtu.be") ? url.pathname.split("/").filter(Boolean)[0] : (url.searchParams.get("v") || url.pathname.match(/^\/(?:shorts|embed)\/([^/]+)/)?.[1]);
+    if (!videoId || !/^[A-Za-z0-9_-]{6,20}$/.test(videoId)) throw new Error("YouTube video manzili noto‘g‘ri");
+    return { title: cleanText(item.title, 100), url: url.href, description: cleanText(item.description, 220), active: item.active !== false };
+  }).filter(item => item.title && item.url);
+  const news = (Array.isArray(input.news) ? input.news : []).slice(0, 8).map(item => ({ title: cleanText(item.title, 100), body: cleanText(item.body, 500), active: item.active !== false })).filter(item => item.title && item.body);
+  return { hero: { eyebrow: cleanText(hero.eyebrow, 70), title: cleanText(hero.title, 120), description: cleanText(hero.description, 240), productId, buttonText: cleanText(hero.buttonText, 40) || "Kameralarni ko‘rish" }, videos, news };
+}
+function getHomeContent() {
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'homepage_content'").get();
+  if (!row) return DEFAULT_HOME_CONTENT;
+  try { return normalizeHomeContent(JSON.parse(row.value)); } catch { return DEFAULT_HOME_CONTENT; }
+}
+
 function sessionUser(user) { return { id: user.telegram_id, username: user.username || "", fullName: user.full_name || "", phone: user.phone || "", role: user.role }; }
+
+
+function telegramWebhookSecret() {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  return token ? createHmac("sha256", token).update("uzcam-telegram-webhook").digest("hex") : "";
+}
+async function telegramApi(method, payload) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
+  const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  const result = await response.json();
+  if (!response.ok || !result.ok) throw new Error(`Telegram API ${method} failed`);
+  return result.result;
+}
+async function configureTelegramWebhook() {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const publicUrl = process.env.RENDER_EXTERNAL_URL;
+  if (!token || !publicUrl) return;
+  try {
+    await telegramApi("setWebhook", { url: `${publicUrl.replace(/\/$/, "")}/telegram/webhook`, secret_token: telegramWebhookSecret(), allowed_updates: ["message"] });
+    await telegramApi("setMyCommands", { commands: [{ command: "start", description: "UzCam katalogini ochish" }, { command: "help", description: "Yordam" }] });
+    console.info("Telegram webhook configured");
+  } catch (error) { console.error("Telegram webhook setup failed:", error.message); }
+}
 
 const server = http.createServer(async (req, res) => {
   let pathname;
   try { pathname = decodeURIComponent(new URL(req.url, "http://localhost").pathname); }
   catch { res.writeHead(400).end("Bad request"); return; }
 
+
+  if (pathname === "/telegram/webhook") {
+    if (req.method !== "POST") { res.writeHead(405).end(); return; }
+    const expected = Buffer.from(telegramWebhookSecret());
+    const supplied = Buffer.from(String(req.headers["x-telegram-bot-api-secret-token"] || ""));
+    if (!expected.length || supplied.length !== expected.length || !timingSafeEqual(expected, supplied)) { res.writeHead(401).end(); return; }
+    try {
+      const update = await readJson(req);
+      const message = update.message;
+      const chat = message?.chat;
+      if (message && chat?.type === "private") {
+        const firstName = String(message.from?.first_name || "").trim();
+        const command = String(message.text || "").trim();
+        const isCommand = /^\/(start|help)(?:@\w+)?(?:\s|$)/i.test(command);
+        const text = isCommand
+          ? `Assalomu alaykum${firstName ? ", " + firstName : ""}! UzCam’ga xush kelibsiz. Kameralar, kabellar va elektronika katalogini ochish uchun tugmani bosing.`
+          : "UzCam katalogini ochish yoki buyurtma berish uchun quyidagi tugmani bosing.";
+        const appUrl = `${(process.env.RENDER_EXTERNAL_URL || "https://texnocam-miniapp.onrender.com").replace(/\/$/, "")}/`;
+        await telegramApi("sendMessage", { chat_id: chat.id, text, reply_markup: { inline_keyboard: [[{ text: "Katalogni ochish", web_app: { url: appUrl } }]] } });
+      }
+      sendJson(res, 200, { ok: true }); return;
+    } catch (error) { console.error("Telegram webhook update failed:", error.message); sendJson(res, 500, { error: "Update handling failed" }); return; }
+  }
+
   if (pathname.startsWith("/api/")) {
+    if (pathname === "/api/home-content" && req.method === "GET") { sendJson(res, 200, { content: getHomeContent() }); return; }
+    if (pathname === "/api/home-content" && req.method === "PUT") {
+      const actor = getAdminSession(req);
+      if (!actor || !["admin", "super_admin"].includes(actor.role)) { sendJson(res, 403, { error: "Admin ruxsati talab qilinadi" }); return; }
+      try {
+        const content = normalizeHomeContent(await readJson(req));
+        const value = JSON.stringify(content);
+        db.prepare("INSERT INTO settings(key, value, updated_by, updated_at) VALUES ('homepage_content', ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_by = excluded.updated_by, updated_at = CURRENT_TIMESTAMP").run(value, actor.id);
+        db.prepare("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'homepage_content', 'home', ?)").run(actor.id, JSON.stringify({ videos: content.videos.length, news: content.news.length, productId: content.hero.productId }));
+        sendJson(res, 200, { content }); return;
+      } catch (error) { sendJson(res, 400, { error: error.message || "Kontentni saqlab bo‘lmadi" }); return; }
+    }
     if (pathname === "/api/session" && req.method === "POST") {
       try {
         const body = await readJson(req);
@@ -96,4 +180,4 @@ const server = http.createServer(async (req, res) => {
 const port = Number(process.env.PORT || 3000);
 try { db.prepare("SELECT 1 AS ready").get(); }
 catch (error) { console.error("Database initialization failed:", error.message); process.exit(1); }
-server.listen(port, "0.0.0.0", () => console.log(`UzCam backend running on port ${port}`));
+server.listen(port, "0.0.0.0", () => { console.log(`UzCam backend running on port ${port}`); void configureTelegramWebhook(); });
