@@ -32,4 +32,4 @@ const server = http.createServer((req, res) => {
 const port = Number(process.env.PORT || 3000);
 try { db.prepare("SELECT 1 AS ready").get(); }
 catch (error) { console.error("Database initialization failed:", error.message); process.exit(1); }
-server.listen(port, "0.0.0.0", () => console.log(`TexnoCam backend running on port ${port}`));
+server.listen(port, "0.0.0.0", () => console.log(`UzCam backend running on port ${port}`));

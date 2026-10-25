@@ -1,4 +1,4 @@
-# TexnoCam Mini App / Backend
+# UzCam Mini App / Backend
 
 This folder is hosting-neutral. It does not require Replit.
 
