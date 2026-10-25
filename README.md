@@ -15,10 +15,10 @@ The SQLite file is created in `.data/` and is excluded from Git. The checked-in 
 ## Backend stages
 
 1. **Foundation (current):** SQLite schema, seeded public catalog, health/product read API, role and order tables, and database-level one-worker-per-order claim function.
-2. **Telegram identity:** validate `Telegram.WebApp.initData` on the server; create/update customer records. Never trust `initDataUnsafe` or a client-supplied Telegram ID.
+2. **Telegram identity (in progress):** `/api/session` validates `Telegram.WebApp.initData`, creates/updates the Telegram user record, and issues a short-lived signed admin session. The admin preview route is restricted to active admin/worker roles. Set `TELEGRAM_BOT_TOKEN` and `SUPER_ADMIN_TELEGRAM_ID` as private Render environment variables to enable Super Admin access. Never trust `initDataUnsafe` or a client-supplied Telegram ID.
 3. **Catalog and CBU rates:** securely import supplier costs/currencies, fetch official rates from the backend, recalculate UZS prices, and record rate history.
 4. **Orders and payments:** create order snapshots, accept payment proof, and let authorized admins confirm payment.
 5. **Worker assignment:** expose paid unclaimed orders, atomically claim one, reveal customer contact only to its assigned worker, and record service fees separately.
 6. **Admin roles and bot notifications:** enforce Super Admin/Admin/Worker permissions on every API route, send private order notifications, and add audit logs.
 
-Stage 1 has no write endpoints or authentication. The deployed service is a public read-only test backend; do not use it for customer/admin data or real orders until authentication and durable storage are in place.
+The admin panel is currently a demo UI: its buttons do not persist catalog, order, payment, or staff changes. Telegram identity/session checks protect the panel route, but operational API permissions and durable storage must be finished before processing real admin actions or orders.
