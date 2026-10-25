@@ -142,3 +142,14 @@ CREATE TABLE IF NOT EXISTS support_message_links (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS support_message_links_customer_idx ON support_message_links(customer_telegram_id, created_at);
+CREATE TABLE IF NOT EXISTS worker_profiles (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  experience_years INTEGER NOT NULL DEFAULT 0 CHECK (experience_years BETWEEN 0 AND 60),
+  phone TEXT NOT NULL DEFAULT '',
+  telegram_username TEXT NOT NULL DEFAULT '',
+  photo_url TEXT NOT NULL DEFAULT '',
+  service_prices TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  is_public INTEGER NOT NULL DEFAULT 1 CHECK (is_public IN (0,1)),
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

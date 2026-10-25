@@ -47,6 +47,22 @@ async function readJson(req) {
 
 const DEFAULT_HOME_CONTENT = { hero: { eyebrow: "EZVIZ · aqlli videokuzatuv", title: "Uyingizni EZVIZ bilan himoyalang", description: "CS-H1C (1080P) — uy va biznes uchun aqlli kamera.", productId: 1, buttonText: "Kameralarni ko‘rish" }, videos: [], news: [] };
 function cleanText(value, max) { return String(value || "").trim().slice(0, max); }
+function normalizeWorkerProfile(input) {
+  const experienceYears = Number(input.experienceYears || 0);
+  if (!Number.isInteger(experienceYears) || experienceYears < 0 || experienceYears > 60) throw new Error("Ish stajini 0–60 yil oralig‘ida kiriting");
+  const phone = cleanText(input.phone, 24);
+  if (phone && !/^\+?[0-9 ()-]{7,24}$/.test(phone)) throw new Error("Telefon raqamini tekshiring");
+  const telegramUsername = cleanText(input.telegramUsername, 32).replace(/^@/, "");
+  if (telegramUsername && !/^[A-Za-z0-9_]{5,32}$/.test(telegramUsername)) throw new Error("Telegram username noto‘g‘ri");
+  const photoUrl = cleanText(input.photoUrl, 500);
+  if (photoUrl) { let photo; try { photo = new URL(photoUrl); } catch { throw new Error("Rasm uchun HTTPS havolani kiriting"); } if (photo.protocol !== "https:") throw new Error("Rasm uchun HTTPS havolani kiriting"); }
+  return { experienceYears, phone, telegramUsername, photoUrl, servicePrices: cleanText(input.servicePrices, 1200), description: cleanText(input.description, 500), isPublic: input.isPublic !== false && input.isPublic !== 0 };
+}
+function saveWorkerProfile(userId, profile) {
+  db.prepare("INSERT INTO worker_profiles(user_id, experience_years, phone, telegram_username, photo_url, service_prices, description, is_public, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET experience_years = excluded.experience_years, phone = excluded.phone, telegram_username = excluded.telegram_username, photo_url = excluded.photo_url, service_prices = excluded.service_prices, description = excluded.description, is_public = excluded.is_public, updated_at = CURRENT_TIMESTAMP").run(userId, profile.experienceYears, profile.phone, profile.telegramUsername, profile.photoUrl, profile.servicePrices, profile.description, profile.isPublic ? 1 : 0);
+  db.prepare("UPDATE users SET phone = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(profile.phone, userId);
+}
+
 function normalizeHomeContent(input) {
   if (!input || typeof input !== "object") throw new Error("Kontent formati noto‘g‘ri");
   const hero = input.hero || {};
@@ -92,7 +108,8 @@ function telegramMenuMarkup() {
     keyboard: [
       [{ text: "🛍 Katalog", web_app: { url: telegramAppUrl() } }],
       [{ text: "📷 EZVIZ kameralar" }, { text: "📹 Video tavsiyalar" }],
-      [{ text: "📰 Yangiliklar" }, { text: "💬 Admin bilan aloqa" }]
+      [{ text: "📰 Yangiliklar" }, { text: "💬 Admin bilan aloqa" }],
+      [{ text: "👷 Ustalar", web_app: { url: telegramAppUrl() + "#workers" } }]
     ],
     resize_keyboard: true,
     is_persistent: true,
@@ -113,7 +130,7 @@ async function handleTelegramUpdate(update) {
   const senderId = String(message.from && message.from.id || "");
   const superAdminId = String(process.env.SUPER_ADMIN_TELEGRAM_ID || "");
   const incomingText = String(message.text || "").trim();
-  const match = incomingText.match(/^\/(start|help|menu|catalog|camera|videos|news|support|stop)(?:@\w+)?(?:\s|$)/i);
+  const match = incomingText.match(/^\/(start|help|menu|catalog|camera|videos|news|workers|support|stop)(?:@\w+)?(?:\s|$)/i);
   const command = match ? match[1].toLowerCase() : "";
 
   if (superAdminId && senderId === superAdminId && message.reply_to_message && message.reply_to_message.message_id) {
@@ -164,6 +181,10 @@ async function handleTelegramUpdate(update) {
     await sendBotMenu(chat.id, shortTelegramText(text));
     return;
   }
+  if (command === "workers" || incomingText === "👷 Ustalar") {
+    await telegramApi("sendMessage", { chat_id: chat.id, text: "Hududingizdagi ustalarni ko‘rish uchun katalogni oching:", reply_markup: { inline_keyboard: [[{ text: "Ustalar katalogini ochish", web_app: { url: telegramAppUrl() + "#workers" } }]] } });
+    return;
+  }
   if (command === "support" || incomingText === "💬 Admin bilan aloqa") {
     if (!superAdminId) {
       await sendBotMenu(chat.id, "Admin bilan aloqa hozir sozlanmagan. Iltimos, keyinroq urinib ko‘ring.");
@@ -202,7 +223,7 @@ async function configureTelegramWebhook() {
   if (!token || !publicUrl) return;
   try {
     await telegramApi("setWebhook", { url: `${publicUrl.replace(/\/$/, "")}/telegram/webhook`, secret_token: telegramWebhookSecret(), allowed_updates: ["message"] });
-    await telegramApi("setMyCommands", { commands: [{ command: "start", description: "UzCam bosh menyusi" }, { command: "catalog", description: "Mahsulotlar katalogi" }, { command: "camera", description: "EZVIZ kameralar" }, { command: "videos", description: "Video tavsiyalar" }, { command: "news", description: "Yangiliklar" }, { command: "support", description: "Admin bilan aloqa" }, { command: "stop", description: "Suhbatni yakunlash" }, { command: "help", description: "Yordam" }] });
+    await telegramApi("setMyCommands", { commands: [{ command: "start", description: "UzCam bosh menyusi" }, { command: "catalog", description: "Mahsulotlar katalogi" }, { command: "camera", description: "EZVIZ kameralar" }, { command: "videos", description: "Video tavsiyalar" }, { command: "news", description: "Yangiliklar" }, { command: "workers", description: "Ustalar katalogi" }, { command: "support", description: "Admin bilan aloqa" }, { command: "stop", description: "Suhbatni yakunlash" }, { command: "help", description: "Yordam" }] });
     console.info("Telegram webhook configured");
   } catch (error) { console.error("Telegram webhook setup failed:", error.message); }
 }
@@ -226,11 +247,34 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (pathname.startsWith("/api/")) {
+    if (pathname === "/api/workers" && req.method === "GET") {
+      const workers = db.prepare("SELECT u.telegram_id, u.full_name, wp.experience_years, wp.phone, wp.telegram_username, wp.photo_url, wp.service_prices, wp.description FROM worker_profiles wp JOIN users u ON u.id = wp.user_id WHERE u.role = 'worker' AND u.is_active = 1 AND wp.is_public = 1 ORDER BY u.full_name").all();
+      sendJson(res, 200, { workers }); return;
+    }
+    const workerProfileMatch = pathname.match(/^\/api\/workers\/(\d{5,20})$/);
+    if (workerProfileMatch && req.method === "PUT") {
+      const actor = getAdminSession(req);
+      if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin ustalar profilini boshqaradi" }); return; }
+      try {
+        const telegramId = workerProfileMatch[1];
+        const user = db.prepare("SELECT id FROM users WHERE telegram_id = ? AND role = 'worker'").get(telegramId);
+        if (!user) { sendJson(res, 404, { error: "Ishchi topilmadi" }); return; }
+        const body = await readJson(req);
+        const profile = normalizeWorkerProfile(body);
+        const fullName = cleanText(body.fullName, 100);
+        if (!fullName) { sendJson(res, 400, { error: "Ustaning ism-familiyasini kiriting" }); return; }
+        if (profile.isPublic && (!profile.phone || !profile.telegramUsername || !profile.photoUrl || !profile.servicePrices)) { sendJson(res, 400, { error: "Ommaga chiqarish uchun telefon, Telegram username, rasm havolasi va xizmat narxlarini to‘ldiring" }); return; }
+        db.prepare("UPDATE users SET full_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(fullName, user.id);
+        saveWorkerProfile(user.id, profile);
+        db.prepare("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'worker_profile', ?, ?)").run(actor.id, telegramId, JSON.stringify({ isPublic: profile.isPublic }));
+        sendJson(res, 200, { ok: true }); return;
+      } catch (error) { sendJson(res, 400, { error: error.message || "Usta profilini saqlab bo‘lmadi" }); return; }
+    }
     if (pathname === "/api/staff") {
       const actor = getAdminSession(req);
       if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin xodimlarni boshqaradi" }); return; }
       if (req.method === "GET") {
-        const staff = db.prepare("SELECT telegram_id, username, full_name, role, is_active, created_at FROM users WHERE role IN ('super_admin','admin','worker') ORDER BY CASE role WHEN 'super_admin' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END, full_name, telegram_id").all();
+        const staff = db.prepare("SELECT u.telegram_id, u.username, u.full_name, u.role, u.is_active, u.created_at, COALESCE(wp.experience_years, 0) AS experience_years, COALESCE(wp.phone, u.phone, '') AS phone, COALESCE(wp.telegram_username, '') AS telegram_username, COALESCE(wp.photo_url, '') AS photo_url, COALESCE(wp.service_prices, '') AS service_prices, COALESCE(wp.description, '') AS description, COALESCE(wp.is_public, 1) AS is_public FROM users u LEFT JOIN worker_profiles wp ON wp.user_id = u.id WHERE u.role IN ('super_admin','admin','worker') ORDER BY CASE u.role WHEN 'super_admin' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END, u.full_name, u.telegram_id").all();
         sendJson(res, 200, { staff }); return;
       }
       if (req.method === "POST") {
@@ -241,11 +285,14 @@ const server = http.createServer(async (req, res) => {
           const role = String(body.role || "");
           if (!/^\d{5,20}$/.test(telegramId)) { sendJson(res, 400, { error: "Telegram ID faqat raqamlardan iborat bo‘lsin" }); return; }
           if (!["admin", "worker"].includes(role)) { sendJson(res, 400, { error: "Rolni Admin yoki Ishchi qilib tanlang" }); return; }
+          const workerProfile = role === "worker" ? normalizeWorkerProfile(body) : null;
+          if (workerProfile && workerProfile.isPublic && (!fullName || !workerProfile.phone || !workerProfile.telegramUsername || !workerProfile.photoUrl || !workerProfile.servicePrices)) { sendJson(res, 400, { error: "Ommaga chiqarish uchun ism-familiya, telefon, Telegram username, rasm havolasi va xizmat narxlarini to‘ldiring; aks holda profilni yashirin saqlang" }); return; }
           if (telegramId === String(process.env.SUPER_ADMIN_TELEGRAM_ID || "")) { sendJson(res, 409, { error: "Super Admin akkauntini bu yerdan o‘zgartirib bo‘lmaydi" }); return; }
           const existingStaff = db.prepare("SELECT role FROM users WHERE telegram_id = ?").get(telegramId);
           if (existingStaff && existingStaff.role === "super_admin") { sendJson(res, 409, { error: "Boshqa Super Admin akkauntini bu yerdan o‘zgartirib bo‘lmaydi" }); return; }
           db.prepare("INSERT INTO users(telegram_id, full_name, role) VALUES (?, ?, ?) ON CONFLICT(telegram_id) DO UPDATE SET full_name = CASE WHEN excluded.full_name <> '' THEN excluded.full_name ELSE users.full_name END, role = excluded.role, is_active = 1, updated_at = CURRENT_TIMESTAMP").run(telegramId, fullName, role);
-          const user = db.prepare("SELECT telegram_id, username, full_name, role, is_active, created_at FROM users WHERE telegram_id = ?").get(telegramId);
+          const user = db.prepare("SELECT id, telegram_id, username, full_name, role, is_active, created_at FROM users WHERE telegram_id = ?").get(telegramId);
+          if (role === "worker") saveWorkerProfile(user.id, workerProfile);
           db.prepare("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'create_or_promote', 'staff', ?, ?)").run(actor.id, telegramId, JSON.stringify({ role }));
           sendJson(res, 201, { staff: user }); return;
         } catch (error) { sendJson(res, 400, { error: error.message || "Xodimni qo‘shib bo‘lmadi" }); return; }
@@ -266,6 +313,7 @@ const server = http.createServer(async (req, res) => {
         const isActive = body.isActive === undefined ? current.is_active : (body.isActive === true || body.isActive === 1 ? 1 : body.isActive === false || body.isActive === 0 ? 0 : -1);
         if (!["admin", "worker"].includes(role) || ![0, 1].includes(isActive)) { sendJson(res, 400, { error: "Rol yoki faol holat noto‘g‘ri" }); return; }
         db.prepare("UPDATE users SET role = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE telegram_id = ?").run(role, isActive, telegramId);
+        if (role === "worker") db.prepare("INSERT OR IGNORE INTO worker_profiles(user_id) VALUES (?)").run(current.id);
         db.prepare("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'staff', ?, ?)").run(actor.id, telegramId, JSON.stringify({ role, isActive }));
         const staff = db.prepare("SELECT telegram_id, username, full_name, role, is_active, created_at FROM users WHERE telegram_id = ?").get(telegramId);
         sendJson(res, 200, { staff }); return;
