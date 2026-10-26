@@ -194,3 +194,23 @@ Keyingi qadam: GitHub Desktop’da o‘zgarishlarni commit/push, Render’da DAT
 ### 2026-10-26 — Supabase TLS xatosi
 
 DATABASE_URL saqlanib deploy boshlangan, lekin Render SELF_SIGNED_CERT_IN_CHAIN bilan to‘xtadi. backend/postgres-tls.js va rasmiy CA backend/certs/ ichiga qo‘shildi. SSL tekshiruvi o‘chirilmagan. 7 mahalliy test o‘tdi. Haqiqiy pooler bilan parolsiz TLS sinovi muvaffaqiyatli, noto‘g‘ri hostname rad etildi. GitHub push va yangi Render deploy hali foydalanuvchi tomonidan bajarilishi kerak. Haqiqiy baza login/SQL/health hali tasdiqlanmagan.
+
+
+## 2026-10-26 — Kategoriyalar ixchamlashtirildi
+
+Foydalanuvchi talabi: Quvvat/UPS/Aksessuarlar bitta; Domofon/Kirish nazorati bitta; Ovozli ogohlantirish Signalizatsiyaga; Asboblar Elektronikaga. Aqlli uy’dagi mavjud 18 mahsulot foydalanuvchining aniq javobiga ko‘ra saqlanadi, yangilari qo‘lda kiritiladi.
+
+14 kategoriya 10 taga birlashtirildi. Dastlabki katalogda jami 2141 mahsulot saqlangan. Yangi sonlar: Quvvat, UPS va aksessuarlar 219; Domofon va kirish nazorati 320; Signalizatsiya va yong‘in xavfsizligi 308; Elektronika 198; Aqlli uy 18. Boshqa bo‘limlar o‘zgarmagan.
+
+assets/category-config.js umumiy nomlar va eski aliaslarni belgilaydi. backend/category-management.js bir martalik, tranzaksiyali migratsiya bilan faqat category_id ni almashtiradi; narx, rasm, visibility, o‘chirish holati va mahsulot ID’lari saqlanadi. Eski bo‘limlar inactive qilinadi. Migratsiya PostgreSQL va SQLite’ga qo‘llanadi; qayta deploy qo‘lda keyin o‘zgartirilgan kategoriyalarni qaytarmaydi. Katalog API kategoriya nomlarini ham beradi; admin mahsulot formasi yangi kategoriyalarni oladi, eski nom bilan so‘rov kelsa yangisiga moslanadi.
+
+Mahalliy 9 ta test o‘tdi; 320/390/768 px brauzerda filtr sonlari, eski bo‘limlar yo‘qligi, Aqlli uy 18 ta, gorizontal toshish yo‘qligi va script xatolari tekshirildi. Preview: http://127.0.0.1:31317/#catalog (faqat shu kompyuterda, test SQLite bazasi). Jonli Supabase’da kategoriya ko‘chishi yangi commit push/deploydan keyin bajariladi.
+
+
+## 2026-10-26 — Ikonkali filtrlar va aloqa telefoni
+
+Brend va narx selectlari ixcham bitta qatorga almashtirildi: chapda Brend ikonka, o‘ngda Filtr ikonka, o‘rtada foydalanuvchi tasdiqlagan +998 50 855 41 87 telefon raqami (tel: havola). Brend oynasida qidiruv va brend tugmalari, narx oynasida arzonidan/arzon/o‘rtacha/qimmat tanlovlari bor. Tanlangan filtrlar kichik yozuvda ko‘rinadi. Escape/tashqariga bosish bilan yopiladi; narx tanlovida klaviatura strelkalari ishlaydi.
+
+assets/catalog-controls.js ochilish, tanlash, yopilish va telefon formatini boshqaradi. Mavjud katalog qidiruvi va narx saralash mantiqi saqlandi. Bosh sahifa kontentiga contactPhone qo‘shildi; server raqamni tekshiradi va E.164 formatida saqlaydi. Admin panel → Bosh sahifa kontenti → Promo banner va aloqa → Aloqa telefon raqami orqali o‘zgartiriladi. Bo‘sh qoldirish telefonni yashiradi. Eski klient contactPhone yubormasa saqlangan raqam saqlanib qoladi.
+
+9 ta avtomatik test (shu jumladan aloqa raqamining validatsiya, saqlash, bo‘shatish va restartdan keyingi holati) o‘tdi. Brauzerda 320/390/768 px bo‘yicha menyular, qidiruv, narx, reset, keyboard, tel havola va sig‘ish tekshirildi. Mahalliy preview o‘sha 31317 portda. O‘zgarishlar hali GitHub push/deploy talab qiladi; kategoriya birlashtirish o‘zgarishlari ham shu ishchi papkada turibdi.

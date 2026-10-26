@@ -1,3 +1,7 @@
+import { mergeCatalogCategories, listCatalogCategories, categoryConfig } from '../backend/category-management.js';
+import { DatabaseSync } from 'node:sqlite';
+import { createSqliteDatabase } from '../backend/database-adapters.js';
+import fs from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PGlite } from '@electric-sql/pglite';
@@ -103,4 +107,38 @@ test('Storage server key uploads only to configured bucket, never falls back aft
   assert.equal(calls[1].init.headers.Authorization,'Bearer TEST-SERVER-KEY');
   const failing=createImageStorage({kind:'postgres'},{SUPABASE_URL:'https://example.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'TEST'},async()=>new Response('{}',{status:500}));
   await assert.rejects(()=>failing.save(Buffer.from('image'),'png'),/saqlay olmadi/);
+});
+
+for(const engineType of ['sqlite','postgres']) test('Category merge preserves products and manual smart-home editing: '+engineType,async t=>{
+  let db;
+  if(engineType==='postgres') { ({db}=await makeDatabase(t));await initializePostgres(db,{catalog:{products:[]}}); }
+  else {
+    const sqlite=new DatabaseSync(':memory:');sqlite.exec(fs.readFileSync(new URL('../backend/schema.sql',import.meta.url),'utf8'));sqlite.exec('ALTER TABLE products ADD COLUMN deleted_at TEXT');
+    db=createSqliteDatabase(sqlite);t.after(()=>db.close());
+  }
+  const legacy=[...Object.keys(categoryConfig.aliases),'Aqlli uy','Signalizatsiya va yong‘in xavfsizligi','Elektronika','Maxsus bo‘lim'];
+  for(let i=0;i<legacy.length;i++) {
+    await db.run('INSERT INTO categories(name) VALUES (?)',legacy[i]);const cat=await db.get('SELECT id FROM categories WHERE name=?',legacy[i]);
+    await db.run('INSERT INTO products(model,name,brand,category_id,source_price,source_currency,rate_used,sale_price_uzs,image_path,is_active) VALUES (?,?,?,?,?,?,?,?,?,?)','OLD-'+i,'Mahsulot '+i,'EZVIZ',cat.id,10,'USD',12000,156000,'assets/ezviz/01.webp',i===0?0:1);
+  }
+  await db.run("UPDATE products SET deleted_at='2026-10-26' WHERE model='OLD-1'");
+  const before=await db.all('SELECT * FROM products ORDER BY id');
+  assert.equal(await mergeCatalogCategories(db),true);
+  const after=await db.all('SELECT * FROM products ORDER BY id');assert.equal(after.length,before.length);
+  for(let i=0;i<before.length;i++) {
+    const {category_id:oldId,...oldRow}=before[i],{category_id:newId,...newRow}=after[i];assert.deepEqual(newRow,oldRow);
+    assert.equal((await db.get('SELECT name FROM categories WHERE id=?',newId)).name,categoryConfig.canonical(legacy[i]));
+  }
+  const names=await listCatalogCategories(db);assert.ok(names.includes('Aqlli uy'));assert.ok(names.includes('Maxsus bo‘lim'));
+  for(const name of Object.keys(categoryConfig.aliases))assert.ok(!names.includes(name));
+  await db.run("INSERT INTO users(telegram_id,role) VALUES ('90000001','super_admin')");const actor=await db.get("SELECT * FROM users WHERE telegram_id='90000001'");
+  const products=createProductManager(db);
+  const smart=await products.saveManagedProduct(actor,{name:'Yangi aqlli rozetka',model:'MANUAL-SMART',brand:'EZVIZ',category:'Aqlli uy',image:'assets/ezviz/01.webp',priceMode:'sale',salePrice:100000});
+  assert.equal(smart.category,'Aqlli uy');
+  const alias=await products.saveManagedProduct(actor,{name:'Yangi UPS',model:'MANUAL-UPS',brand:'EZVIZ',category:'Quvvat va UPS',image:'assets/ezviz/01.webp',priceMode:'sale',salePrice:200000});
+  assert.equal(alias.category,'Quvvat, UPS va aksessuarlar');
+  const smartId=(await db.get("SELECT id FROM categories WHERE name='Aqlli uy'")).id;
+  await db.run("UPDATE products SET category_id=? WHERE model='OLD-0'",smartId);
+  assert.equal(await mergeCatalogCategories(db),false);
+  assert.equal((await db.get("SELECT category_id FROM products WHERE model='OLD-0'")).category_id,smartId);
 });

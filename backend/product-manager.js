@@ -1,3 +1,4 @@
+import { categoryConfig, listCatalogCategories } from './category-management.js';
 export function createProductManager(db) {
 
 function productError(message, status = 400) { return Object.assign(new Error(message), { statusCode: status }); }
@@ -30,7 +31,7 @@ async function listManagedProducts(actor, params) {
   const pageSize = 30, page = Math.min(Math.max(1, Number.parseInt(params.get('page'), 10) || 1), Math.max(1, Math.ceil(total/pageSize)));
   const products = await db.all(`SELECT ${projection}${actor.role === 'super_admin' ? privateProjection : ''} ${from} ORDER BY p.id DESC LIMIT ? OFFSET ?`, ...values, pageSize, (page-1)*pageSize);
   const brands = (await db.all('SELECT DISTINCT brand FROM products ORDER BY brand')).map(row=>row.brand);
-  const categories = (await db.all('SELECT name FROM categories ORDER BY name')).map(row=>row.name);
+  const categories = await listCatalogCategories(db);
   const result = { products, total, page, pageSize, brands, categories, canManageCosts: actor.role === 'super_admin' };
   if (actor.role === 'super_admin') { const rates = {}; for (const row of await db.all('SELECT currency, rate_to_uzs FROM exchange_rates ORDER BY effective_date DESC, id DESC')) if (!rates[row.currency]) rates[row.currency] = row.rate_to_uzs; result.pricing = { markupPercent: 30, rates }; }
   return result;
@@ -46,7 +47,7 @@ function imagePath(value) {
 async function normalize(actor, body, current) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw productError('Mahsulot formati noto‘g‘ri');
   if (actor.role !== 'super_admin' && privateFields.some(field=>present(body,field))) throw productError('Tannarx sozlamalarini faqat Super Admin boshqaradi',403);
-  const name=clean(body.name,300), model=clean(body.model,200), brand=clean(body.brand,80), category=clean(body.category,120);
+  const name=clean(body.name,300), model=clean(body.model,200), brand=clean(body.brand,80), category=categoryConfig.canonical(clean(body.category,120));
   if (!name || !model || !brand || !category) throw productError('Nom, model, brend va kategoriyani to‘ldiring');
   const image = imagePath(body.image ?? current?.image);
   if (!current && !image) throw productError('Yangi mahsulot uchun rasm kiriting');

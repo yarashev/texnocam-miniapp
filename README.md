@@ -41,3 +41,5 @@ npm test uses an isolated PostgreSQL WASM engine (PGlite) for SQL/role/transacti
 ### Supabase TLS trust
 
 Supabase database/pooler hostnames automatically use the official Supabase Root 2021 CA bundled in backend/certs/supabase-prod-ca-2021.crt, alongside Node public roots. Certificate-chain and hostname checks remain enabled. See backend/certs/README.md for official source, fingerprint and rotation date. Other PostgreSQL hosts keep normal certificate verification. PGSSLROOTCERT remains an explicit custom-CA override.
+
+The customer catalog uses icon buttons for brand and price selection, with the shop contact phone between them. Admins edit or clear the public contactPhone field in the homepage content panel; the existing authenticated homepage-content route validates and persists it in settings. Clearing the field hides the phone link.

@@ -3,7 +3,7 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { listPublicProducts, db } from "./backend/database.js";
+import { listPublicProducts, listPublicCategories, db } from "./backend/database.js";
 import { listManagedProducts, getManagedProduct, saveManagedProduct, changeProductState, productError } from "./backend/product-management.js";
 
 const root = process.cwd();
@@ -47,7 +47,7 @@ async function readJson(req, maxBytes = 10000) {
   return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
 }
 
-const DEFAULT_HOME_CONTENT = { hero: { eyebrow: "EZVIZ · aqlli videokuzatuv", title: "Uyingizni EZVIZ bilan himoyalang", description: "CS-H1C (1080P) — uy va biznes uchun aqlli kamera.", productId: 1, buttonText: "Kameralarni ko‘rish" }, videos: [], news: [] };
+const DEFAULT_HOME_CONTENT = { contactPhone: "+998508554187", hero: { eyebrow: "EZVIZ · aqlli videokuzatuv", title: "Uyingizni EZVIZ bilan himoyalang", description: "CS-H1C (1080P) — uy va biznes uchun aqlli kamera.", productId: 1, buttonText: "Kameralarni ko‘rish" }, videos: [], news: [] };
 function cleanText(value, max) { return String(value || "").trim().slice(0, max); }
 function normalizeWorkerProfile(input) {
   const experienceYears = Number(input.experienceYears || 0);
@@ -67,6 +67,15 @@ async function saveWorkerProfile(userId, profile) {
   });
 }
 
+function normalizeContactPhone(value) {
+  const phone=cleanText(value,30);
+  if(!phone)return '';
+  if(!/^\+?[0-9 ()-]+$/.test(phone))throw new Error("Aloqa telefon raqamini tekshiring");
+  let digits=phone.replace(/[^0-9]/g,'');
+  if(digits.length===9)digits='998'+digits;
+  if(!/^[1-9][0-9]{6,14}$/.test(digits))throw new Error("Aloqa telefon raqamini tekshiring");
+  return '+'+digits;
+}
 async function normalizeHomeContent(input) {
   if (!input || typeof input !== "object") throw new Error("Kontent formati noto‘g‘ri");
   const hero = input.hero || {};
@@ -80,7 +89,7 @@ async function normalizeHomeContent(input) {
     return { title: cleanText(item.title, 100), url: url.href, description: cleanText(item.description, 220), active: item.active !== false };
   }).filter(item => item.title && item.url);
   const news = (Array.isArray(input.news) ? input.news : []).slice(0, 8).map(item => ({ title: cleanText(item.title, 100), body: cleanText(item.body, 500), active: item.active !== false })).filter(item => item.title && item.body);
-  return { hero: { eyebrow: cleanText(hero.eyebrow, 70), title: cleanText(hero.title, 120), description: cleanText(hero.description, 240), productId, buttonText: cleanText(hero.buttonText, 40) || "Kameralarni ko‘rish" }, videos, news };
+  return { contactPhone: input.contactPhone === undefined ? DEFAULT_HOME_CONTENT.contactPhone : normalizeContactPhone(input.contactPhone), hero: { eyebrow: cleanText(hero.eyebrow, 70), title: cleanText(hero.title, 120), description: cleanText(hero.description, 240), productId, buttonText: cleanText(hero.buttonText, 40) || "Kameralarni ko‘rish" }, videos, news };
 }
 async function getHomeContent() {
   const row = await db.get("SELECT value FROM settings WHERE key = 'homepage_content'");
@@ -359,7 +368,9 @@ async function handleRequest(req, res) {
       const actor = await getAdminSession(req);
       if (!actor || !["admin", "super_admin"].includes(actor.role)) { sendJson(res, 403, { error: "Admin ruxsati talab qilinadi" }); return; }
       try {
-        const content = await normalizeHomeContent(await readJson(req));
+        const body = await readJson(req);
+        if(body.contactPhone===undefined)body.contactPhone=(await getHomeContent()).contactPhone;
+        const content = await normalizeHomeContent(body);
         const value = JSON.stringify(content);
         await db.run("INSERT INTO settings(key, value, updated_by, updated_at) VALUES ('homepage_content', ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_by = excluded.updated_by, updated_at = CURRENT_TIMESTAMP", value, actor.id);
         await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'homepage_content', 'home', ?)", actor.id, JSON.stringify({ videos: content.videos.length, news: content.news.length, productId: content.hero.productId }));
@@ -392,7 +403,7 @@ async function handleRequest(req, res) {
     }
     if (req.method !== "GET") { sendJson(res, 405, { error: "Method not allowed" }); return; }
     if (pathname === "/api/health") { await db.get("SELECT 1 AS ready"); sendJson(res,200,{status:"ok",database:"connected",databaseEngine:db.kind,imageStorage:imageStorageMode(),backendStage:"catalog-management"}); return; }
-    if (pathname === "/api/products") { try { sendJson(res, 200, { products: await listPublicProducts() }); } catch { sendJson(res, 500, { error: "Catalog unavailable" }); } return; }
+    if (pathname === "/api/products") { try { sendJson(res, 200, { products: await listPublicProducts(), categories: await listPublicCategories() }); } catch { sendJson(res, 500, { error: "Catalog unavailable" }); } return; }
     sendJson(res, 404, { error: "API route not found" }); return;
   }
 

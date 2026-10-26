@@ -1,3 +1,4 @@
+import { mergeCatalogCategories, listCatalogCategories } from './category-management.js';
 import { postgresTls } from './postgres-tls.js';
 import { createPostgresDatabase, createSqliteDatabase } from './database-adapters.js';
 import { initializePostgres } from './postgres-initialize.js';
@@ -34,6 +35,9 @@ if (db.kind === 'postgres') {
   try { await initializePostgres(db); }
   catch (error) { await db.close(); throw Object.assign(new Error('PostgreSQL bazasini tayyorlab bo‘lmadi; migratsiya va ulanish sozlamalarini tekshiring'), { code: error.code }); }
 }
+
+await mergeCatalogCategories(db);
+export const listPublicCategories=()=>listCatalogCategories(db);
 
 export async function listPublicProducts() {
   return db.all(`SELECT p.id, p.model, p.name, p.brand, c.name AS category,
