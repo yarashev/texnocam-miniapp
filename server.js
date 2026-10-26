@@ -1,8 +1,9 @@
+import { initializeImageStorage, saveProductImage, loadProductImage, imageStorageMode } from "./backend/image-storage.js";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
-import { createHmac, timingSafeEqual, randomUUID } from "node:crypto";
-import { listPublicProducts, db } from "./backend/db.js";
+import { createHmac, timingSafeEqual } from "node:crypto";
+import { listPublicProducts, db } from "./backend/database.js";
 import { listManagedProducts, getManagedProduct, saveManagedProduct, changeProductState, productError } from "./backend/product-management.js";
 
 const root = process.cwd();
@@ -25,7 +26,7 @@ function verifyTelegramInitData(raw) {
   if (actualHash.length !== expectedHash.length || !timingSafeEqual(actualHash, expectedHash)) return null;
   try { return JSON.parse(params.get("user") || "null"); } catch { return null; }
 }
-function getAdminSession(req) {
+async function getAdminSession(req) {
   const token = (req.headers.cookie || "").split(";").map(part => part.trim()).find(part => part.startsWith("uzcam_session="))?.slice("uzcam_session=".length);
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   if (!token || !botToken) return null;
@@ -36,7 +37,7 @@ function getAdminSession(req) {
   if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return null;
   let session; try { session = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")); } catch { return null; }
   if (!session.id || session.exp < Date.now()) return null;
-  const user = db.prepare("SELECT id, telegram_id, username, full_name, phone, role, is_active FROM users WHERE telegram_id = ?").get(String(session.id));
+  const user = await db.get("SELECT id, telegram_id, username, full_name, phone, role, is_active FROM users WHERE telegram_id = ?", String(session.id));
   if (!user || !user.is_active || !["admin", "super_admin", "worker"].includes(user.role)) return null;
   return user;
 }
@@ -59,16 +60,18 @@ function normalizeWorkerProfile(input) {
   if (photoUrl) { let photo; try { photo = new URL(photoUrl); } catch { throw new Error("Rasm uchun HTTPS havolani kiriting"); } if (photo.protocol !== "https:") throw new Error("Rasm uchun HTTPS havolani kiriting"); }
   return { experienceYears, phone, telegramUsername, photoUrl, servicePrices: cleanText(input.servicePrices, 1200), description: cleanText(input.description, 500), isPublic: input.isPublic !== false && input.isPublic !== 0 };
 }
-function saveWorkerProfile(userId, profile) {
-  db.prepare("INSERT INTO worker_profiles(user_id, experience_years, phone, telegram_username, photo_url, service_prices, description, is_public, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET experience_years = excluded.experience_years, phone = excluded.phone, telegram_username = excluded.telegram_username, photo_url = excluded.photo_url, service_prices = excluded.service_prices, description = excluded.description, is_public = excluded.is_public, updated_at = CURRENT_TIMESTAMP").run(userId, profile.experienceYears, profile.phone, profile.telegramUsername, profile.photoUrl, profile.servicePrices, profile.description, profile.isPublic ? 1 : 0);
-  db.prepare("UPDATE users SET phone = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(profile.phone, userId);
+async function saveWorkerProfile(userId, profile) {
+  await db.transaction(async () => {
+  await db.run("INSERT INTO worker_profiles(user_id, experience_years, phone, telegram_username, photo_url, service_prices, description, is_public, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET experience_years = excluded.experience_years, phone = excluded.phone, telegram_username = excluded.telegram_username, photo_url = excluded.photo_url, service_prices = excluded.service_prices, description = excluded.description, is_public = excluded.is_public, updated_at = CURRENT_TIMESTAMP", userId, profile.experienceYears, profile.phone, profile.telegramUsername, profile.photoUrl, profile.servicePrices, profile.description, profile.isPublic ? 1 : 0);
+  await db.run("UPDATE users SET phone = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", profile.phone, userId);
+  });
 }
 
-function normalizeHomeContent(input) {
+async function normalizeHomeContent(input) {
   if (!input || typeof input !== "object") throw new Error("Kontent formati noto‘g‘ri");
   const hero = input.hero || {};
   const productId = Number(hero.productId);
-  if (!Number.isSafeInteger(productId) || !db.prepare("SELECT 1 FROM products WHERE id = ? AND is_active = 1 AND deleted_at IS NULL").get(productId)) throw new Error("Promo uchun faol mahsulot tanlang");
+  if (!Number.isSafeInteger(productId) || !await db.get("SELECT 1 FROM products WHERE id = ? AND is_active = 1 AND deleted_at IS NULL", productId)) throw new Error("Promo uchun faol mahsulot tanlang");
   const videos = (Array.isArray(input.videos) ? input.videos : []).slice(0, 6).map(item => {
     let url; try { url = new URL(String(item.url || "")); } catch { throw new Error("YouTube havolasini tekshiring"); }
     if (url.protocol !== "https:" || !["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtu.be"].includes(url.hostname)) throw new Error("Faqat YouTube havolasini kiriting");
@@ -79,10 +82,10 @@ function normalizeHomeContent(input) {
   const news = (Array.isArray(input.news) ? input.news : []).slice(0, 8).map(item => ({ title: cleanText(item.title, 100), body: cleanText(item.body, 500), active: item.active !== false })).filter(item => item.title && item.body);
   return { hero: { eyebrow: cleanText(hero.eyebrow, 70), title: cleanText(hero.title, 120), description: cleanText(hero.description, 240), productId, buttonText: cleanText(hero.buttonText, 40) || "Kameralarni ko‘rish" }, videos, news };
 }
-function getHomeContent() {
-  const row = db.prepare("SELECT value FROM settings WHERE key = 'homepage_content'").get();
+async function getHomeContent() {
+  const row = await db.get("SELECT value FROM settings WHERE key = 'homepage_content'");
   if (!row) return DEFAULT_HOME_CONTENT;
-  try { return normalizeHomeContent(JSON.parse(row.value)); } catch { return DEFAULT_HOME_CONTENT; }
+  try { return await normalizeHomeContent(JSON.parse(row.value)); } catch { return DEFAULT_HOME_CONTENT; }
 }
 
 function sessionUser(user) { return { id: user.telegram_id, username: user.username || "", fullName: user.full_name || "", phone: user.phone || "", role: user.role }; }
@@ -135,10 +138,10 @@ async function handleTelegramUpdate(update) {
   const command = match ? match[1].toLowerCase() : "";
 
   if (superAdminId && senderId === superAdminId && message.reply_to_message && message.reply_to_message.message_id) {
-    const link = db.prepare("SELECT customer_telegram_id FROM support_message_links WHERE admin_message_id = ?").get(message.reply_to_message.message_id);
+    const link = await db.get("SELECT customer_telegram_id FROM support_message_links WHERE admin_message_id = ?", message.reply_to_message.message_id);
     if (link) {
       if (command === "stop" || incomingText.toLowerCase() === "/close") {
-        db.prepare("UPDATE support_threads SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE customer_telegram_id = ?").run(link.customer_telegram_id);
+        await db.run("UPDATE support_threads SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE customer_telegram_id = ?", link.customer_telegram_id);
         await telegramApi("sendMessage", { chat_id: link.customer_telegram_id, text: "Admin bilan suhbat yakunlandi. Yana yozish uchun ‘💬 Admin bilan aloqa’ tugmasini bosing." });
         await telegramApi("sendMessage", { chat_id: chat.id, text: "Suhbat yopildi." });
         return;
@@ -163,21 +166,21 @@ async function handleTelegramUpdate(update) {
     return;
   }
   if (command === "camera" || incomingText === "📷 EZVIZ kameralar") {
-    const content = getHomeContent();
-    const product = listPublicProducts().find(item => item.id === content.hero.productId);
+    const content = await getHomeContent();
+    const product = (await listPublicProducts()).find(item => item.id === content.hero.productId);
     const price = product ? new Intl.NumberFormat("uz-UZ").format(product.price_uzs) + " so‘m" : "Narx katalogda";
     const lines = [content.hero.eyebrow, content.hero.title, content.hero.description, product ? product.brand + " " + product.name + " · " + price : "", "Katalogni ochib mavjud kameralarni ko‘ring."].filter(Boolean);
     await telegramApi("sendMessage", { chat_id: chat.id, text: shortTelegramText(lines.join("\n")), reply_markup: { inline_keyboard: [[{ text: "Kameralarni ko‘rish", web_app: { url: telegramAppUrl() } }]] } });
     return;
   }
   if (command === "videos" || incomingText === "📹 Video tavsiyalar") {
-    const videos = getHomeContent().videos.filter(item => item.active);
+    const videos = (await getHomeContent()).videos.filter(item => item.active);
     const text = videos.length ? "📹 Video tavsiyalar\n\n" + videos.map((item, index) => (index + 1) + ". " + item.title + (item.description ? "\n" + item.description : "") + "\n" + item.url).join("\n\n") : "Hozircha video tavsiyalar joylanmagan. Yangilari qo‘shilganda shu bo‘limda ko‘rinadi.";
     await sendBotMenu(chat.id, shortTelegramText(text));
     return;
   }
   if (command === "news" || incomingText === "📰 Yangiliklar") {
-    const news = getHomeContent().news.filter(item => item.active);
+    const news = (await getHomeContent()).news.filter(item => item.active);
     const text = news.length ? "📰 UzCam yangiliklari\n\n" + news.map((item, index) => (index + 1) + ". " + item.title + "\n" + item.body).join("\n\n") : "Hozircha yangi e’lon yo‘q. Yangiliklar qo‘shilganda shu bo‘limda ko‘rinadi.";
     await sendBotMenu(chat.id, shortTelegramText(text));
     return;
@@ -191,23 +194,23 @@ async function handleTelegramUpdate(update) {
       await sendBotMenu(chat.id, "Admin bilan aloqa hozir sozlanmagan. Iltimos, keyinroq urinib ko‘ring.");
       return;
     }
-    db.prepare("INSERT INTO support_threads(customer_telegram_id, is_active, updated_at) VALUES (?, 1, CURRENT_TIMESTAMP) ON CONFLICT(customer_telegram_id) DO UPDATE SET is_active = 1, updated_at = CURRENT_TIMESTAMP").run(senderId);
+    await db.run("INSERT INTO support_threads(customer_telegram_id, is_active, updated_at) VALUES (?, 1, CURRENT_TIMESTAMP) ON CONFLICT(customer_telegram_id) DO UPDATE SET is_active = 1, updated_at = CURRENT_TIMESTAMP", senderId);
     await sendBotMenu(chat.id, "Admin bilan suhbat boshlandi. Xabaringizni shu yerga yozing. Suhbatni tugatish uchun /stop yuboring.");
     await telegramApi("sendMessage", { chat_id: superAdminId, text: "💬 Yangi mijoz murojaati\nIsm: " + [message.from && message.from.first_name, message.from && message.from.last_name].filter(Boolean).join(" ") + "\nUsername: " + (message.from && message.from.username ? "@" + message.from.username : "yo‘q") + "\nTelegram ID: " + senderId + "\nMijoz xabariga javob berish uchun uning yuborgan nusxasiga Reply qiling." });
     return;
   }
   if (command === "stop") {
-    db.prepare("UPDATE support_threads SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE customer_telegram_id = ?").run(senderId);
+    await db.run("UPDATE support_threads SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE customer_telegram_id = ?", senderId);
     await sendBotMenu(chat.id, "Admin bilan suhbat yakunlandi. Yana bog‘lanish uchun menyudan aloqa tugmasini bosing.");
     return;
   }
 
-  const activeThread = db.prepare("SELECT is_active FROM support_threads WHERE customer_telegram_id = ?").get(senderId);
+  const activeThread = await db.get("SELECT is_active FROM support_threads WHERE customer_telegram_id = ?", senderId);
   if (activeThread && activeThread.is_active && superAdminId) {
     try {
       await telegramApi("sendMessage", { chat_id: superAdminId, text: "📩 Mijoz xabari\nIsm: " + [message.from && message.from.first_name, message.from && message.from.last_name].filter(Boolean).join(" ") + "\nUsername: " + (message.from && message.from.username ? "@" + message.from.username : "yo‘q") + "\nTelegram ID: " + senderId + "\nQuyidagi xabarga Reply qilib javob yuboring." });
       const copied = await telegramApi("copyMessage", { chat_id: superAdminId, from_chat_id: chat.id, message_id: message.message_id });
-      db.prepare("INSERT OR REPLACE INTO support_message_links(admin_message_id, customer_telegram_id, created_at) VALUES (?, ?, CURRENT_TIMESTAMP)").run(copied.message_id, senderId);
+      await db.run("INSERT INTO support_message_links(admin_message_id, customer_telegram_id, created_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(admin_message_id) DO UPDATE SET customer_telegram_id=excluded.customer_telegram_id, created_at=CURRENT_TIMESTAMP", copied.message_id, senderId);
       await sendBotMenu(chat.id, "Xabaringiz adminga yetkazildi. Javobni shu bot orqali olasiz.");
     } catch (error) {
       console.error("Telegram support relay failed:", error.message);
@@ -229,7 +232,7 @@ async function configureTelegramWebhook() {
   } catch (error) { console.error("Telegram webhook setup failed:", error.message); }
 }
 
-const server = http.createServer(async (req, res) => {
+async function handleRequest(req, res) {
   let pathname;
   try { pathname = decodeURIComponent(new URL(req.url, "http://localhost").pathname); }
   catch { res.writeHead(400).end("Bad request"); return; }
@@ -252,7 +255,7 @@ const server = http.createServer(async (req, res) => {
 
     const productMatch = pathname.match(/^\/api\/admin\/products\/(\d+)$/);
     if (pathname === "/api/admin/products" || productMatch || pathname === "/api/admin/product-images") {
-      const actor=getAdminSession(req);
+      const actor=await getAdminSession(req);
       if (!actor || !["admin","super_admin"].includes(actor.role)) { sendJson(res,403,{error:"Admin ruxsati talab qilinadi"});return; }
       try {
         if (pathname === "/api/admin/product-images" && req.method === "POST") {
@@ -262,52 +265,51 @@ const server = http.createServer(async (req, res) => {
           if (!bytes.length || bytes.length>3*1024*1024) throw productError("Rasm 3 MB dan oshmasin",413);
           const ext=bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))?"png":bytes[0]===255&&bytes[1]===216&&bytes[2]===255?"jpg":bytes.toString("ascii",0,4)==="RIFF"&&bytes.toString("ascii",8,12)==="WEBP"?"webp":null;
           if (!ext) throw productError("Faqat JPG, PNG va WEBP rasmlarini yuklang");
-          const directory=path.join(process.env.UZCAM_DATA_DIR?path.resolve(process.env.UZCAM_DATA_DIR):path.join(root,".data"),"uploads");
-          fs.mkdirSync(directory,{recursive:true});const name=randomUUID()+"."+ext;fs.writeFileSync(path.join(directory,name),bytes,{flag:"wx"});
-          sendJson(res,201,{image:"uploads/"+name});return;
+          const image=await saveProductImage(bytes,ext);
+          sendJson(res,201,{image});return;
         }
         if (pathname === "/api/admin/products") {
-          if(req.method==="GET"){sendJson(res,200,listManagedProducts(actor,new URL(req.url,"http://localhost").searchParams));return;}
-          if(req.method==="POST"){sendJson(res,201,{product:saveManagedProduct(actor,await readJson(req,16000))});return;}
+          if(req.method==="GET"){sendJson(res,200,await listManagedProducts(actor,new URL(req.url,"http://localhost").searchParams));return;}
+          if(req.method==="POST"){sendJson(res,201,{product:await saveManagedProduct(actor,await readJson(req,16000))});return;}
         } else if(productMatch) {
           const id=Number(productMatch[1]);if(!Number.isSafeInteger(id))throw productError("Mahsulot ID noto‘g‘ri");
-          if(req.method==="GET"){sendJson(res,200,{product:getManagedProduct(actor,id)});return;}
-          if(req.method==="PUT"){sendJson(res,200,{product:saveManagedProduct(actor,await readJson(req,16000),id)});return;}
-          if(req.method==="PATCH"){sendJson(res,200,{product:changeProductState(actor,id,await readJson(req))});return;}
-          if(req.method==="DELETE"){sendJson(res,200,{product:changeProductState(actor,id,{},true)});return;}
+          if(req.method==="GET"){sendJson(res,200,{product:await getManagedProduct(actor,id)});return;}
+          if(req.method==="PUT"){sendJson(res,200,{product:await saveManagedProduct(actor,await readJson(req,16000),id)});return;}
+          if(req.method==="PATCH"){sendJson(res,200,{product:await changeProductState(actor,id,await readJson(req))});return;}
+          if(req.method==="DELETE"){sendJson(res,200,{product:await changeProductState(actor,id,{},true)});return;}
         }
         sendJson(res,405,{error:"Usul qo‘llanmaydi"});return;
       }catch(error){if(!error.statusCode && !(error instanceof SyntaxError))console.error("Product operation failed:",error.message);sendJson(res,error.statusCode||(error instanceof SyntaxError?400:500),{error:error.statusCode?error.message:error instanceof SyntaxError?"So‘rov formati noto‘g‘ri":"Amalni bajarib bo‘lmadi"});return;}
     }
 
     if (pathname === "/api/workers" && req.method === "GET") {
-      const workers = db.prepare("SELECT u.telegram_id, u.full_name, wp.experience_years, wp.phone, wp.telegram_username, wp.photo_url, wp.service_prices, wp.description FROM worker_profiles wp JOIN users u ON u.id = wp.user_id WHERE u.role = 'worker' AND u.is_active = 1 AND wp.is_public = 1 ORDER BY u.full_name").all();
+      const workers = await db.all("SELECT u.telegram_id, u.full_name, wp.experience_years, wp.phone, wp.telegram_username, wp.photo_url, wp.service_prices, wp.description FROM worker_profiles wp JOIN users u ON u.id = wp.user_id WHERE u.role = 'worker' AND u.is_active = 1 AND wp.is_public = 1 ORDER BY u.full_name");
       sendJson(res, 200, { workers }); return;
     }
     const workerProfileMatch = pathname.match(/^\/api\/workers\/(\d{5,20})$/);
     if (workerProfileMatch && req.method === "PUT") {
-      const actor = getAdminSession(req);
+      const actor = await getAdminSession(req);
       if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin ustalar profilini boshqaradi" }); return; }
       try {
         const telegramId = workerProfileMatch[1];
-        const user = db.prepare("SELECT id FROM users WHERE telegram_id = ? AND role = 'worker'").get(telegramId);
+        const user = await db.get("SELECT id FROM users WHERE telegram_id = ? AND role = 'worker'", telegramId);
         if (!user) { sendJson(res, 404, { error: "Ishchi topilmadi" }); return; }
         const body = await readJson(req);
         const profile = normalizeWorkerProfile(body);
         const fullName = cleanText(body.fullName, 100);
         if (!fullName) { sendJson(res, 400, { error: "Ustaning ism-familiyasini kiriting" }); return; }
         if (profile.isPublic && (!profile.phone || !profile.telegramUsername || !profile.photoUrl || !profile.servicePrices)) { sendJson(res, 400, { error: "Ommaga chiqarish uchun telefon, Telegram username, rasm havolasi va xizmat narxlarini to‘ldiring" }); return; }
-        db.prepare("UPDATE users SET full_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(fullName, user.id);
-        saveWorkerProfile(user.id, profile);
-        db.prepare("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'worker_profile', ?, ?)").run(actor.id, telegramId, JSON.stringify({ isPublic: profile.isPublic }));
+        await db.run("UPDATE users SET full_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", fullName, user.id);
+        await saveWorkerProfile(user.id, profile);
+        await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'worker_profile', ?, ?)", actor.id, telegramId, JSON.stringify({ isPublic: profile.isPublic }));
         sendJson(res, 200, { ok: true }); return;
       } catch (error) { sendJson(res, 400, { error: error.message || "Usta profilini saqlab bo‘lmadi" }); return; }
     }
     if (pathname === "/api/staff") {
-      const actor = getAdminSession(req);
+      const actor = await getAdminSession(req);
       if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin xodimlarni boshqaradi" }); return; }
       if (req.method === "GET") {
-        const staff = db.prepare("SELECT u.telegram_id, u.username, u.full_name, u.role, u.is_active, u.created_at, COALESCE(wp.experience_years, 0) AS experience_years, COALESCE(wp.phone, u.phone, '') AS phone, COALESCE(wp.telegram_username, '') AS telegram_username, COALESCE(wp.photo_url, '') AS photo_url, COALESCE(wp.service_prices, '') AS service_prices, COALESCE(wp.description, '') AS description, COALESCE(wp.is_public, 1) AS is_public FROM users u LEFT JOIN worker_profiles wp ON wp.user_id = u.id WHERE u.role IN ('super_admin','admin','worker') ORDER BY CASE u.role WHEN 'super_admin' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END, u.full_name, u.telegram_id").all();
+        const staff = await db.all("SELECT u.telegram_id, u.username, u.full_name, u.role, u.is_active, u.created_at, COALESCE(wp.experience_years, 0) AS experience_years, COALESCE(wp.phone, u.phone, '') AS phone, COALESCE(wp.telegram_username, '') AS telegram_username, COALESCE(wp.photo_url, '') AS photo_url, COALESCE(wp.service_prices, '') AS service_prices, COALESCE(wp.description, '') AS description, COALESCE(wp.is_public, 1) AS is_public FROM users u LEFT JOIN worker_profiles wp ON wp.user_id = u.id WHERE u.role IN ('super_admin','admin','worker') ORDER BY CASE u.role WHEN 'super_admin' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END, u.full_name, u.telegram_id");
         sendJson(res, 200, { staff }); return;
       }
       if (req.method === "POST") {
@@ -321,12 +323,12 @@ const server = http.createServer(async (req, res) => {
           const workerProfile = role === "worker" ? normalizeWorkerProfile(body) : null;
           if (workerProfile && workerProfile.isPublic && (!fullName || !workerProfile.phone || !workerProfile.telegramUsername || !workerProfile.photoUrl || !workerProfile.servicePrices)) { sendJson(res, 400, { error: "Ommaga chiqarish uchun ism-familiya, telefon, Telegram username, rasm havolasi va xizmat narxlarini to‘ldiring; aks holda profilni yashirin saqlang" }); return; }
           if (telegramId === String(process.env.SUPER_ADMIN_TELEGRAM_ID || "")) { sendJson(res, 409, { error: "Super Admin akkauntini bu yerdan o‘zgartirib bo‘lmaydi" }); return; }
-          const existingStaff = db.prepare("SELECT role FROM users WHERE telegram_id = ?").get(telegramId);
+          const existingStaff = await db.get("SELECT role FROM users WHERE telegram_id = ?", telegramId);
           if (existingStaff && existingStaff.role === "super_admin") { sendJson(res, 409, { error: "Boshqa Super Admin akkauntini bu yerdan o‘zgartirib bo‘lmaydi" }); return; }
-          db.prepare("INSERT INTO users(telegram_id, full_name, role) VALUES (?, ?, ?) ON CONFLICT(telegram_id) DO UPDATE SET full_name = CASE WHEN excluded.full_name <> '' THEN excluded.full_name ELSE users.full_name END, role = excluded.role, is_active = 1, updated_at = CURRENT_TIMESTAMP").run(telegramId, fullName, role);
-          const user = db.prepare("SELECT id, telegram_id, username, full_name, role, is_active, created_at FROM users WHERE telegram_id = ?").get(telegramId);
-          if (role === "worker") saveWorkerProfile(user.id, workerProfile);
-          db.prepare("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'create_or_promote', 'staff', ?, ?)").run(actor.id, telegramId, JSON.stringify({ role }));
+          await db.run("INSERT INTO users(telegram_id, full_name, role) VALUES (?, ?, ?) ON CONFLICT(telegram_id) DO UPDATE SET full_name = CASE WHEN excluded.full_name <> '' THEN excluded.full_name ELSE users.full_name END, role = excluded.role, is_active = 1, updated_at = CURRENT_TIMESTAMP", telegramId, fullName, role);
+          const user = await db.get("SELECT id, telegram_id, username, full_name, role, is_active, created_at FROM users WHERE telegram_id = ?", telegramId);
+          if (role === "worker") await saveWorkerProfile(user.id, workerProfile);
+          await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'create_or_promote', 'staff', ?, ?)", actor.id, telegramId, JSON.stringify({ role }));
           sendJson(res, 201, { staff: user }); return;
         } catch (error) { sendJson(res, 400, { error: error.message || "Xodimni qo‘shib bo‘lmadi" }); return; }
       }
@@ -334,33 +336,33 @@ const server = http.createServer(async (req, res) => {
     }
     const staffMatch = pathname.match(/^\/api\/staff\/(\d{5,20})$/);
     if (staffMatch && req.method === "PATCH") {
-      const actor = getAdminSession(req);
+      const actor = await getAdminSession(req);
       if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin xodimlar ruxsatini o‘zgartiradi" }); return; }
       const telegramId = staffMatch[1];
       if (telegramId === String(process.env.SUPER_ADMIN_TELEGRAM_ID || "")) { sendJson(res, 409, { error: "Super Admin akkauntini o‘zgartirib bo‘lmaydi" }); return; }
       try {
         const body = await readJson(req);
-        const current = db.prepare("SELECT id, role, is_active FROM users WHERE telegram_id = ?").get(telegramId);
+        const current = await db.get("SELECT id, role, is_active FROM users WHERE telegram_id = ?", telegramId);
         if (!current || !["admin", "worker"].includes(current.role)) { sendJson(res, 404, { error: "Xodim topilmadi" }); return; }
         const role = body.role === undefined ? current.role : String(body.role);
         const isActive = body.isActive === undefined ? current.is_active : (body.isActive === true || body.isActive === 1 ? 1 : body.isActive === false || body.isActive === 0 ? 0 : -1);
         if (!["admin", "worker"].includes(role) || ![0, 1].includes(isActive)) { sendJson(res, 400, { error: "Rol yoki faol holat noto‘g‘ri" }); return; }
-        db.prepare("UPDATE users SET role = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE telegram_id = ?").run(role, isActive, telegramId);
-        if (role === "worker") db.prepare("INSERT OR IGNORE INTO worker_profiles(user_id) VALUES (?)").run(current.id);
-        db.prepare("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'staff', ?, ?)").run(actor.id, telegramId, JSON.stringify({ role, isActive }));
-        const staff = db.prepare("SELECT telegram_id, username, full_name, role, is_active, created_at FROM users WHERE telegram_id = ?").get(telegramId);
+        await db.run("UPDATE users SET role = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE telegram_id = ?", role, isActive, telegramId);
+        if (role === "worker") await db.run("INSERT OR IGNORE INTO worker_profiles(user_id) VALUES (?)", current.id);
+        await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'staff', ?, ?)", actor.id, telegramId, JSON.stringify({ role, isActive }));
+        const staff = await db.get("SELECT telegram_id, username, full_name, role, is_active, created_at FROM users WHERE telegram_id = ?", telegramId);
         sendJson(res, 200, { staff }); return;
       } catch (error) { sendJson(res, 400, { error: error.message || "Xodim ruxsatini yangilab bo‘lmadi" }); return; }
     }
-    if (pathname === "/api/home-content" && req.method === "GET") { sendJson(res, 200, { content: getHomeContent() }); return; }
+    if (pathname === "/api/home-content" && req.method === "GET") { sendJson(res, 200, { content: await getHomeContent() }); return; }
     if (pathname === "/api/home-content" && req.method === "PUT") {
-      const actor = getAdminSession(req);
+      const actor = await getAdminSession(req);
       if (!actor || !["admin", "super_admin"].includes(actor.role)) { sendJson(res, 403, { error: "Admin ruxsati talab qilinadi" }); return; }
       try {
-        const content = normalizeHomeContent(await readJson(req));
+        const content = await normalizeHomeContent(await readJson(req));
         const value = JSON.stringify(content);
-        db.prepare("INSERT INTO settings(key, value, updated_by, updated_at) VALUES ('homepage_content', ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_by = excluded.updated_by, updated_at = CURRENT_TIMESTAMP").run(value, actor.id);
-        db.prepare("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'homepage_content', 'home', ?)").run(actor.id, JSON.stringify({ videos: content.videos.length, news: content.news.length, productId: content.hero.productId }));
+        await db.run("INSERT INTO settings(key, value, updated_by, updated_at) VALUES ('homepage_content', ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_by = excluded.updated_by, updated_at = CURRENT_TIMESTAMP", value, actor.id);
+        await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'homepage_content', 'home', ?)", actor.id, JSON.stringify({ videos: content.videos.length, news: content.news.length, productId: content.hero.productId }));
         sendJson(res, 200, { content }); return;
       } catch (error) { sendJson(res, 400, { error: error.message || "Kontentni saqlab bo‘lmadi" }); return; }
     }
@@ -370,12 +372,12 @@ const server = http.createServer(async (req, res) => {
         const telegramUser = verifyTelegramInitData(body.initData);
         if (!telegramUser?.id) { sendJson(res, 401, { error: "Telegram tasdiqlashi yaroqsiz yoki eskirgan" }); return; }
         const telegramId = String(telegramUser.id);
-        const existing = db.prepare("SELECT role FROM users WHERE telegram_id = ?").get(telegramId);
+        const existing = await db.get("SELECT role FROM users WHERE telegram_id = ?", telegramId);
         const superAdminId = process.env.SUPER_ADMIN_TELEGRAM_ID;
         const role = superAdminId && telegramId === String(superAdminId) ? "super_admin" : (existing?.role || "customer");
         const fullName = [telegramUser.first_name, telegramUser.last_name].filter(Boolean).join(" ");
-        db.prepare("INSERT INTO users (telegram_id, username, full_name, role) VALUES (?, ?, ?, ?) ON CONFLICT(telegram_id) DO UPDATE SET username = excluded.username, full_name = excluded.full_name, role = CASE WHEN users.role = 'super_admin' OR excluded.role = 'super_admin' THEN 'super_admin' ELSE users.role END, updated_at = CURRENT_TIMESTAMP").run(telegramId, telegramUser.username || null, fullName, role);
-        const user = db.prepare("SELECT id, telegram_id, username, full_name, phone, role, is_active FROM users WHERE telegram_id = ?").get(telegramId);
+        await db.run("INSERT INTO users (telegram_id, username, full_name, role) VALUES (?, ?, ?, ?) ON CONFLICT(telegram_id) DO UPDATE SET username = excluded.username, full_name = excluded.full_name, role = CASE WHEN users.role = 'super_admin' OR excluded.role = 'super_admin' THEN 'super_admin' ELSE users.role END, updated_at = CURRENT_TIMESTAMP", telegramId, telegramUser.username || null, fullName, role);
+        const user = await db.get("SELECT id, telegram_id, username, full_name, phone, role, is_active FROM users WHERE telegram_id = ?", telegramId);
         if (!user.is_active) { sendJson(res, 403, { error: "Ushbu foydalanuvchi faolsiz" }); return; }
         const payload = Buffer.from(JSON.stringify({ id: telegramId, exp: Date.now() + 2 * 60 * 60 * 1000 })).toString("base64url");
         const signature = createHmac("sha256", process.env.TELEGRAM_BOT_TOKEN).update(payload).digest("base64url");
@@ -384,20 +386,24 @@ const server = http.createServer(async (req, res) => {
       } catch { sendJson(res, 400, { error: "Profil so‘rovini o‘qib bo‘lmadi" }); return; }
     }
     if (pathname === "/api/session" && req.method === "GET") {
-      const user = getAdminSession(req);
+      const user = await getAdminSession(req);
       if (!user) { sendJson(res, 401, { error: "Admin sessiyasi topilmadi" }); return; }
       sendJson(res, 200, { user: sessionUser(user) }); return;
     }
     if (req.method !== "GET") { sendJson(res, 405, { error: "Method not allowed" }); return; }
-    if (pathname === "/api/health") { sendJson(res, 200, { status: "ok", database: "connected", backendStage: "foundation" }); return; }
-    if (pathname === "/api/products") { try { sendJson(res, 200, { products: listPublicProducts() }); } catch { sendJson(res, 500, { error: "Catalog unavailable" }); } return; }
+    if (pathname === "/api/health") { await db.get("SELECT 1 AS ready"); sendJson(res,200,{status:"ok",database:"connected",databaseEngine:db.kind,imageStorage:imageStorageMode(),backendStage:"catalog-management"}); return; }
+    if (pathname === "/api/products") { try { sendJson(res, 200, { products: await listPublicProducts() }); } catch { sendJson(res, 500, { error: "Catalog unavailable" }); } return; }
     sendJson(res, 404, { error: "API route not found" }); return;
   }
 
-  if (pathname === "/admin-preview.html" && !getAdminSession(req)) { res.writeHead(404, { "Content-Type":"text/plain; charset=utf-8" }).end("Not found"); return; }
+  if (pathname === "/admin-preview.html" && !await getAdminSession(req)) { res.writeHead(404, { "Content-Type":"text/plain; charset=utf-8" }).end("Not found"); return; }
   if (pathname === "/") pathname = "/index.html";
   let file;
-  if (/^\/uploads\/[a-f0-9-]+\.(png|jpg|webp)$/.test(pathname)) file=path.join(process.env.UZCAM_DATA_DIR?path.resolve(process.env.UZCAM_DATA_DIR):path.join(root,".data"),"uploads",path.basename(pathname));
+  if (/^\/uploads\/[a-f0-9-]+\.(png|jpg|webp)$/.test(pathname)) {
+    const image=await loadProductImage(path.basename(pathname));
+    if(!image){res.writeHead(404).end("Not found");return;}
+    res.writeHead(200,{"Content-Type":image.contentType,"Cache-Control":"public, max-age=86400","X-Content-Type-Options":"nosniff"});res.end(image.bytes);return;
+  }
   else if (pathname === "/index.html" || pathname === "/admin-preview.html" || pathname.startsWith("/assets/")) {
     file=path.resolve(root,"."+pathname);
     const allowedRoot=pathname.startsWith("/assets/")?path.join(root,"assets"):root;
@@ -408,9 +414,18 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { "Content-Type":types[path.extname(file).toLowerCase()] || "application/octet-stream", "Cache-Control":pathname.startsWith("/assets/") ? "public, max-age=86400, stale-while-revalidate=604800" : "no-cache", "X-Content-Type-Options":"nosniff" });
     fs.createReadStream(file).pipe(res);
   });
+}
+
+const server = http.createServer((req,res) => {
+  handleRequest(req,res).catch(() => {
+    console.error("Request failed: database or storage unavailable");
+    if (!res.headersSent) sendJson(res,503,{error:"Xizmat vaqtincha mavjud emas. Qayta urinib ko‘ring."});
+    else res.destroy();
+  });
 });
 
 const port = Number(process.env.PORT || 3000);
-try { db.prepare("SELECT 1 AS ready").get(); }
-catch (error) { console.error("Database initialization failed:", error.message); process.exit(1); }
+try { await db.get("SELECT 1 AS ready"); await initializeImageStorage(); }
+catch (error) { console.error("Database/storage initialization failed; check environment configuration"); process.exit(1); }
 server.listen(port, "0.0.0.0", () => { console.log(`UzCam backend running on port ${port}`); void configureTelegramWebhook(); });
+for(const signal of ["SIGINT","SIGTERM"]) process.once(signal,()=>{server.close(()=>{void db.close().finally(()=>process.exit(0));});setTimeout(()=>process.exit(1),10000).unref();});

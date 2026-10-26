@@ -5,9 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test tests/*.test.js",
+    "backup:sqlite": "node backend/export-sqlite.js",
+    "import:postgres": "node backend/import-postgres.js"
   },
   "engines": {
     "node": ">=24.15"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.11"
   }
 }

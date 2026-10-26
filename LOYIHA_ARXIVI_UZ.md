@@ -179,3 +179,14 @@ Hozirgi loyiha `.data/texnocam.sqlite` lokal SQLite faylidan foydalanadi. Render
 ---
 
 **Xavfsizlik:** bot tokeni, Paynetning maxfiy credential’lari, `.env`, karta yoki shaxsiy maxfiy kalitlarni ushbu arxivga va GitHub’ga hech qachon yozmang. Arxivda faqat kalit NOMLARI keltirilgan.
+
+
+## 2026-10-26 — Supabase ulanishiga tayyorgarlik yakuni
+
+Oracle ro‘yxatdan o‘tish muammolaridan keyin Supabase Free tanlandi; bir hafta sinovdan keyin tarif qo‘lda baholanadi. uzcam loyihasida 001-schema.sql foydalanuvchi tomonidan muvaffaqiyatli bajarildi. Render’da DATABASE_URL Session pooler (5432) manzili va baza paroli kiritildi, lekin hali saqlash/deploy tasdiqlanmagan. Maxfiy qiymatlar ushbu faylda yozilmagan.
+
+Foydalanuvchi amaldagi Render’da faqat dastlabki katalog borligini, qo‘shimcha mahsulot/admin/usta/kontent kiritilmaganini tasdiqladi. Kod DATABASE_URL bilan PostgreSQL’ga ulanish, asinxron SQL, RLS, versiyali migratsiya va 2141 mahsulotning bir martalik seedini bajaradi. PostgreSQL uzilganda SQLite fallback yo‘q. Rasmlar PostgreSQL’da doimiy saqlanadi; ixtiyoriy SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY bilan yangi rasmlar Storage’ga yuboriladi. Ulanish /api/health da databaseEngine va imageStorage orqali ko‘rinadi.
+
+Mahalliy tekshiruvlar: npm test — 6 test o‘tdi (PostgreSQL WASM/PGlite, import, CRUD/ruxsatlar, RLS, rasm, Telegram sessiya/staff/home/worker HTTP API, restart va xatoda yopilish). Mobile brauzer sinovi ham o‘tdi. Haqiqiy Supabase paroli/TLS ulanishi tekshirilmagan; bu Render deploydan keyingi bosqich.
+
+Keyingi qadam: GitHub Desktop’da o‘zgarishlarni commit/push, Render’da DATABASE_URL ni Save/rebuild/deploy, health’da databaseEngine: postgres tekshirish. Ko‘rsatma: SUPABASE_UTISH_UZ.md. SQLite zaxira/import vositalari qo‘shildi, backups/ va node_modules/ Git’dan chiqarildi.
