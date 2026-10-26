@@ -1,8 +1,9 @@
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual, randomUUID } from "node:crypto";
 import { listPublicProducts, db } from "./backend/db.js";
+import { listManagedProducts, getManagedProduct, saveManagedProduct, changeProductState, productError } from "./backend/product-management.js";
 
 const root = process.cwd();
 const types = { ".html":"text/html; charset=utf-8", ".js":"text/javascript; charset=utf-8", ".css":"text/css; charset=utf-8", ".json":"application/json; charset=utf-8", ".webp":"image/webp", ".png":"image/png", ".jpg":"image/jpeg", ".jpeg":"image/jpeg", ".svg":"image/svg+xml" };
@@ -39,10 +40,10 @@ function getAdminSession(req) {
   if (!user || !user.is_active || !["admin", "super_admin", "worker"].includes(user.role)) return null;
   return user;
 }
-async function readJson(req) {
-  let body = "";
-  for await (const chunk of req) { body += chunk; if (body.length > 10000) throw new Error("Request too large"); }
-  return JSON.parse(body || "{}");
+async function readJson(req, maxBytes = 10000) {
+  const chunks = []; let size = 0;
+  for await (const chunk of req) { size += chunk.length; if (size > maxBytes) throw productError("So‘rov hajmi juda katta", 413); chunks.push(chunk); }
+  return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
 }
 
 const DEFAULT_HOME_CONTENT = { hero: { eyebrow: "EZVIZ · aqlli videokuzatuv", title: "Uyingizni EZVIZ bilan himoyalang", description: "CS-H1C (1080P) — uy va biznes uchun aqlli kamera.", productId: 1, buttonText: "Kameralarni ko‘rish" }, videos: [], news: [] };
@@ -67,7 +68,7 @@ function normalizeHomeContent(input) {
   if (!input || typeof input !== "object") throw new Error("Kontent formati noto‘g‘ri");
   const hero = input.hero || {};
   const productId = Number(hero.productId);
-  if (!Number.isSafeInteger(productId) || !db.prepare("SELECT 1 FROM products WHERE id = ? AND is_active = 1").get(productId)) throw new Error("Promo uchun faol mahsulot tanlang");
+  if (!Number.isSafeInteger(productId) || !db.prepare("SELECT 1 FROM products WHERE id = ? AND is_active = 1 AND deleted_at IS NULL").get(productId)) throw new Error("Promo uchun faol mahsulot tanlang");
   const videos = (Array.isArray(input.videos) ? input.videos : []).slice(0, 6).map(item => {
     let url; try { url = new URL(String(item.url || "")); } catch { throw new Error("YouTube havolasini tekshiring"); }
     if (url.protocol !== "https:" || !["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtu.be"].includes(url.hostname)) throw new Error("Faqat YouTube havolasini kiriting");
@@ -232,6 +233,7 @@ const server = http.createServer(async (req, res) => {
   let pathname;
   try { pathname = decodeURIComponent(new URL(req.url, "http://localhost").pathname); }
   catch { res.writeHead(400).end("Bad request"); return; }
+  if (pathname.includes("\0")) { res.writeHead(400).end("Bad request"); return; }
 
 
   if (pathname === "/telegram/webhook") {
@@ -247,6 +249,37 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (pathname.startsWith("/api/")) {
+
+    const productMatch = pathname.match(/^\/api\/admin\/products\/(\d+)$/);
+    if (pathname === "/api/admin/products" || productMatch || pathname === "/api/admin/product-images") {
+      const actor=getAdminSession(req);
+      if (!actor || !["admin","super_admin"].includes(actor.role)) { sendJson(res,403,{error:"Admin ruxsati talab qilinadi"});return; }
+      try {
+        if (pathname === "/api/admin/product-images" && req.method === "POST") {
+          const body=await readJson(req,4500000);
+          if (typeof body.base64!=="string" || !/^[A-Za-z0-9+/]+={0,2}$/.test(body.base64)) throw productError("Rasm faylini tanlang");
+          const bytes=Buffer.from(body.base64,"base64");
+          if (!bytes.length || bytes.length>3*1024*1024) throw productError("Rasm 3 MB dan oshmasin",413);
+          const ext=bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))?"png":bytes[0]===255&&bytes[1]===216&&bytes[2]===255?"jpg":bytes.toString("ascii",0,4)==="RIFF"&&bytes.toString("ascii",8,12)==="WEBP"?"webp":null;
+          if (!ext) throw productError("Faqat JPG, PNG va WEBP rasmlarini yuklang");
+          const directory=path.join(process.env.UZCAM_DATA_DIR?path.resolve(process.env.UZCAM_DATA_DIR):path.join(root,".data"),"uploads");
+          fs.mkdirSync(directory,{recursive:true});const name=randomUUID()+"."+ext;fs.writeFileSync(path.join(directory,name),bytes,{flag:"wx"});
+          sendJson(res,201,{image:"uploads/"+name});return;
+        }
+        if (pathname === "/api/admin/products") {
+          if(req.method==="GET"){sendJson(res,200,listManagedProducts(actor,new URL(req.url,"http://localhost").searchParams));return;}
+          if(req.method==="POST"){sendJson(res,201,{product:saveManagedProduct(actor,await readJson(req,16000))});return;}
+        } else if(productMatch) {
+          const id=Number(productMatch[1]);if(!Number.isSafeInteger(id))throw productError("Mahsulot ID noto‘g‘ri");
+          if(req.method==="GET"){sendJson(res,200,{product:getManagedProduct(actor,id)});return;}
+          if(req.method==="PUT"){sendJson(res,200,{product:saveManagedProduct(actor,await readJson(req,16000),id)});return;}
+          if(req.method==="PATCH"){sendJson(res,200,{product:changeProductState(actor,id,await readJson(req))});return;}
+          if(req.method==="DELETE"){sendJson(res,200,{product:changeProductState(actor,id,{},true)});return;}
+        }
+        sendJson(res,405,{error:"Usul qo‘llanmaydi"});return;
+      }catch(error){if(!error.statusCode && !(error instanceof SyntaxError))console.error("Product operation failed:",error.message);sendJson(res,error.statusCode||(error instanceof SyntaxError?400:500),{error:error.statusCode?error.message:error instanceof SyntaxError?"So‘rov formati noto‘g‘ri":"Amalni bajarib bo‘lmadi"});return;}
+    }
+
     if (pathname === "/api/workers" && req.method === "GET") {
       const workers = db.prepare("SELECT u.telegram_id, u.full_name, wp.experience_years, wp.phone, wp.telegram_username, wp.photo_url, wp.service_prices, wp.description FROM worker_profiles wp JOIN users u ON u.id = wp.user_id WHERE u.role = 'worker' AND u.is_active = 1 AND wp.is_public = 1 ORDER BY u.full_name").all();
       sendJson(res, 200, { workers }); return;
@@ -363,8 +396,13 @@ const server = http.createServer(async (req, res) => {
 
   if (pathname === "/admin-preview.html" && !getAdminSession(req)) { res.writeHead(404, { "Content-Type":"text/plain; charset=utf-8" }).end("Not found"); return; }
   if (pathname === "/") pathname = "/index.html";
-  const file = path.resolve(root, "." + pathname);
-  if (!file.startsWith(root + path.sep) && file !== path.join(root, "index.html")) { res.writeHead(403).end("Forbidden"); return; }
+  let file;
+  if (/^\/uploads\/[a-f0-9-]+\.(png|jpg|webp)$/.test(pathname)) file=path.join(process.env.UZCAM_DATA_DIR?path.resolve(process.env.UZCAM_DATA_DIR):path.join(root,".data"),"uploads",path.basename(pathname));
+  else if (pathname === "/index.html" || pathname === "/admin-preview.html" || pathname.startsWith("/assets/")) {
+    file=path.resolve(root,"."+pathname);
+    const allowedRoot=pathname.startsWith("/assets/")?path.join(root,"assets"):root;
+    if (!file.startsWith(allowedRoot+path.sep)) { res.writeHead(403).end("Forbidden");return; }
+  } else { res.writeHead(404).end("Not found");return; }
   fs.stat(file, (err, stat) => {
     if (err || !stat.isFile()) { res.writeHead(404, { "Content-Type":"text/plain; charset=utf-8" }).end("Not found"); return; }
     res.writeHead(200, { "Content-Type":types[path.extname(file).toLowerCase()] || "application/octet-stream", "Cache-Control":pathname.startsWith("/assets/") ? "public, max-age=86400, stale-while-revalidate=604800" : "no-cache", "X-Content-Type-Options":"nosniff" });

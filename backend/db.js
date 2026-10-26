@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const dataDir = path.join(here, '..', '.data');
+const dataDir = process.env.UZCAM_DATA_DIR ? path.resolve(process.env.UZCAM_DATA_DIR) : path.join(here, '..', '.data');
 fs.mkdirSync(dataDir, { recursive: true });
 
 export const db = new DatabaseSync(path.join(dataDir, 'texnocam.sqlite'));
@@ -84,6 +84,7 @@ function seedCatalog() {
 }
 
 allowUnknownSupplierPrices();
+if (!db.prepare('PRAGMA table_info(products)').all().some(column => column.name === 'deleted_at')) db.exec('ALTER TABLE products ADD COLUMN deleted_at TEXT');
 seedCatalog();
 
 export function listPublicProducts() {
@@ -92,7 +93,7 @@ export function listPublicProducts() {
            p.description, p.image_path AS image, p.sale_price_uzs AS price_uzs
     FROM products p
     LEFT JOIN categories c ON c.id = p.category_id
-    WHERE p.is_active = 1
+    WHERE p.is_active = 1 AND p.deleted_at IS NULL
     ORDER BY p.brand, p.model
   `).all();
 }
