@@ -37,3 +37,7 @@ With PostgreSQL, product uploads are durably stored in product_image_files by de
 Before switching a populated SQLite installation, export it in its original running environment with npm run backup:sqlite -- backups/uzcam.json, retain that private file off the ephemeral server, and import it into a fresh empty PostgreSQL database using npm run import:postgres -- <backup.json>. The importer preserves IDs and repairs identity sequences, runs atomically, and refuses to overwrite a populated target. It cannot restore data already lost by a previous Render restart.
 
 npm test uses an isolated PostgreSQL WASM engine (PGlite) for SQL/role/transaction/import/image tests and mocked Storage HTTP responses for the upload contract. A real Supabase connection must still be validated after deployment. Order/payment UI workflows and automatic CBU rates remain unfinished as noted above.
+
+### Supabase TLS trust
+
+Supabase database/pooler hostnames automatically use the official Supabase Root 2021 CA bundled in backend/certs/supabase-prod-ca-2021.crt, alongside Node public roots. Certificate-chain and hostname checks remain enabled. See backend/certs/README.md for official source, fingerprint and rotation date. Other PostgreSQL hosts keep normal certificate verification. PGSSLROOTCERT remains an explicit custom-CA override.

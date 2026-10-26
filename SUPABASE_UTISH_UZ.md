@@ -44,3 +44,7 @@ Rasmiy manbalar:
 https://supabase.com/docs/guides/database/connecting-to-postgres
 https://supabase.com/docs/guides/storage/security/access-control
 https://node-postgres.com/features/transactions
+
+## SELF_SIGNED_CERT_IN_CHAIN tuzatishi
+
+2026-10-26 Render’dagi birinchi PostgreSQL deployida SELF_SIGNED_CERT_IN_CHAIN chiqdi. Rasmiy Supabase CA kodga qo‘shildi; Supabase hostname’lari uchun avtomatik ishonch zanjiriga ulanadi. Parol va DATABASE_URL o‘zgartirilmaydi. GitHub’da tuzatishni commit/push qilib qayta deploy qiling. Haqiqiy aws-0-us-east-1.pooler.supabase.com:5432 serveri bilan parolsiz TLS negotiation sinovi VERIFIED chiqdi; wrong.invalid hostname esa ERR_TLS_CERT_ALTNAME_INVALID bilan rad etildi. Baza autentifikatsiyasi va SQL ishga tushishi deploydan keyin health orqali tekshiriladi.

@@ -190,3 +190,7 @@ Foydalanuvchi amaldagi Render’da faqat dastlabki katalog borligini, qo‘shimc
 Mahalliy tekshiruvlar: npm test — 6 test o‘tdi (PostgreSQL WASM/PGlite, import, CRUD/ruxsatlar, RLS, rasm, Telegram sessiya/staff/home/worker HTTP API, restart va xatoda yopilish). Mobile brauzer sinovi ham o‘tdi. Haqiqiy Supabase paroli/TLS ulanishi tekshirilmagan; bu Render deploydan keyingi bosqich.
 
 Keyingi qadam: GitHub Desktop’da o‘zgarishlarni commit/push, Render’da DATABASE_URL ni Save/rebuild/deploy, health’da databaseEngine: postgres tekshirish. Ko‘rsatma: SUPABASE_UTISH_UZ.md. SQLite zaxira/import vositalari qo‘shildi, backups/ va node_modules/ Git’dan chiqarildi.
+
+### 2026-10-26 — Supabase TLS xatosi
+
+DATABASE_URL saqlanib deploy boshlangan, lekin Render SELF_SIGNED_CERT_IN_CHAIN bilan to‘xtadi. backend/postgres-tls.js va rasmiy CA backend/certs/ ichiga qo‘shildi. SSL tekshiruvi o‘chirilmagan. 7 mahalliy test o‘tdi. Haqiqiy pooler bilan parolsiz TLS sinovi muvaffaqiyatli, noto‘g‘ri hostname rad etildi. GitHub push va yangi Render deploy hali foydalanuvchi tomonidan bajarilishi kerak. Haqiqiy baza login/SQL/health hali tasdiqlanmagan.

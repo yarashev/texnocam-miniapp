@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import { postgresTls } from './postgres-tls.js';
 import { createPostgresDatabase, createSqliteDatabase } from './database-adapters.js';
 import { initializePostgres } from './postgres-initialize.js';
 
@@ -12,13 +12,12 @@ export async function connectDatabase(env = process.env) {
   if (!['postgres:', 'postgresql:'].includes(url.protocol) || !url.hostname || !url.password || /\[YOUR-PASSWORD\]/i.test(decodeURIComponent(url.password))) {
     throw new Error('DATABASE_URL uchun to‘liq PostgreSQL manzili va baza paroli talab qilinadi');
   }
-  const local = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(url.hostname);
   // Do not let connection-string SSL options disable certificate verification.
   for (const name of ['sslmode', 'sslcert', 'sslkey', 'sslrootcert', 'uselibpqcompat']) url.searchParams.delete(name);
   const { Pool, types } = await import('pg');
   const pool = new Pool({
     connectionString: url.href,
-    ssl: local ? false : { rejectUnauthorized: true, ...(env.PGSSLROOTCERT ? { ca: fs.readFileSync(env.PGSSLROOTCERT, 'utf8') } : {}) },
+    ssl: postgresTls(url.hostname,env),
     types: { getTypeParser: (oid,format) => oid === 20 ? value => { const number=Number(value);if(!Number.isSafeInteger(number))throw new Error('Integer exceeds safe JavaScript range');return number; } : types.getTypeParser(oid,format) },
     max: 3, connectionTimeoutMillis: 15000, idleTimeoutMillis: 30000,
     statement_timeout: 30000, application_name: 'uzcam'
