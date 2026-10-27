@@ -45,6 +45,81 @@
 .app{padding:12px 12px calc(88px + env(safe-area-inset-bottom))}.top{margin:0 0 12px}.brand{gap:8px;font-size:17px}.logo{width:39px;min-width:39px;height:38px;border-radius:12px}.logo svg{width:28px;height:24px}.iconbtn{width:38px;height:38px;border-radius:12px}.promo-carousel{margin-bottom:10px}.promo-track{border-radius:18px}.promo-track>.hero{min-height:166px;padding:15px 14px;border-radius:18px}.promo-track .hero-copy{padding-right:94px}.promo-track .hero h1{font-size:18px;line-height:1.12;margin:5px 0}.promo-track .hero p{min-height:0;font-size:11px;line-height:1.35;margin-bottom:5px}.promo-track .hero-price{font-size:13px;margin:5px 0 8px}.promo-track .hero a{padding:8px 10px;border-radius:10px;font-size:11px}.promo-track .hero-product{width:88px;height:104px;right:9px;border-radius:14px}.promo-controls{margin-top:7px;gap:8px}.promo-arrow,.promo-pause{width:26px;height:26px}.catalog-tools{margin:12px 0 5px}.catalog-tool{min-height:49px;border-radius:13px}.catalog-phone{font-size:15px}.search{height:46px;margin:10px 0 12px;border-radius:13px}.cats{gap:6px}.cat{min-height:34px;padding:7px 5px;font-size:10px;border-radius:10px}.section-head{margin:14px 0 9px}.section-head h2{font-size:16px}.grid{gap:7px}.grid .product{border-radius:12px;padding:7px;box-shadow:none}.grid .photo{border-radius:9px;background:#f0f6ed}.grid .name{font-size:10px;line-height:1.25;height:26px;margin:6px 0 3px}.grid .meta{display:none}.grid .buyrow{margin-top:5px}.grid .price{font-size:10px}.grid .add{width:27px;height:27px;border-radius:8px;font-size:16px}.badge{top:5px;left:5px;padding:3px 5px;font-size:8px}.bottom{padding:9px 12px calc(10px + env(safe-area-inset-bottom))}.cart{height:46px;border-radius:13px}.catalog-filter-status{margin-bottom:8px}@media(max-width:380px){.promo-track>.hero{min-height:178px}.promo-track .hero-copy{padding-right:82px}.promo-track .hero-product{width:76px;height:94px}.grid{gap:6px}.grid .product{padding:6px}.catalog-phone{font-size:13px}}
 /* Marketplace katalog: mahsulot birinchi, ikki ustunli mobil ko‘rinish. */
 .promo-carousel{margin-bottom:10px}.promo-track{border-radius:18px}.promo-track>.hero{min-height:172px;padding:16px 15px;border-radius:18px}.promo-track .hero-copy{padding-right:100px}.promo-track .hero h1{font-size:19px;line-height:1.12;margin:5px 0}.promo-track .hero p{min-height:0;margin-bottom:5px;font-size:11px}.promo-track .hero-price{margin:5px 0 8px;font-size:13px}.promo-track .hero-product{width:91px;height:108px;right:9px;border-radius:14px}.promo-track .hero a{padding:8px 10px;border-radius:10px;font-size:11px}.promo-controls{margin-top:7px}.catalog-tools{margin:11px 0 5px}.search{height:46px;margin:10px 0 12px;border-radius:13px}.cats{display:flex;overflow:auto;gap:7px;padding:0 0 4px}.cat{min-width:max-content;min-height:34px;padding:7px 10px;font-size:10px;border-radius:10px}.section-head{margin:14px 0 9px}.section-head h2{font-size:16px}.grid{gap:10px}.grid .product{padding:9px;border-radius:15px;box-shadow:none}.grid .photo{height:126px;border-radius:11px;background:#f0f6ed}.grid .photo img{width:90%;height:90%}.grid .name{height:31px;margin:8px 0 4px;font-size:11px;line-height:1.3}.grid .meta{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.grid .buyrow{margin-top:7px}.grid .price{font-size:11px}.grid .add{width:30px;height:30px;border-radius:9px}.smart-bundle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;padding:11px 12px;border:1px solid #dce8d7;border-radius:14px;background:#f1f7ed}.smart-bundle b{display:block;font-size:11px;color:#315827}.smart-bundle small{display:block;margin-top:2px;font-size:9px;color:#6e806a}.bundle-links{display:flex;gap:5px;overflow:auto}.bundle-links button{border:0;border-radius:8px;background:#fff;color:#477a37;padding:7px 8px;font-size:9px;font-weight:750;white-space:nowrap}@media(max-width:380px){.promo-track>.hero{min-height:182px}.promo-track .hero-copy{padding-right:84px}.promo-track .hero-product{width:78px;height:96px}.grid{gap:7px}.grid .product{padding:7px}.grid .photo{height:108px}.smart-bundle{display:block}.bundle-links{margin-top:8px}}
+
+/* UzCam visual refresh: presentation-only overrides; catalog/API/cart logic unchanged. */
+:root{--ink:#102b59;--muted:#7485a2;--blue:#0878ff;--line:#e5edf8;--bg:#f4f8ff;--card:#fff}
+body{background:linear-gradient(180deg,#f7faff 0%,#f2f6fd 100%);color:var(--ink)}
+.app{max-width:560px;padding:14px 14px calc(104px + env(safe-area-inset-bottom))}
+.top{gap:10px;margin:0 0 14px;align-items:center}
+.brand{font-size:21px;letter-spacing:-.7px;gap:9px}
+.brand>div:last-child{font-weight:850}
+.logo{width:42px;height:42px;min-width:42px;border-radius:50%;background:#e6f1ff;box-shadow:inset 0 0 0 1px #d7e8ff}
+.logo svg{width:30px;height:28px}
+.logo svg path{fill:#0878ff!important}.logo svg circle:nth-of-type(1){fill:#f7fbff!important}.logo svg circle:nth-of-type(2){fill:#124eaa!important}.logo svg circle:nth-of-type(3){fill:#58a5ff!important}.logo svg circle:nth-of-type(4){fill:#fff!important}
+.loc{font-size:11px;color:#7d8da8}
+.header-phone{color:#0878ff;font-size:12px;letter-spacing:0;font-weight:800}
+.iconbtn{background:#fff;border:1px solid #e8eff9;border-radius:50%;width:42px;height:42px;box-shadow:0 5px 16px #1b4b8510}
+.app{display:flex;flex-direction:column;gap:0}
+.top{order:0}
+.catalog-tools{order:1;display:grid;grid-template-columns:minmax(0,1fr) 88px;gap:8px;margin:0 0 7px}
+.catalog-tool{min-height:48px;border:1px solid #e3ecf8;border-radius:15px;background:#fff;color:#163967;box-shadow:0 5px 18px #1c4e8509}
+.catalog-tool svg{stroke:#0878ff}
+.catalog-tool:focus-visible,.catalog-phone:focus-visible,.catalog-picker button:focus-visible{outline:2px solid #0878ff;outline-offset:3px}
+#brandPickerButton{display:none}
+#pricePickerButton{grid-column:auto;justify-self:stretch}
+.catalog-filter-status{order:2;margin:0 2px 8px;font-size:10px;color:#7a8ba6}
+.search{order:3;display:flex;min-height:49px;height:49px;margin:0 0 13px;border:1px solid #e1eaf7;border-radius:16px;background:#fff;box-shadow:0 5px 18px #1c4e8508;color:#0878ff}
+.search input{font-size:13px;color:#173762}
+.search input::placeholder{color:#91a0b7}
+.search-hint{order:4;display:none}
+.app>.section-head:not(#catalog){order:5;margin:8px 0 10px}
+.cats{order:6;gap:8px;padding-bottom:6px}
+.cat{flex:1;text-align:center;white-space:normal;min-width:0;min-height:66px;padding:10px 6px;border:1px solid #e7eef9;border-radius:15px;background:linear-gradient(180deg,#fff,#f7faff);color:#28466f;font-size:11px;box-shadow:0 4px 14px #1b4b8507}
+.cat.active{background:#0878ff;color:#fff;border-color:#0878ff;box-shadow:0 7px 16px #0878ff25}
+.promo-carousel{order:7;margin:10px 0 8px}
+.promo-track{border-radius:21px;box-shadow:0 10px 25px #0865d51a}
+.promo-track>.hero{border-radius:21px;min-height:184px;padding:19px 17px;background:linear-gradient(120deg,#0878ff 0%,#0757d8 72%,#163cbb 100%);box-shadow:none}
+.promo-track>.hero:after{opacity:.12}
+.promo-track .hero-copy{padding-right:108px}
+.promo-track .hero h1{font-size:21px;line-height:1.13;letter-spacing:-.5px;max-width:240px}
+.promo-track .hero p{font-size:12px;line-height:1.45;max-width:225px}
+.promo-track .hero a{background:#fff;color:#0865e8;border-radius:12px;padding:10px 13px;font-size:12px}
+.promo-track .hero-product{width:104px;height:118px;right:10px;border-radius:17px;background:#fff}
+.promo-controls{margin-top:8px}
+.promo-arrow,.promo-pause{border:1px solid #e1eaf7;background:#fff;color:#0878ff;border-radius:50%}
+.home-content-block{order:8}
+.camera-recommendations{order:9;margin:10px 0 14px;padding:13px;border:1px solid #e5edf8;border-radius:20px;background:#fff;box-shadow:0 6px 20px #1c4e8508}
+.camera-recommendations h2{font-size:16px;letter-spacing:-.3px}
+.camera-eyebrow{color:#0878ff}
+.camera-average{background:#edf5ff}
+.camera-average small{color:#627b9d}.camera-average strong{color:#075edb}
+.camera-card{border-color:#e7eef8;border-radius:15px;background:#fbfdff}
+.camera-card img{background:#f2f7ff}
+.camera-card .camera-add{background:#0878ff;border-radius:10px}
+#catalog{order:10;margin:14px 0 10px}
+#catalog h2{font-size:18px}
+#countLabel{font-size:11px}
+#products{order:11}
+.catalog-grid{gap:11px}
+.catalog-grid .product{padding:10px;border:1px solid #e6edf8;border-radius:18px;background:#fff;box-shadow:0 5px 18px #1d4b810a;min-height:0}
+.catalog-grid .photo{height:clamp(132px,39vw,174px);border:1px solid #f0f4fa;border-radius:14px;background:linear-gradient(145deg,#fbfdff,#f0f6ff)}
+.catalog-grid .photo img{mix-blend-mode:multiply;padding:5px}
+.catalog-grid .name{height:36px;font-size:12px;line-height:1.35;color:#193762;margin:9px 0 5px}
+.catalog-grid .meta{font-size:10px;color:#7c8ca6;min-height:25px}
+.catalog-grid .buyrow{padding-top:9px;gap:7px}
+.catalog-grid .price{font-size:13px;color:#102b59}
+.catalog-grid .add{background:#0878ff;color:#fff;border-radius:12px;width:38px;height:38px;flex-basis:38px;box-shadow:0 5px 12px #0878ff28}
+.catalog-grid .badge{background:#fff0f3;color:#f43f63;border-radius:8px}
+.grid .photo{background:#f1f6ff}
+.bottom{position:fixed;z-index:20;left:50%;transform:translateX(-50%);bottom:0;width:min(100%,560px);padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:#ffffffed;backdrop-filter:blur(16px);border-top:1px solid #e5edf8}
+.cart{width:100%;height:48px;border:0;border-radius:15px;background:linear-gradient(100deg,#0878ff,#075be4);color:#fff;box-shadow:0 7px 18px #0878ff25;font-weight:800}
+.cart small{color:#d9e9ff}
+.toast{border-radius:13px}
+.cart-sheet{border-radius:24px 24px 0 0}
+@media(min-width:440px){.app{padding-left:18px;padding-right:18px}.promo-track .hero h1{font-size:23px}}
+@media(max-width:390px){.app{padding-left:11px;padding-right:11px}.header-phone{font-size:10px}.brand{font-size:19px}.catalog-tools{grid-template-columns:minmax(0,1fr) 78px}.catalog-grid{gap:8px}.catalog-grid .product{padding:8px}.catalog-grid .photo{height:125px}.catalog-grid .price{font-size:12px}.catalog-grid .add{width:34px;height:34px;flex-basis:34px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
 </style></head>
 <body><main class="app">
 <header class="top"><div class="brand"><div class="logo" role="img" aria-label="UzCam kamera belgisi"><svg viewBox="0 0 48 40" aria-hidden="true"><path d="M8 10.5h6.2l3-4h13.6l3 4H40a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-16a4 4 0 0 1 4-4Z" fill="#5b9b3f"/><circle cx="23" cy="22.5" r="9" fill="#f7fbf4"/><circle cx="23" cy="22.5" r="6.3" fill="#23472d"/><circle cx="23" cy="22.5" r="3.6" fill="#8bc46c"/><circle cx="23" cy="22.5" r="1.7" fill="#f7fbf4"/><circle cx="38" cy="15" r="1.7" fill="#eaf6e2"/></svg></div><div>UzCam<div class="loc">Kameralar · elektronika</div></div></div><a class="header-phone" id="catalogPhone" href="tel:+998508554187" aria-label="UzCam bilan bog‘lanish: +998 50 855 41 87"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-3 2a15 15 0 0 0 6 6l2-3 5 2v4a2 2 0 0 1-2 2C10 21 3 14 3 5a2 2 0 0 1 2-2Z"/></svg><span id="catalogPhoneText">+998 50 855 41 87</span></a><button class="iconbtn" id="profileButton" aria-label="Profilni ochish">👤</button></header>
@@ -170,7 +245,7 @@ async function loadServerCatalog(){
   } catch { if(location.protocol!=='file:'){items=[];renderCats();renderBrands();renderProducts();updateCart();updateEzvizPromoPrice();document.querySelector('#products').innerHTML='<div class="empty">Katalogni yuklab bo‘lmadi. Sahifani yangilang.</div>'} }
 }
 loadServerCatalog();
-if(window.Telegram?.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand();document.documentElement.style.setProperty('--blue','#5b9b3f')}
+if(window.Telegram?.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand();document.documentElement.style.setProperty('--blue','#0878ff')}
 </script>
 <script src="assets/catalog-controls.js"></script><script src="assets/analytics.js"></script><script>window.UzCamCatalogState={get items(){return items},get activeCategory(){return activeCategory},set activeCategory(value){activeCategory=value},get activeBrand(){return activeBrand},set activeBrand(value){activeBrand=value},get priceTier(){return priceTier},get visibleLimit(){return visibleLimit},set visibleLimit(value){visibleLimit=value},get renderProducts(){return renderProducts},set renderProducts(value){renderProducts=value},renderCats(){return renderCats()},add(id){return add(id)}};</script><script src="assets/catalog-intelligence.js"></script></body></html>
 
