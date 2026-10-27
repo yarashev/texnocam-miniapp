@@ -172,7 +172,7 @@ async function loadServerCatalog(){
 loadServerCatalog();
 if(window.Telegram?.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand();document.documentElement.style.setProperty('--blue','#5b9b3f')}
 </script>
-<script src="assets/catalog-controls.js"></script><script src="assets/analytics.js"></script><script src="assets/catalog-intelligence.js"></script></body></html>
+<script src="assets/catalog-controls.js"></script><script src="assets/analytics.js"></script><script>window.UzCamCatalogState={get items(){return items},get activeCategory(){return activeCategory},set activeCategory(value){activeCategory=value},get activeBrand(){return activeBrand},set activeBrand(value){activeBrand=value},get priceTier(){return priceTier},get visibleLimit(){return visibleLimit},set visibleLimit(value){visibleLimit=value},get renderProducts(){return renderProducts},set renderProducts(value){renderProducts=value},renderCats(){return renderCats()},add(id){return add(id)}};</script><script src="assets/catalog-intelligence.js"></script></body></html>
 
 
 
