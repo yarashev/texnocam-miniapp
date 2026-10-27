@@ -5,6 +5,7 @@ import path from "node:path";
 import { createHmac, timingSafeEqual, randomUUID } from "node:crypto";
 import { listPublicProducts, listPublicCategories, db } from "./backend/database.js";
 import { listManagedProducts, getManagedProduct, saveManagedProduct, changeProductState, productError } from "./backend/product-management.js";
+import { listManagedCategories, createCatalogCategory, deactivateCatalogCategory } from "./backend/category-management.js";
 
 const root = process.cwd();
 const types = { ".html":"text/html; charset=utf-8", ".js":"text/javascript; charset=utf-8", ".css":"text/css; charset=utf-8", ".json":"application/json; charset=utf-8", ".webp":"image/webp", ".png":"image/png", ".jpg":"image/jpeg", ".jpeg":"image/jpeg", ".svg":"image/svg+xml" };
@@ -58,11 +59,11 @@ function normalizeWorkerProfile(input) {
   if (telegramUsername && !/^[A-Za-z0-9_]{5,32}$/.test(telegramUsername)) throw new Error("Telegram username noto‘g‘ri");
   const photoUrl = cleanText(input.photoUrl, 500);
   if (photoUrl) { let photo; try { photo = new URL(photoUrl); } catch { throw new Error("Rasm uchun HTTPS havolani kiriting"); } if (photo.protocol !== "https:") throw new Error("Rasm uchun HTTPS havolani kiriting"); }
-  return { experienceYears, phone, telegramUsername, photoUrl, servicePrices: cleanText(input.servicePrices, 1200), description: cleanText(input.description, 500), isPublic: input.isPublic !== false && input.isPublic !== 0 };
+  return { experienceYears, phone, serviceRegion: cleanText(input.serviceRegion, 80), serviceCity: cleanText(input.serviceCity, 80), serviceDistrict: cleanText(input.serviceDistrict, 80), telegramUsername, photoUrl, servicePrices: cleanText(input.servicePrices, 1200), description: cleanText(input.description, 500), isPublic: input.isPublic !== false && input.isPublic !== 0 };
 }
 async function saveWorkerProfile(userId, profile) {
   await db.transaction(async () => {
-  await db.run("INSERT INTO worker_profiles(user_id, experience_years, phone, telegram_username, photo_url, service_prices, description, is_public, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET experience_years = excluded.experience_years, phone = excluded.phone, telegram_username = excluded.telegram_username, photo_url = excluded.photo_url, service_prices = excluded.service_prices, description = excluded.description, is_public = excluded.is_public, updated_at = CURRENT_TIMESTAMP", userId, profile.experienceYears, profile.phone, profile.telegramUsername, profile.photoUrl, profile.servicePrices, profile.description, profile.isPublic ? 1 : 0);
+  await db.run("INSERT INTO worker_profiles(user_id, experience_years, phone, service_region, service_city, service_district, telegram_username, photo_url, service_prices, description, is_public, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET experience_years = excluded.experience_years, phone = excluded.phone, service_region = excluded.service_region, service_city = excluded.service_city, service_district = excluded.service_district, telegram_username = excluded.telegram_username, photo_url = excluded.photo_url, service_prices = excluded.service_prices, description = excluded.description, is_public = excluded.is_public, updated_at = CURRENT_TIMESTAMP", userId, profile.experienceYears, profile.phone, profile.serviceRegion, profile.serviceCity, profile.serviceDistrict, profile.telegramUsername, profile.photoUrl, profile.servicePrices, profile.description, profile.isPublic ? 1 : 0);
   await db.run("UPDATE users SET phone = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", profile.phone, userId);
   });
 }
@@ -262,6 +263,27 @@ async function handleRequest(req, res) {
 
   if (pathname.startsWith("/api/")) {
 
+    if (pathname === "/api/admin/categories") {
+      const actor = await getAdminSession(req);
+      if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin kategoriyalarni boshqaradi" }); return; }
+      try {
+        if (req.method === "GET") { sendJson(res, 200, { categories: await listManagedCategories(db) }); return; }
+        if (req.method === "POST") {
+          const category = await createCatalogCategory(db, (await readJson(req)).name);
+          await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'category', ?, ?)", actor.id, category.reactivated ? 'reactivate' : 'create', category.name, JSON.stringify(category));
+          sendJson(res, category.created ? 201 : 200, { category }); return;
+        }
+        if (req.method === "DELETE") {
+          const body = await readJson(req), category = await deactivateCatalogCategory(db, body.name, body.replacementCategory);
+          await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'deactivate', 'category', ?, ?)", actor.id, category.name, JSON.stringify(category));
+          sendJson(res, 200, { category }); return;
+        }
+        sendJson(res, 405, { error: "Usul qo‘llanmaydi" }); return;
+      } catch (error) {
+        sendJson(res, error.statusCode || (error instanceof SyntaxError ? 400 : 500), { error: error.statusCode ? error.message : error instanceof SyntaxError ? "So‘rov formati noto‘g‘ri" : "Kategoriyani saqlab bo‘lmadi", productCount: error.productCount }); return;
+      }
+    }
+
     const productMatch = pathname.match(/^\/api\/admin\/products\/(\d+)$/);
     if (pathname === "/api/admin/products" || productMatch || pathname === "/api/admin/product-images") {
       const actor=await getAdminSession(req);
@@ -292,8 +314,23 @@ async function handleRequest(req, res) {
     }
 
     if (pathname === "/api/workers" && req.method === "GET") {
-      const workers = await db.all("SELECT u.telegram_id, u.full_name, wp.experience_years, wp.phone, wp.telegram_username, wp.photo_url, wp.service_prices, wp.description FROM worker_profiles wp JOIN users u ON u.id = wp.user_id WHERE u.role = 'worker' AND u.is_active = 1 AND wp.is_public = 1 ORDER BY u.full_name");
+      const workers = await db.all("SELECT u.telegram_id, u.full_name, wp.experience_years, wp.phone, wp.service_region, wp.service_city, wp.service_district, wp.telegram_username, wp.photo_url, wp.service_prices, wp.description, COALESCE(r.rating_average, 0) AS rating_average, COALESCE(r.rating_count, 0) AS rating_count FROM worker_profiles wp JOIN users u ON u.id = wp.user_id LEFT JOIN (SELECT worker_id, ROUND(AVG(rating), 1) AS rating_average, COUNT(*) AS rating_count FROM worker_ratings GROUP BY worker_id) r ON r.worker_id = wp.user_id WHERE u.role = 'worker' AND u.is_active = 1 AND wp.is_public = 1 ORDER BY u.full_name");
       sendJson(res, 200, { workers }); return;
+    }
+    const workerRatingMatch = pathname.match(/^\/api\/workers\/(\d{5,20})\/rating$/);
+    if (workerRatingMatch && req.method === "POST") {
+      const body = await readJson(req);
+      const customer = verifyTelegramInitData(String(body.initData || ""));
+      const customerTelegramId = String(customer?.id || "");
+      if (!/^\d{5,20}$/.test(customerTelegramId)) { sendJson(res, 401, { error: "Baho berish uchun Telegram Mini App orqali kiring" }); return; }
+      const rating = Number(body.rating);
+      if (!Number.isInteger(rating) || rating < 1 || rating > 5) { sendJson(res, 400, { error: "Baho 1 dan 5 yulduzgacha bo‘lishi kerak" }); return; }
+      const worker = await db.get("SELECT u.id, u.telegram_id FROM users u JOIN worker_profiles wp ON wp.user_id = u.id WHERE u.telegram_id = ? AND u.role = 'worker' AND u.is_active = 1 AND wp.is_public = 1", workerRatingMatch[1]);
+      if (!worker) { sendJson(res, 404, { error: "Ochiq usta profili topilmadi" }); return; }
+      if (customerTelegramId === String(worker.telegram_id)) { sendJson(res, 403, { error: "Usta o‘ziga baho bera olmaydi" }); return; }
+      await db.run("INSERT INTO worker_ratings(worker_id, customer_telegram_id, rating) VALUES (?, ?, ?) ON CONFLICT(worker_id, customer_telegram_id) DO UPDATE SET rating = excluded.rating, updated_at = CURRENT_TIMESTAMP", worker.id, customerTelegramId, rating);
+      const summary = await db.get("SELECT ROUND(AVG(rating), 1) AS rating_average, COUNT(*) AS rating_count FROM worker_ratings WHERE worker_id = ?", worker.id);
+      sendJson(res, 200, { ok: true, rating, rating_average: Number(summary.rating_average), rating_count: Number(summary.rating_count) }); return;
     }
     const workerProfileMatch = pathname.match(/^\/api\/workers\/(\d{5,20})$/);
     if (workerProfileMatch && req.method === "PUT") {
@@ -307,7 +344,7 @@ async function handleRequest(req, res) {
         const profile = normalizeWorkerProfile(body);
         const fullName = cleanText(body.fullName, 100);
         if (!fullName) { sendJson(res, 400, { error: "Ustaning ism-familiyasini kiriting" }); return; }
-        if (profile.isPublic && (!profile.phone || !profile.telegramUsername || !profile.photoUrl || !profile.servicePrices)) { sendJson(res, 400, { error: "Ommaga chiqarish uchun telefon, Telegram username, rasm havolasi va xizmat narxlarini to‘ldiring" }); return; }
+        if (profile.isPublic && (!profile.phone || !profile.telegramUsername || !profile.photoUrl || !profile.servicePrices || !profile.serviceRegion || !(profile.serviceCity || profile.serviceDistrict))) { sendJson(res, 400, { error: "Ommaga chiqarish uchun telefon, hudud, shahar yoki tuman, Telegram username, rasm va xizmat narxlarini to‘ldiring" }); return; }
         await db.run("UPDATE users SET full_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", fullName, user.id);
         await saveWorkerProfile(user.id, profile);
         await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'worker_profile', ?, ?)", actor.id, telegramId, JSON.stringify({ isPublic: profile.isPublic }));
@@ -318,7 +355,7 @@ async function handleRequest(req, res) {
       const actor = await getAdminSession(req);
       if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin xodimlarni boshqaradi" }); return; }
       if (req.method === "GET") {
-        const staff = await db.all("SELECT u.telegram_id, u.username, u.full_name, u.role, u.is_active, u.created_at, COALESCE(wp.experience_years, 0) AS experience_years, COALESCE(wp.phone, u.phone, '') AS phone, COALESCE(wp.telegram_username, '') AS telegram_username, COALESCE(wp.photo_url, '') AS photo_url, COALESCE(wp.service_prices, '') AS service_prices, COALESCE(wp.description, '') AS description, COALESCE(wp.is_public, 1) AS is_public FROM users u LEFT JOIN worker_profiles wp ON wp.user_id = u.id WHERE u.role IN ('super_admin','admin','worker') ORDER BY CASE u.role WHEN 'super_admin' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END, u.full_name, u.telegram_id");
+        const staff = await db.all("SELECT u.telegram_id, u.username, u.full_name, u.role, u.is_active, u.created_at, COALESCE(wp.experience_years, 0) AS experience_years, COALESCE(wp.phone, u.phone, '') AS phone, COALESCE(wp.service_region, '') AS service_region, COALESCE(wp.service_city, '') AS service_city, COALESCE(wp.service_district, '') AS service_district, COALESCE(wp.telegram_username, '') AS telegram_username, COALESCE(wp.photo_url, '') AS photo_url, COALESCE(wp.service_prices, '') AS service_prices, COALESCE(wp.description, '') AS description, COALESCE(wp.is_public, 1) AS is_public FROM users u LEFT JOIN worker_profiles wp ON wp.user_id = u.id WHERE u.role IN ('super_admin','admin','worker') ORDER BY CASE u.role WHEN 'super_admin' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END, u.full_name, u.telegram_id");
         sendJson(res, 200, { staff }); return;
       }
       if (req.method === "POST") {
@@ -330,7 +367,7 @@ async function handleRequest(req, res) {
           if (!/^\d{5,20}$/.test(telegramId)) { sendJson(res, 400, { error: "Telegram ID faqat raqamlardan iborat bo‘lsin" }); return; }
           if (!["admin", "worker"].includes(role)) { sendJson(res, 400, { error: "Rolni Admin yoki Ishchi qilib tanlang" }); return; }
           const workerProfile = role === "worker" ? normalizeWorkerProfile(body) : null;
-          if (workerProfile && workerProfile.isPublic && (!fullName || !workerProfile.phone || !workerProfile.telegramUsername || !workerProfile.photoUrl || !workerProfile.servicePrices)) { sendJson(res, 400, { error: "Ommaga chiqarish uchun ism-familiya, telefon, Telegram username, rasm havolasi va xizmat narxlarini to‘ldiring; aks holda profilni yashirin saqlang" }); return; }
+          if (workerProfile && workerProfile.isPublic && (!fullName || !workerProfile.phone || !workerProfile.serviceRegion || !(workerProfile.serviceCity || workerProfile.serviceDistrict) || !workerProfile.telegramUsername || !workerProfile.photoUrl || !workerProfile.servicePrices)) { sendJson(res, 400, { error: "Ommaga chiqarish uchun ism-familiya, telefon, hudud, shahar yoki tuman, Telegram username, rasm va xizmat narxlarini to‘ldiring; aks holda profilni yashirin saqlang" }); return; }
           if (telegramId === String(process.env.SUPER_ADMIN_TELEGRAM_ID || "")) { sendJson(res, 409, { error: "Super Admin akkauntini bu yerdan o‘zgartirib bo‘lmaydi" }); return; }
           const existingStaff = await db.get("SELECT role FROM users WHERE telegram_id = ?", telegramId);
           if (existingStaff && existingStaff.role === "super_admin") { sendJson(res, 409, { error: "Boshqa Super Admin akkauntini bu yerdan o‘zgartirib bo‘lmaydi" }); return; }

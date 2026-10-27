@@ -145,6 +145,9 @@ CREATE TABLE IF NOT EXISTS worker_profiles (
   user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   experience_years INTEGER NOT NULL DEFAULT 0 CHECK (experience_years BETWEEN 0 AND 60),
   phone TEXT NOT NULL DEFAULT '',
+  service_region TEXT NOT NULL DEFAULT '',
+  service_city TEXT NOT NULL DEFAULT '',
+  service_district TEXT NOT NULL DEFAULT '',
   telegram_username TEXT NOT NULL DEFAULT '',
   photo_url TEXT NOT NULL DEFAULT '',
   service_prices TEXT NOT NULL DEFAULT '',
@@ -152,6 +155,15 @@ CREATE TABLE IF NOT EXISTS worker_profiles (
   is_public INTEGER NOT NULL DEFAULT 1 CHECK (is_public IN (0,1)),
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS worker_ratings (
+  worker_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  customer_telegram_id TEXT NOT NULL,
+  rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (worker_id, customer_telegram_id)
+);
+CREATE INDEX IF NOT EXISTS worker_ratings_worker_idx ON worker_ratings(worker_id);
 
 
 CREATE TABLE IF NOT EXISTS product_image_files (name TEXT PRIMARY KEY, content_type TEXT NOT NULL, bytes BYTEA NOT NULL CHECK (octet_length(bytes) <= 3145728), created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
@@ -181,6 +193,8 @@ ALTER TABLE public.support_message_links ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN REVOKE ALL ON public.support_message_links FROM anon; END IF; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN REVOKE ALL ON public.support_message_links FROM authenticated; END IF; END $$;
 ALTER TABLE public.worker_profiles ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN REVOKE ALL ON public.worker_profiles FROM anon; END IF; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN REVOKE ALL ON public.worker_profiles FROM authenticated; END IF; END $$;
+ALTER TABLE public.worker_ratings ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN REVOKE ALL ON public.worker_ratings FROM anon; END IF; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN REVOKE ALL ON public.worker_ratings FROM authenticated; END IF; END $$;
 ALTER TABLE public.product_image_files ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN REVOKE ALL ON public.product_image_files FROM anon; END IF; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN REVOKE ALL ON public.product_image_files FROM authenticated; END IF; END $$;
 ALTER TABLE products ALTER COLUMN sale_price_uzs TYPE BIGINT;

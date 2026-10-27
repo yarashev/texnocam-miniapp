@@ -149,6 +149,9 @@ CREATE TABLE IF NOT EXISTS worker_profiles (
   user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   experience_years INTEGER NOT NULL DEFAULT 0 CHECK (experience_years BETWEEN 0 AND 60),
   phone TEXT NOT NULL DEFAULT '',
+  service_region TEXT NOT NULL DEFAULT '',
+  service_city TEXT NOT NULL DEFAULT '',
+  service_district TEXT NOT NULL DEFAULT '',
   telegram_username TEXT NOT NULL DEFAULT '',
   photo_url TEXT NOT NULL DEFAULT '',
   service_prices TEXT NOT NULL DEFAULT '',
@@ -156,6 +159,15 @@ CREATE TABLE IF NOT EXISTS worker_profiles (
   is_public INTEGER NOT NULL DEFAULT 1 CHECK (is_public IN (0,1)),
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS worker_ratings (
+  worker_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  customer_telegram_id TEXT NOT NULL,
+  rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (worker_id, customer_telegram_id)
+);
+CREATE INDEX IF NOT EXISTS worker_ratings_worker_idx ON worker_ratings(worker_id);
 
 -- Telegram sessions are checked by our backend, not Supabase Auth.
 -- Deny direct browser/Data API access to ALL business tables.
@@ -185,6 +197,8 @@ ALTER TABLE public.support_message_links ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.support_message_links FROM anon, authenticated;
 ALTER TABLE public.worker_profiles ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.worker_profiles FROM anon, authenticated;
+ALTER TABLE public.worker_ratings ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.worker_ratings FROM anon, authenticated;
 
 -- Only public product pictures belong in this bucket, never payment proofs.
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

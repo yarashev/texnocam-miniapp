@@ -64,6 +64,10 @@
         const band = state.priceTier === 'cheap' ? byPrice.slice(0, first) : state.priceTier === 'medium' ? byPrice.slice(first, second) : byPrice.slice(second).reverse();
         shown = band.sort((left, right) => score(right, query, signals) - score(left, query, signals));
       }
+      const initialCatalog = !tokens.length && state.activeCategory === 'Barchasi' && state.activeBrand === 'Barcha brendlar' && state.priceTier === 'all';
+      if (initialCatalog) {
+        shown = window.UzCamCatalogRanking.rankInitialCatalog(matching, { minPrice: 400000, maxPrice: 800000, limit: 6 });
+      }
       const count = document.querySelector('#countLabel'), filterCount = document.querySelector('#filterCount'), host = document.querySelector('#products'), loadMore = document.querySelector('#loadMoreWrap');
       if (!host) return;
       if (count) count.textContent = shown.length + ' ta mahsulot';

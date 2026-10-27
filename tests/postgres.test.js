@@ -1,4 +1,4 @@
-import { mergeCatalogCategories, listCatalogCategories, categoryConfig } from '../backend/category-management.js';
+import { mergeCatalogCategories, listCatalogCategories, listManagedCategories, createCatalogCategory, deactivateCatalogCategory, categoryConfig } from '../backend/category-management.js';
 import { DatabaseSync } from 'node:sqlite';
 import { createSqliteDatabase } from '../backend/database-adapters.js';
 import fs from 'node:fs';
@@ -83,13 +83,14 @@ test('Empty PostgreSQL imports IDs, private costs, settings, chats and images; r
   const {db}=await makeDatabase(t);
   await initializePostgres(db,{catalog:{products:[]}});
   const snapshot={format:'uzcam-sqlite-v1',tables:Object.fromEntries(snapshotTables.map(table=>[table,[]])),images:[{name:'aabbccdd-1234.png',contentType:'image/png',base64:Buffer.from('saved-image').toString('base64')}]};
+  delete snapshot.tables.worker_ratings;
   snapshot.tables.users=[{id:15,telegram_id:'91000111',full_name:'Usta',role:'worker',is_active:1}];
   snapshot.tables.categories=[{id:8,name:'Kameralar'}];
   snapshot.tables.products=[{id:9000,model:'IMPORTED-CAM',name:'Imported',brand:'EZVIZ',category_id:8,source_price:10,source_currency:'USD',rate_used:12000,sale_price_uzs:156000,image_path:'uploads/aabbccdd-1234.png',is_active:1}];
   snapshot.tables.settings=[{key:'homepage_content',value:'{"news":[{"title":"Saved"}]}',updated_by:15,updated_at:'2026-10-26 00:00:00'}];
   snapshot.tables.support_threads=[{customer_telegram_id:'91000222',is_active:1}];
   snapshot.tables.support_message_links=[{admin_message_id:123,customer_telegram_id:'91000222'}];
-  const summary=await importSnapshot(db,snapshot);assert.equal(summary.products,1);
+  const summary=await importSnapshot(db,snapshot);assert.equal(summary.products,1);assert.equal(summary.worker_ratings,0);
   assert.equal((await db.get('SELECT source_price FROM products WHERE id=9000')).source_price,10);
   assert.equal((await db.get('SELECT customer_telegram_id FROM support_message_links WHERE admin_message_id=123')).customer_telegram_id,'91000222');
   const insert=await db.run("INSERT INTO products(model,name,brand,sale_price_uzs) VALUES ('NEXT','Next','EZVIZ',100) RETURNING id");assert.ok(insert.lastInsertRowid>9000);
@@ -141,4 +142,21 @@ for(const engineType of ['sqlite','postgres']) test('Category merge preserves pr
   await db.run("UPDATE products SET category_id=? WHERE model='OLD-0'",smartId);
   assert.equal(await mergeCatalogCategories(db),false);
   assert.equal((await db.get("SELECT category_id FROM products WHERE model='OLD-0'")).category_id,smartId);
+});
+
+for(const engineType of ['sqlite','postgres']) test('Category management preserves products when hiding a populated category: '+engineType,async t=>{
+  let db;
+  if(engineType==='postgres') { ({db}=await makeDatabase(t));await initializePostgres(db,{catalog:{products:[]}}); }
+  else { const sqlite=new DatabaseSync(':memory:');sqlite.exec(fs.readFileSync(new URL('../backend/schema.sql',import.meta.url),'utf8'));db=createSqliteDatabase(sqlite);t.after(()=>db.close()); }
+  const source=await createCatalogCategory(db,'  Sinov kameralar  '),target=await createCatalogCategory(db,'Yangi bo‘lim');
+  assert.equal(source.created,true);assert.equal(target.created,true);
+  await db.run("INSERT INTO products(model,name,brand,category_id,sale_price_uzs) VALUES ('CATEGORY-ITEM','Usta kamera','EZVIZ',?,100000)",(await db.get('SELECT id FROM categories WHERE name=?',source.name)).id);
+  await assert.rejects(()=>deactivateCatalogCategory(db,source.name),error=>error.statusCode===409&&error.productCount===1);
+  assert.equal((await listCatalogCategories(db)).includes(source.name),true);
+  const moved=await deactivateCatalogCategory(db,source.name,target.name);assert.equal(moved.productCount,1);assert.equal(moved.replacementCategory,target.name);
+  assert.equal((await db.get("SELECT c.name FROM products p JOIN categories c ON c.id=p.category_id WHERE p.model='CATEGORY-ITEM'")).name,target.name);
+  assert.equal((await listCatalogCategories(db)).includes(source.name),false);
+  const restored=await createCatalogCategory(db,source.name);assert.equal(restored.reactivated,true);assert.equal((await listCatalogCategories(db)).includes(source.name),true);
+  const categories=await listManagedCategories(db);assert.equal(Number(categories.find(item=>item.name===target.name).product_count),1);
+  await assert.rejects(()=>createCatalogCategory(db,'Barchasi'),error=>error.statusCode===400);
 });

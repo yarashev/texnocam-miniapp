@@ -84,6 +84,11 @@ function seedCatalog() {
 }
 
 allowUnknownSupplierPrices();
+for (const name of ['service_region', 'service_city', 'service_district']) {
+  if (!db.prepare('PRAGMA table_info(worker_profiles)').all().some(column => column.name === name)) {
+    db.exec(`ALTER TABLE worker_profiles ADD COLUMN ${name} TEXT NOT NULL DEFAULT ''`);
+  }
+}
 if (!db.prepare('PRAGMA table_info(products)').all().some(column => column.name === 'deleted_at')) db.exec('ALTER TABLE products ADD COLUMN deleted_at TEXT');
 seedCatalog();
 
