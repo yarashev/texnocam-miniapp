@@ -41,7 +41,10 @@ export const listPublicCategories=()=>listCatalogCategories(db);
 
 export async function listPublicProducts() {
   return db.all(`SELECT p.id, p.model, p.name, p.brand, c.name AS category,
-    p.description, p.image_path AS image, p.sale_price_uzs AS price_uzs
+    p.description, p.image_path AS image, p.sale_price_uzs AS price_uzs,
+    (SELECT COUNT(*) FROM audit_log a WHERE a.entity_type = 'analytics' AND a.action = 'product_view' AND a.entity_id = CAST(p.id AS TEXT)) AS views,
+    (SELECT COUNT(*) FROM audit_log a WHERE a.entity_type = 'analytics' AND a.action = 'add_to_cart' AND a.entity_id = CAST(p.id AS TEXT)) AS cart_adds,
+    (SELECT COALESCE(SUM(oi.quantity), 0) FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE oi.product_id = p.id AND o.payment_status = 'confirmed') AS sold_qty
     FROM products p LEFT JOIN categories c ON c.id = p.category_id
     WHERE p.is_active = 1 AND p.deleted_at IS NULL ORDER BY p.brand, p.model`);
 }
