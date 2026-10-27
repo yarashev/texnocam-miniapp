@@ -3,11 +3,9 @@
   const cleanProperties = value => Object.fromEntries(Object.entries(value || {}).filter(([, item]) => typeof item === "string" || typeof item === "number" || typeof item === "boolean").map(([key, item]) => [key, typeof item === "string" ? item.slice(0, 80) : item]));
   const addScript = (src, onload) => { const script = document.createElement("script"); script.async = true; script.src = src; script.onload = onload; document.head.append(script); };
   const state = { ga4: false, clarity: false, sentry: false };
-  const sendFirstParty = (name, properties) => { try { fetch("/api/analytics/events", { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true, body: JSON.stringify({ name, properties }) }).catch(() => {}); } catch {} }
   window.UzCamAnalytics = {
     track(name, properties = {}) {
       const safe = cleanProperties(properties);
-      sendFirstParty(name, safe);
       if (state.ga4 && typeof window.gtag === "function") window.gtag("event", name, safe);
       if (state.clarity && typeof window.clarity === "function") window.clarity("event", name);
       if (state.sentry && window.Sentry) window.Sentry.addBreadcrumb({ category: "analytics", message: name, data: safe, level: "info" });
@@ -38,10 +36,7 @@
     }
   }).catch(() => {});
 
-  track("page_view", { path: location.pathname === "/" ? "/index.html" : location.pathname });
   document.addEventListener("click", event => {
-    const productCard = event.target.closest(".product");
-    if (productCard) { const addButton = productCard.querySelector("[data-add]"); if (addButton) track("product_view", { productId: Number(addButton.dataset.add) }); }
     const control = event.target.closest("button,a");
     if (!control) return;
     if (control.id === "catalogPhone") track("contact_phone_click");

@@ -12,6 +12,8 @@ test('limits markup to 0–300 percent', () => {
  assert.throws(() => normalizeMarkupPercent(-1), /0–300/);
  assert.throws(() => normalizeMarkupPercent(301), /0–300/);
  assert.throws(() => normalizeMarkupPercent('abc'), /0–300/);
+ assert.throws(() => normalizeMarkupPercent(''), /0–300/);
+ assert.throws(() => normalizeMarkupPercent(null), /0–300/);
 });
 test('rejects invalid cost and exchange rate', () => {
  assert.throws(() => calculateSalePrice(0, 15000, 30), /Manba narxi/);

@@ -1,5 +1,4 @@
 import { categoryConfig, listCatalogCategories } from './category-management.js';
-import { calculateSalePrice, normalizeMarkupPercent } from './pricing.js';
 export function createProductManager(db) {
 
 function productError(message, status = 400) { return Object.assign(new Error(message), { statusCode: status }); }
@@ -34,7 +33,7 @@ async function listManagedProducts(actor, params) {
   const brands = (await db.all('SELECT DISTINCT brand FROM products ORDER BY brand')).map(row=>row.brand);
   const categories = await listCatalogCategories(db);
   const result = { products, total, page, pageSize, brands, categories, canManageCosts: actor.role === 'super_admin' };
-  if (actor.role === 'super_admin') { const rates = {}; for (const row of await db.all('SELECT currency, rate_to_uzs FROM exchange_rates ORDER BY effective_date DESC, id DESC')) if (!rates[row.currency]) rates[row.currency] = row.rate_to_uzs; const setting = await db.get('SELECT value FROM settings WHERE key = ?', 'markup_percent'); result.pricing = { markupPercent: normalizeMarkupPercent(setting?.value ?? 30), rates }; }
+  if (actor.role === 'super_admin') { const rates = {}; for (const row of await db.all('SELECT currency, rate_to_uzs FROM exchange_rates ORDER BY effective_date DESC, id DESC')) if (!rates[row.currency]) rates[row.currency] = row.rate_to_uzs; result.pricing = { markupPercent: 30, rates }; }
   return result;
 }
 function imagePath(value) {
@@ -59,8 +58,7 @@ async function normalize(actor, body, current) {
     if (!Number.isFinite(sourcePrice) || sourcePrice<=0 || !['UZS','USD','EUR','CNY'].includes(currency)) throw productError('Manba narxi va valyutani tekshiring');
     rate=currency==='UZS'?1:Number(body.rate || (await db.get('SELECT rate_to_uzs FROM exchange_rates WHERE currency = ? ORDER BY effective_date DESC, id DESC LIMIT 1', currency))?.rate_to_uzs);
     if (!Number.isFinite(rate) || rate<=0) throw productError('Ushbu valyuta uchun kurs kiriting');
-    const markupSetting=await db.get('SELECT value FROM settings WHERE key = ?', 'markup_percent');
-    price=calculateSalePrice(sourcePrice,rate,markupSetting?.value ?? 30);
+    price=Math.round(sourcePrice*rate*1.3);
   } else if (!current || actor.role === 'super_admin') {
     price=Number(body.salePrice ?? current?.price_uzs);
     if (actor.role === 'super_admin' && body.priceMode === 'sale') { sourcePrice=null;currency=null;rate=null; }

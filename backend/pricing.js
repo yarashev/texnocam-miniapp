@@ -1,4 +1,5 @@
 export function normalizeMarkupPercent(value) {
+  if (value === null || value === undefined || String(value).trim() === '') throw Object.assign(new RangeError('Ustama 0–300 foiz oralig‘ida bo‘lishi kerak'), { statusCode: 400 });
   const percent = Number(value);
   if (!Number.isFinite(percent) || percent < 0 || percent > 300) throw Object.assign(new RangeError('Ustama 0–300 foiz oralig‘ida bo‘lishi kerak'), { statusCode: 400 });
   return Math.round(percent * 100) / 100;
