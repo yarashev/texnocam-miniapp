@@ -2,7 +2,7 @@ import { initializeImageStorage, saveProductImage, loadProductImage, imageStorag
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual, randomUUID } from "node:crypto";
 import { listPublicProducts, listPublicCategories, db } from "./backend/database.js";
 import { listManagedProducts, getManagedProduct, saveManagedProduct, changeProductState, productError } from "./backend/product-management.js";
 
@@ -362,6 +362,94 @@ async function handleRequest(req, res) {
         const staff = await db.get("SELECT telegram_id, username, full_name, role, is_active, created_at FROM users WHERE telegram_id = ?", telegramId);
         sendJson(res, 200, { staff }); return;
       } catch (error) { sendJson(res, 400, { error: error.message || "Xodim ruxsatini yangilab bo‘lmadi" }); return; }
+    }
+    if (pathname === "/api/settings/pricing" && req.method === "GET") {
+      const actor = await getAdminSession(req);
+      if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin ustama foizini boshqaradi" }); return; }
+      const setting = await db.get("SELECT value, updated_at FROM settings WHERE key = ?", "markup_percent");
+      sendJson(res, 200, { markupPercent: Number(setting?.value ?? 30), updatedAt: setting?.updated_at ?? null }); return;
+    }
+    if (pathname === "/api/settings/pricing" && req.method === "PUT") {
+      const actor = await getAdminSession(req);
+      if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin ustama foizini boshqaradi" }); return; }
+      try {
+        const body = await readJson(req, 2000), { normalizeMarkupPercent } = await import("./backend/pricing.js");
+        const markupPercent = normalizeMarkupPercent(body.markupPercent);
+        await db.transaction(async () => {
+          await db.run("INSERT INTO settings(key, value, updated_by, updated_at) VALUES ('markup_percent', ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_by = excluded.updated_by, updated_at = CURRENT_TIMESTAMP", String(markupPercent), actor.id);
+          await db.run("UPDATE products SET sale_price_uzs = ROUND(source_price * rate_used * (1 + ? / 100.0)), updated_at = CURRENT_TIMESTAMP WHERE source_price > 0 AND rate_used > 0 AND deleted_at IS NULL", markupPercent);
+          await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update_markup', 'settings', 'markup_percent', ?)", actor.id, JSON.stringify({ markupPercent }));
+        });
+        sendJson(res, 200, { markupPercent }); return;
+      } catch (error) { sendJson(res, error.statusCode || 400, { error: error.message || "Ustama foizini saqlab bo‘lmadi" }); return; }
+    }
+    if (pathname === "/api/analytics/events" && req.method === "POST") {
+      try {
+        const body = await readJson(req, 3000);
+        const allowed = new Set(["page_view","product_view","search","add_to_cart","view_cart","begin_checkout","select_promotion","order_submitted","view_all_categories","open_brand_filter","open_price_filter","contact_phone_click"]);
+        const action = String(body.name || "");
+        if (!allowed.has(action)) { sendJson(res, 400, { error: "Analitika hodisasi noma’lum" }); return; }
+        const input = body.properties && typeof body.properties === "object" ? body.properties : {}, safe = {};
+        if (Number.isSafeInteger(Number(input.productId)) && Number(input.productId) > 0) safe.productId = Number(input.productId);
+        if (input.query_length !== undefined && Number.isFinite(Number(input.query_length))) safe.query_length = Math.max(0, Math.min(200, Math.trunc(Number(input.query_length))));
+        if (typeof input.category === "string") safe.category = input.category.slice(0, 60).replace(/[<>]/g, "");
+        await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (NULL, ?, 'analytics', ?, ?)", action, safe.productId ? String(safe.productId) : null, JSON.stringify(safe));
+        sendJson(res, 202, { ok: true }); return;
+      } catch (error) { sendJson(res, error.statusCode || 400, { error: "Analitika hodisasi saqlanmadi" }); return; }
+    }
+    if (pathname === "/api/analytics/stats" && req.method === "GET") {
+      const actor = await getAdminSession(req);
+      if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Analitikani faqat Super Admin ko‘ra oladi" }); return; }
+      const since = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 19).replace("T", " ");
+      const rows = await db.all("SELECT action, COUNT(*) AS total FROM audit_log WHERE entity_type = 'analytics' AND created_at >= ? GROUP BY action ORDER BY total DESC", since);
+      const events = rows.map(row => ({ name: row.action, count: Number(row.total) }));
+      sendJson(res, 200, { days: 30, total: events.reduce((sum, event) => sum + event.count, 0), events }); return;
+    }
+    if (pathname === "/api/public-config" && req.method === "GET") {
+      sendJson(res, 200, { analytics: { ga4MeasurementId: process.env.GA4_MEASUREMENT_ID || "", clarityProjectId: process.env.CLARITY_PROJECT_ID || "", sentryBrowserDsn: process.env.SENTRY_BROWSER_DSN || "" } }); return;
+    }
+    if (pathname === "/api/orders" && req.method === "POST") {
+      try {
+        const body = await readJson(req, 16000), telegramUser = verifyTelegramInitData(body.initData);
+        if (!telegramUser?.id) { sendJson(res, 401, { error: "Buyurtma berish uchun Telegram ichidan oching va profilni tasdiqlang" }); return; }
+        const incoming = body.order;
+        if (!incoming || !Array.isArray(incoming.items) || incoming.items.length < 1 || incoming.items.length > 50) { sendJson(res, 400, { error: "Savatchadagi mahsulotlarni tekshiring" }); return; }
+        const deliveryMethod = incoming.deliveryMethod === "bts" ? "bts" : ["courier","address"].includes(incoming.deliveryMethod) ? "address" : "";
+        const phone = cleanText(incoming.phone, 24), address = cleanText(incoming.address, 500), recipientName = cleanText(incoming.recipientName, 100);
+        if (!deliveryMethod || !/^\+?[0-9 ()-]{7,24}$/.test(phone) || phone.replace(/\D/g, "").length < 7 || !address || (deliveryMethod === "bts" && !recipientName)) { sendJson(res, 400, { error: "Telefon, manzil va yetkazish ma’lumotlarini to‘ldiring" }); return; }
+        const orderNumber = "UC-" + new Date().toISOString().slice(0,10).replaceAll("-","") + "-" + randomUUID().slice(0,8).toUpperCase();
+        const superAdminId = String(process.env.SUPER_ADMIN_TELEGRAM_ID || "");
+        const saved = await db.transaction(async () => {
+          const telegramId = String(telegramUser.id), existing = await db.get("SELECT id, role, is_active FROM users WHERE telegram_id = ?", telegramId);
+          if (existing && !existing.is_active) throw Object.assign(new Error("Ushbu foydalanuvchi faolsiz"), { statusCode: 403 });
+          const role = superAdminId && telegramId === superAdminId ? "super_admin" : (existing?.role || "customer");
+          const fullName = [telegramUser.first_name, telegramUser.last_name].filter(Boolean).join(" ");
+          await db.run("INSERT INTO users(telegram_id, username, full_name, role) VALUES (?, ?, ?, ?) ON CONFLICT(telegram_id) DO UPDATE SET username = excluded.username, full_name = excluded.full_name, role = CASE WHEN users.role = 'super_admin' OR excluded.role = 'super_admin' THEN 'super_admin' ELSE users.role END, updated_at = CURRENT_TIMESTAMP", telegramId, telegramUser.username || null, fullName, role);
+          const customer = await db.get("SELECT id FROM users WHERE telegram_id = ?", telegramId);
+          const orderItems = []; let subtotal = 0;
+          for (const line of incoming.items) {
+            const id = Number(line.id), quantity = Number(line.quantity);
+            if (!Number.isSafeInteger(id) || id <= 0 || !Number.isInteger(quantity) || quantity < 1 || quantity > 99) throw Object.assign(new Error("Mahsulot miqdorini tekshiring"), { statusCode: 400 });
+            const product = await db.get("SELECT id, model, name, sale_price_uzs AS price_uzs FROM products WHERE id = ? AND is_active = 1 AND deleted_at IS NULL", id);
+            if (!product) throw Object.assign(new Error("Savatchadagi mahsulotlardan biri mavjud emas"), { statusCode: 409 });
+            const lineTotal = Number(product.price_uzs) * quantity;
+            if (!Number.isSafeInteger(lineTotal) || lineTotal < 0) throw Object.assign(new Error("Buyurtma summasi noto‘g‘ri"), { statusCode: 400 });
+            subtotal += lineTotal; orderItems.push({ product, quantity, lineTotal });
+          }
+          if (!Number.isSafeInteger(subtotal) || subtotal <= 0 || subtotal > 1e12) throw Object.assign(new Error("Buyurtma summasi ruxsat etilgan chegaradan tashqarida"), { statusCode: 400 });
+          await db.run("INSERT INTO orders(order_number, customer_id, status, payment_status, delivery_method, recipient_name, delivery_phone, delivery_address, delivery_fee_uzs, subtotal_uzs, total_uzs, customer_note) VALUES (?, ?, 'pending_payment', 'pending', ?, ?, ?, ?, 0, ?, ?, ?)", orderNumber, customer.id, deliveryMethod, recipientName, phone, address, subtotal, subtotal, "");
+          const order = await db.get("SELECT id FROM orders WHERE order_number = ?", orderNumber);
+          for (const line of orderItems) await db.run("INSERT INTO order_items(order_id, product_id, model_snapshot, name_snapshot, quantity, unit_price_uzs, line_total_uzs) VALUES (?, ?, ?, ?, ?, ?, ?)", order.id, line.product.id, line.product.model, line.product.name, line.quantity, Number(line.product.price_uzs), line.lineTotal);
+          await db.run("INSERT INTO payments(order_id, amount_uzs, method, status) VALUES (?, ?, 'qr', 'pending')", order.id, subtotal);
+          await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'create', 'order', ?, ?)", customer.id, orderNumber, JSON.stringify({ itemCount: orderItems.length, totalUzs: subtotal, deliveryMethod }));
+          return { orderNumber, total: subtotal, itemCount: orderItems.length, customerName: fullName || "Telegram mijoz", telegramId, phone, address, deliveryMethod };
+        });
+        if (superAdminId) {
+          const note = "🛒 Yangi UzCam buyurtma: " + saved.orderNumber + "\nMijoz: " + saved.customerName + "\nTelegram ID: " + saved.telegramId + "\nTelefon: " + saved.phone + "\nYetkazish: " + (saved.deliveryMethod === "bts" ? "BTS" : "Manzilga") + "\nManzil: " + saved.address + "\nMahsulotlar: " + saved.itemCount + " xil\nJami: " + new Intl.NumberFormat("uz-UZ").format(saved.total) + " so‘m\nHolat: to‘lov tasdig‘ini kutmoqda.";
+          try { await telegramApi("sendMessage", { chat_id: superAdminId, text: note }); } catch (error) { console.error("Order notification failed:", error.message); }
+        }
+        sendJson(res, 201, { ok: true, orderNumber: saved.orderNumber, total: saved.total, message: "Buyurtma saqlandi. To‘lov admin tomonidan tekshiriladi." }); return;
+      } catch (error) { sendJson(res, error.statusCode || 400, { error: error.message || "Buyurtmani saqlab bo‘lmadi" }); return; }
     }
     if (pathname === "/api/home-content" && req.method === "GET") { sendJson(res, 200, { content: await getHomeContent() }); return; }
     if (pathname === "/api/home-content" && req.method === "PUT") {
