@@ -3,9 +3,11 @@
   const cleanProperties = value => Object.fromEntries(Object.entries(value || {}).filter(([, item]) => typeof item === "string" || typeof item === "number" || typeof item === "boolean").map(([key, item]) => [key, typeof item === "string" ? item.slice(0, 80) : item]));
   const addScript = (src, onload) => { const script = document.createElement("script"); script.async = true; script.src = src; script.onload = onload; document.head.append(script); };
   const state = { ga4: false, clarity: false, sentry: false };
+  const sendFirstParty = (name, properties) => { try { fetch("/api/analytics/events", { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true, body: JSON.stringify({ name, properties }) }).catch(() => {}); } catch {} }
   window.UzCamAnalytics = {
     track(name, properties = {}) {
       const safe = cleanProperties(properties);
+      sendFirstParty(name, safe);
       if (state.ga4 && typeof window.gtag === "function") window.gtag("event", name, safe);
       if (state.clarity && typeof window.clarity === "function") window.clarity("event", name);
       if (state.sentry && window.Sentry) window.Sentry.addBreadcrumb({ category: "analytics", message: name, data: safe, level: "info" });
@@ -36,7 +38,10 @@
     }
   }).catch(() => {});
 
+  track("page_view", { path: location.pathname === "/" ? "/index.html" : location.pathname });
   document.addEventListener("click", event => {
+    const productCard = event.target.closest(".product");
+    if (productCard) { const addButton = productCard.querySelector("[data-add]"); if (addButton) track("product_view", { productId: Number(addButton.dataset.add) }); }
     const control = event.target.closest("button,a");
     if (!control) return;
     if (control.id === "catalogPhone") track("contact_phone_click");
@@ -45,7 +50,7 @@
     else if (control.id === "showAll") track("view_all_categories");
     else if (control.id === "brandPickerButton") track("open_brand_filter");
     else if (control.id === "pricePickerButton") track("open_price_filter");
-    else if (control.matches(".add") || control.textContent.includes("Savatchaga qo‘shish")) track("add_to_cart");
+    else if (control.matches(".add") || control.textContent.includes("Savatchaga qo‘shish")) { const productCard = control.closest(".product"); const addButton = productCard?.querySelector("[data-add]"); track("add_to_cart", addButton ? { productId: Number(addButton.dataset.add) } : {}); }
     else if (control.matches("[data-promo-index]")) track("select_promotion");
   }, { passive: true });
 
