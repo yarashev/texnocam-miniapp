@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "setup": "integrated",
+  "languages": [
+    "JavaScript/TypeScript"
+  ],
+  "stacks": [
+    "Node.js"
+  ],
+  "markers": [
+    "package.json"
+  ],
+  "packageName": "uzcam-miniapp",
+  "suggestedRun": "npm run dev",
+  "suggestedTest": "npm test",
+  "createdAt": "2026-10-27T23:52:30.737Z",
+  "tool": "xgrok"
+}
