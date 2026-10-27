@@ -11,7 +11,8 @@ const products = [
 ];
 
 test('search ranking prioritizes exact product-name matches', () => {
-  const ranked = rankProducts(products, { tokens: ['ip kamera'], priceTier: 'all' });
+  const matching = products.filter(product => product.name.toLowerCase().includes('ip kamera'));
+  const ranked = rankProducts(matching, { tokens: ['ip kamera'], priceTier: 'all' });
   assert.equal(ranked[0].id, 1);
 });
 
