@@ -21,6 +21,7 @@
       else if (brand.includes(token)) value += 45;
       if (spec.includes(token)) value += 25;
     }
+    value += Number(product.views || 0) * 0.25 + Number(product.cartAdds || 0) * 4 + Number(product.soldQty || 0) * 6;
     value += Number(signal.views || 0) * 3 + Number(signal.adds || 0) * 18;
     return value;
   };
