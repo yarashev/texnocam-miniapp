@@ -33,49 +33,50 @@
   }[category] || []);
   const renderBundle = () => {
     const existing = document.querySelector('#smartBundle');
-    const categories = relatedCategories(window.activeCategory);
+    const state = window.UzCamCatalogState; const categories = relatedCategories(state?.activeCategory);
     if (!categories.length) { existing?.remove(); return; }
     const host = existing || document.createElement('aside');
     host.id = 'smartBundle'; host.className = 'smart-bundle';
     host.innerHTML = '<div><b>Kamera bilan birga kerak bo‘lishi mumkin</b><small>To‘plamni to‘ldiring va vaqtni tejang</small></div><div class="bundle-links">' + categories.map(category => '<button type="button" data-related-category="' + safeText(category) + '">' + safeText(category) + '</button>').join('') + '</div>';
     if (!existing) document.querySelector('#products')?.before(host);
     host.querySelectorAll('[data-related-category]').forEach(button => button.onclick = () => {
-      window.activeCategory = button.dataset.relatedCategory; window.visibleLimit = 40; window.renderCats?.(); window.renderProducts?.();
+      state.activeCategory = button.dataset.relatedCategory; state.visibleLimit = 40; state.renderCats(); state.renderProducts();
     });
   };
   window.UzCamCatalogIntelligence = { track, relatedCategories };
   const install = () => {
-    if (typeof window.renderProducts !== 'function' || !Array.isArray(window.items)) return;
-    window.renderProducts = function renderProducts(reset = true) {
-      if (reset) window.visibleLimit = 40;
+    const state = window.UzCamCatalogState;
+    if (!state || typeof state.renderProducts !== 'function' || !Array.isArray(state.items)) return;
+    state.renderProducts = function renderProducts(reset = true) {
+      if (reset) state.visibleLimit = 40;
       const query = normalize(document.querySelector('#search')?.value);
       const tokens = query.split(/\s+/).filter(Boolean);
-      const matching = window.items.filter(product =>
-        (window.activeCategory === 'Barchasi' || product.cat === window.activeCategory) &&
-        (window.activeBrand === 'Barcha brendlar' || product.brand === window.activeBrand) &&
+      const matching = state.items.filter(product =>
+        (state.activeCategory === 'Barchasi' || product.cat === state.activeCategory) &&
+        (state.activeBrand === 'Barcha brendlar' || product.brand === state.activeBrand) &&
         tokens.every(token => [product.name, product.spec, product.cat, product.brand].some(field => normalize(field).includes(token))));
       const signals = loadSignals();
       const ranked = matching.slice().sort((left, right) => score(right, query, signals) - score(left, query, signals) || Number(left.price) - Number(right.price) || String(left.name).localeCompare(String(right.name), 'uz'));
       const byPrice = ranked.slice().sort((left, right) => Number(left.price) - Number(right.price));
       let shown = ranked;
-      if (window.priceTier !== 'all') {
+      if (state.priceTier !== 'all') {
         const first = Math.ceil(byPrice.length / 3), second = Math.ceil(byPrice.length * 2 / 3);
-        const band = window.priceTier === 'cheap' ? byPrice.slice(0, first) : window.priceTier === 'medium' ? byPrice.slice(first, second) : byPrice.slice(second).reverse();
+        const band = state.priceTier === 'cheap' ? byPrice.slice(0, first) : state.priceTier === 'medium' ? byPrice.slice(first, second) : byPrice.slice(second).reverse();
         shown = band.sort((left, right) => score(right, query, signals) - score(left, query, signals));
       }
       const count = document.querySelector('#countLabel'), filterCount = document.querySelector('#filterCount'), host = document.querySelector('#products'), loadMore = document.querySelector('#loadMoreWrap');
       if (!host) return;
       if (count) count.textContent = shown.length + ' ta mahsulot';
-      if (filterCount) filterCount.textContent = shown.length ? Math.min(window.visibleLimit, shown.length) + ' / ' + shown.length : '';
-      const visible = shown.slice(0, window.visibleLimit);
+      if (filterCount) filterCount.textContent = shown.length ? Math.min(state.visibleLimit, shown.length) + ' / ' + shown.length : '';
+      const visible = shown.slice(0, state.visibleLimit);
       host.innerHTML = visible.length ? visible.map(product => '<article class="product" data-product-id="' + Number(product.id) + '"><div class="photo">' + (product.badge ? '<span class="badge">' + safeText(product.badge) + '</span>' : '') + (product.image ? '<img src="' + safeText(product.image) + '" alt="' + safeText(product.name) + '" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="placeholder" hidden>' + safeText(product.icon || '⚙️') + '</span>' : '<span class="placeholder">' + safeText(product.icon || '📦') + '</span>') + '</div><div class="name">' + safeText(product.name) + '</div><div class="meta">' + safeText(product.brand) + ' · ' + safeText(product.spec || product.cat) + '</div><div class="buyrow"><span class="price">' + new Intl.NumberFormat('uz-UZ').format(product.price) + ' so‘m</span><button class="add" data-add="' + Number(product.id) + '" aria-label="Savatchaga qo‘shish">+</button></div></article>').join('') : '<div class="empty">' + (query ? 'Mahsulot topilmadi 🔎' : 'Bu bo‘limda mahsulotlar hali kiritilmagan.') + '</div>';
-      if (loadMore) loadMore.innerHTML = shown.length > window.visibleLimit ? '<button class="load-more" id="loadMore">Ko‘proq mahsulot</button>' : '';
-      document.querySelector('#loadMore')?.addEventListener('click', () => { window.visibleLimit += 40; window.renderProducts(false); });
-      host.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', event => { event.stopPropagation(); track('add', Number(button.dataset.add)); window.add?.(Number(button.dataset.add)); }));
+      if (loadMore) loadMore.innerHTML = shown.length > state.visibleLimit ? '<button class="load-more" id="loadMore">Ko‘proq mahsulot</button>' : '';
+      document.querySelector('#loadMore')?.addEventListener('click', () => { state.visibleLimit += 40; state.renderProducts(false); });
+      host.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', event => { event.stopPropagation(); track('add', Number(button.dataset.add)); state.add(Number(button.dataset.add)); }));
       host.querySelectorAll('[data-product-id]').forEach(card => card.addEventListener('click', () => track('view', Number(card.dataset.productId)), { once: true }));
       renderBundle(); window.UzCamCatalogControls?.refresh();
     };
-    window.renderProducts();
+    state.renderProducts();
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true }); else install();
 })();
