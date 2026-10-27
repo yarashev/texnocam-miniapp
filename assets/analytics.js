@@ -50,7 +50,7 @@
     else if (control.id === "showAll") track("view_all_categories");
     else if (control.id === "brandPickerButton") track("open_brand_filter");
     else if (control.id === "pricePickerButton") track("open_price_filter");
-    else if (control.matches(".add") || control.textContent.includes("Savatchaga qo‘shish")) track("add_to_cart");
+    else if (control.matches(".add") || control.textContent.includes("Savatchaga qo‘shish")) { const productCard = control.closest(".product"); const addButton = productCard?.querySelector("[data-add]"); track("add_to_cart", addButton ? { productId: Number(addButton.dataset.add) } : {}); }
     else if (control.matches("[data-promo-index]")) track("select_promotion");
   }, { passive: true });
 
