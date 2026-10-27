@@ -363,6 +363,45 @@ async function handleRequest(req, res) {
         sendJson(res, 200, { staff }); return;
       } catch (error) { sendJson(res, 400, { error: error.message || "Xodim ruxsatini yangilab bo‘lmadi" }); return; }
     }
+    if (pathname === "/api/admin/orders" && req.method === "GET") {
+      const actor = await getAdminSession(req);
+      if (!actor || !["admin", "super_admin"].includes(actor.role)) { sendJson(res, 403, { error: "Admin ruxsati talab qilinadi" }); return; }
+      const rows = await db.all("SELECT o.id, o.order_number, o.status, o.payment_status, o.delivery_method, o.recipient_name, o.delivery_phone, o.delivery_address, o.total_uzs, o.created_at, u.full_name, u.telegram_id, u.username, p.status AS payment_record_status FROM orders o JOIN users u ON u.id = o.customer_id LEFT JOIN payments p ON p.order_id = o.id ORDER BY o.created_at DESC, o.id DESC LIMIT 100");
+      const orders = [];
+      for (const order of rows) {
+        const items = await db.all("SELECT model_snapshot AS model, name_snapshot AS name, quantity, unit_price_uzs, line_total_uzs FROM order_items WHERE order_id = ? ORDER BY id", order.id);
+        orders.push({ ...order, items });
+      }
+      sendJson(res, 200, { orders }); return;
+    }
+    const orderPaymentMatch = pathname.match(/^\/api\/admin\/orders\/(\d+)\/payment$/);
+    if (orderPaymentMatch && req.method === "PATCH") {
+      const actor = await getAdminSession(req);
+      if (!actor || !["admin", "super_admin"].includes(actor.role)) { sendJson(res, 403, { error: "Admin ruxsati talab qilinadi" }); return; }
+      try {
+        const orderId = Number(orderPaymentMatch[1]), body = await readJson(req);
+        const paymentStatus = body.action === "confirm" ? "confirmed" : body.action === "reject" ? "rejected" : "";
+        if (!Number.isSafeInteger(orderId) || orderId <= 0 || !paymentStatus) { sendJson(res, 400, { error: "To‘lov amalini tanlang" }); return; }
+        const order = await db.transaction(async () => {
+          const current = await db.get("SELECT id, order_number, payment_status, customer_id FROM orders WHERE id = ?", orderId);
+          if (!current) throw Object.assign(new Error("Buyurtma topilmadi"), { statusCode: 404 });
+          if (current.payment_status === "confirmed") throw Object.assign(new Error("Bu buyurtma to‘lovi allaqachon tasdiqlangan"), { statusCode: 409 });
+          if (!["pending", "proof_submitted", "rejected"].includes(current.payment_status)) throw Object.assign(new Error("Bu buyurtma holatini o‘zgartirib bo‘lmaydi"), { statusCode: 409 });
+          await db.run("UPDATE orders SET payment_status = ?, status = CASE WHEN ? = 'confirmed' THEN 'paid' ELSE status END, updated_at = CURRENT_TIMESTAMP WHERE id = ?", paymentStatus, paymentStatus, orderId);
+          await db.run("UPDATE payments SET status = ?, confirmed_by = ?, confirmed_at = CASE WHEN ? = 'confirmed' THEN CURRENT_TIMESTAMP ELSE NULL END WHERE order_id = ?", paymentStatus, paymentStatus === "confirmed" ? actor.id : null, paymentStatus, orderId);
+          await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'order', ?, ?)", actor.id, paymentStatus === "confirmed" ? "confirm_payment" : "reject_payment", current.order_number, JSON.stringify({ paymentStatus }));
+          return { ...current, payment_status: paymentStatus };
+        });
+        if (paymentStatus === "confirmed") {
+          const customer = await db.get("SELECT telegram_id FROM users WHERE id = ?", order.customer_id);
+          if (customer?.telegram_id) {
+            try { await telegramApi("sendMessage", { chat_id: customer.telegram_id, text: "✅ " + order.order_number + " buyurtmangiz to‘lovi admin tomonidan tasdiqlandi. UzCam jamoasi siz bilan yetkazib berish bo‘yicha bog‘lanadi." }); }
+            catch (error) { console.error("Payment confirmation notification failed:", error.message); }
+          }
+        }
+        sendJson(res, 200, { ok: true, orderNumber: order.order_number, paymentStatus: order.payment_status }); return;
+      } catch (error) { sendJson(res, error.statusCode || 400, { error: error.message || "To‘lov holatini saqlab bo‘lmadi" }); return; }
+    }
     if (pathname === "/api/settings/pricing" && req.method === "GET") {
       const actor = await getAdminSession(req);
       if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin ustama foizini boshqaradi" }); return; }
