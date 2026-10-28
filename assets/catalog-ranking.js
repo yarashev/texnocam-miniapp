@@ -1,32 +1,65 @@
 // Lightweight, explainable catalog ranking shared by the mini app and tests.
 (function (root) {
   "use strict";
-  const normalizeSearch = value => String(value || "").toLocaleLowerCase("uz").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9а-яё]+/gi, " ").trim();
-  const popularityScore = product => Math.log1p(Number(product.soldQty) || 0) * 5 + Math.log1p(Number(product.cartAdds) || 0) * 2 + Math.log1p(Number(product.views) || 0) * 0.7 + (product.image ? 0.25 : 0);
-  const relevanceScore = (product, tokens) => {
-    if (!tokens.length) return 0;
-    const name = normalizeSearch(product.name), brand = normalizeSearch(product.brand), model = normalizeSearch(product.spec);
-    let score = 0;
-    for (const token of tokens) {
-      if (name === token) score += 12;
-      else if (name.startsWith(token)) score += 7;
-      else if (name.includes(token)) score += 4;
-      if (brand === token) score += 5;
-      else if (brand.includes(token)) score += 2;
-      if (model.includes(token)) score += 2;
+  const letters={а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'yo',ж:'j',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'x',ц:'ts',ч:'ch',ш:'sh',щ:'sh',ъ:'',ь:'',ы:'i',э:'e',ю:'yu',я:'ya',ў:'o',қ:'q',ғ:'g',ҳ:'h'};
+  const normalizeSearch=value=>String(value??'').toLowerCase().normalize('NFKC').replace(/[а-яёўқғҳ]/g,c=>letters[c]).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/['‘’ʻʼ\u0060]/g,'').replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ');
+  const aliases={camera:'kamera',cameras:'kamera',kameralar:'kamera',kamery:'kamera',videokamera:'kamera',megapiksel:'mp',megapixel:'mp'};
+  const canonical=word=>aliases[word]||word;
+  const popularityScore=product=>Math.log1p(Math.max(0,Number(product.soldQty)||0))*5+Math.log1p(Math.max(0,Number(product.cartAdds)||0))*2+Math.log1p(Math.max(0,Number(product.views)||0))*0.7+(product.image?0.25:0);
+  const cache=new WeakMap();
+  function indexProduct(product){
+    const values=[product.model,product.name,product.brand,product.spec,product.description,product.category||product.cat];
+    const stamp=JSON.stringify(values),previous=cache.get(product);
+    if(previous?.stamp===stamp)return previous;
+    const fields=values.map(normalizeSearch),entry={stamp,fields,joined:fields.map(v=>v.replace(/ /g,'')),words:fields.map(v=>v.split(' ').filter(Boolean).map(canonical))};
+    cache.set(product,entry);return entry;
+  }
+  function oneTypo(a,b){
+    if(a===b)return true;
+    if(Math.abs(a.length-b.length)>1)return false;
+    if(a.length===b.length){
+      const diff=[];for(let i=0;i<a.length;i++)if(a[i]!==b[i])diff.push(i);
+      return diff.length===1||(diff.length===2&&diff[1]===diff[0]+1&&a[diff[0]]===b[diff[1]]&&a[diff[1]]===b[diff[0]]);
     }
-    return score;
-  };
-  function rankProducts(products, options = {}) {
-    const tokens = Array.isArray(options.tokens) ? options.tokens : [];
-    const tier = options.priceTier || "all";
-    const byPrice = products.slice().sort((a, b) => Number(a.price) - Number(b.price));
-    let selected = byPrice;
-    if (tier !== "all") {
-      const split1 = Math.ceil(byPrice.length / 3), split2 = Math.ceil(byPrice.length * 2 / 3);
-      selected = tier === "cheap" ? byPrice.slice(0, split1) : tier === "medium" ? byPrice.slice(split1, split2) : tier === "expensive" ? byPrice.slice(split2) : byPrice;
+    if(a.length>b.length)[a,b]=[b,a];
+    let i=0,j=0,skipped=false;
+    while(i<a.length&&j<b.length){if(a[i]===b[j]){i++;j++;}else{if(skipped)return false;skipped=true;j++;}}
+    return true;
+  }
+  function prepareQuery(value){
+    const text=normalizeSearch(value).slice(0,160);
+    return {text,joined:text.replace(/ /g,''),tokens:text.split(' ').filter(Boolean).slice(0,16).map(canonical)};
+  }
+  function scoreProduct(product,query){
+    if(!query.tokens.length)return 0;
+    const index=indexProduct(product),weights=[140,110,80,40,30,35];
+    for(const i of [0,1])if(index.joined[i]&&index.joined[i]===query.joined)return 10000+(i===0?100:0);
+    let total=0;
+    for(const token of query.tokens){
+      let best=0;
+      for(let i=0;i<index.fields.length;i++){
+        const words=index.words[i],weight=weights[i];
+        if(words.includes(token))best=Math.max(best,weight+30);
+        else if(index.fields[i].includes(token)||index.joined[i].includes(token))best=Math.max(best,weight);
+        else if(token.length>=4&&!/\d/.test(token)&&words.some(word=>!/\d/.test(word)&&word.length>=4&&oneTypo(token,word)))best=Math.max(best,weight*0.3);
+      }
+      if(!best)return -1;
+      total+=best;
     }
-    return selected.slice().sort((a, b) => (relevanceScore(b, tokens) - relevanceScore(a, tokens)) + (popularityScore(b) - popularityScore(a)) || Number(a.price) - Number(b.price));
+    if(index.joined[0].includes(query.joined)||index.joined[1].includes(query.joined))total+=400;
+    return total;
+  }
+  const relevanceScore=(product,tokens)=>scoreProduct(product,prepareQuery(tokens.join(' ')));
+  function rankProducts(products,options={}){
+    const query=prepareQuery(options.query??(Array.isArray(options.tokens)?options.tokens.join(' '):''));
+    const scores=new Map();
+    let selected=products.filter(product=>{const score=scoreProduct(product,query);scores.set(product,score);return score>=0;}).sort((a,b)=>Number(a.price)-Number(b.price));
+    const tier=options.priceTier||'all';
+    if(tier!=='all'){
+      const split1=Math.ceil(selected.length/3),split2=Math.ceil(selected.length*2/3);
+      selected=tier==='cheap'?selected.slice(0,split1):tier==='medium'?selected.slice(split1,split2):tier==='expensive'?selected.slice(split2):selected;
+    }
+    return selected.sort((a,b)=>(query.tokens.length?scores.get(b)-scores.get(a):0)||popularityScore(b)-popularityScore(a)||Number(a.price)-Number(b.price)||String(a.id).localeCompare(String(b.id)));
   }
   function rankHomeCameras(products, options = {}) {
     const minPrice=Number(options.minPrice??400000),maxPrice=Number(options.maxPrice??800000),limit=Math.max(0,Math.floor(Number(options.limit??6)));

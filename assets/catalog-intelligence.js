@@ -49,21 +49,12 @@
     if (!state || typeof state.renderProducts !== 'function' || !Array.isArray(state.items)) return;
     state.renderProducts = function renderProducts(reset = true) {
       if (reset) state.visibleLimit = 40;
-      const query = normalize(document.querySelector('#search')?.value);
+      const query = window.UzCamCatalogRanking.normalizeSearch(document.querySelector('#search')?.value);
       const tokens = query.split(/\s+/).filter(Boolean);
       const matching = state.items.filter(product =>
         (state.activeCategory === 'Barchasi' || product.cat === state.activeCategory) &&
-        (state.activeBrand === 'Barcha brendlar' || product.brand === state.activeBrand) &&
-        tokens.every(token => [product.name, product.spec, product.cat, product.brand].some(field => normalize(field).includes(token))));
-      const signals = loadSignals();
-      const ranked = matching.slice().sort((left, right) => score(right, query, signals) - score(left, query, signals) || Number(left.price) - Number(right.price) || String(left.name).localeCompare(String(right.name), 'uz'));
-      const byPrice = ranked.slice().sort((left, right) => Number(left.price) - Number(right.price));
-      let shown = ranked;
-      if (state.priceTier !== 'all') {
-        const first = Math.ceil(byPrice.length / 3), second = Math.ceil(byPrice.length * 2 / 3);
-        const band = state.priceTier === 'cheap' ? byPrice.slice(0, first) : state.priceTier === 'medium' ? byPrice.slice(first, second) : byPrice.slice(second).reverse();
-        shown = band.sort((left, right) => score(right, query, signals) - score(left, query, signals));
-      }
+        (state.activeBrand === 'Barcha brendlar' || product.brand === state.activeBrand));
+      let shown = window.UzCamCatalogRanking.rankProducts(matching, { query, priceTier: state.priceTier });
       const initialCatalog = !tokens.length && state.activeCategory === 'Barchasi' && state.activeBrand === 'Barcha brendlar' && state.priceTier === 'all';
       if (initialCatalog) {
         shown = window.UzCamCatalogRanking.rankInitialCatalog(matching, { minPrice: 400000, maxPrice: 800000, limit: 6 });

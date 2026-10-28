@@ -56,3 +56,29 @@ test('initial catalog prioritizes cameras and NVRs and moves cable and optics af
   ];
   assert.deepEqual(rankInitialCatalog(stock,{limit:1}).map(product=>product.id),['home','cam-1','cam-2','nvr-1','cam-3','nvr-2','other','cable']);
 });
+
+const stock=[
+ {id:'model',model:'DS-2CD2043G2-I',name:'IP kamera',brand:'Hikvision',spec:'4MP 2.8mm',price:500},
+ {id:'similar',model:'DS-2CD2047G2-I',name:'IP kamera Pro',brand:'Hikvision',price:400,soldQty:1e20},
+ {id:'ezviz',model:'CS-H6C',name:'WiFi kamera',brand:'EZVIZ',spec:'5MP',price:300}
+];
+test('model punctuation, case, digits and spacing',()=>{
+ for(const query of ['ds2cd2043g2i','DS 2CD2043G2 I','2043','HIKVISION 2043','2043 kamera'])assert.equal(rankProducts(stock,{query})[0]?.id,'model',query);
+});
+test('wrong numeric codes do not fuzzy match',()=>{assert.equal(rankProducts(stock,{query:'2049'}).length,0);});
+test('Cyrillic, synonyms, typos and word order',()=>{
+ for(const query of ['камера hikvision','hikvision kamerа','camera 2043','kamrea 2043','2043 kamera'])assert.ok(rankProducts(stock,{query}).some(p=>p.id==='model'),query);
+});
+test('exact matches outrank popular partial matches',()=>{
+ assert.equal(rankProducts([{id:1,name:'IP kamera',price:100},{id:2,name:'IP kamera Pro',price:50,soldQty:1e100}],{query:'IP kamera'})[0].id,1);
+});
+test('all terms must match and empty queries preserve browsing',()=>{
+ assert.equal(rankProducts(stock,{query:'2043 ezviz'}).length,0);
+ assert.equal(rankProducts(stock,{query:'  '}).length,3);
+});
+test('index refreshes after model changes',()=>{
+ const item={id:1,model:'ABC123',name:'Camera',price:1};
+ assert.equal(rankProducts([item],{query:'ABC123'}).length,1);item.model='XYZ987';
+ assert.equal(rankProducts([item],{query:'ABC123'}).length,0);
+ assert.equal(rankProducts([item],{query:'XYZ987'}).length,1);
+});
