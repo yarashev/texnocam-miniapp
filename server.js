@@ -1,3 +1,4 @@
+import { listCatalogBrands, saveCatalogBrand, deleteCatalogBrand } from './backend/brand-management.js';
 import { initializeImageStorage, saveProductImage, loadProductImage, imageStorageMode } from "./backend/image-storage.js";
 import http from "node:http";
 import fs from "node:fs";
@@ -262,6 +263,30 @@ async function handleRequest(req, res) {
   }
 
   if (pathname.startsWith("/api/")) {
+
+
+    if (pathname === "/api/catalog-brands" && req.method === "GET") {
+      sendJson(res, 200, { brands: await listCatalogBrands(db) }); return;
+    }
+    const brandMatch = pathname.match(/^\/api\/admin\/brands\/([a-z0-9-]{1,64})$/);
+    if (pathname === "/api/admin/brands" || brandMatch) {
+      const actor = await getAdminSession(req);
+      if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Brendlarni faqat Super Admin boshqaradi" }); return; }
+      try {
+        if (!brandMatch && req.method === "GET") { sendJson(res, 200, { brands: await listCatalogBrands(db, true) }); return; }
+        if ((!brandMatch && req.method === "POST") || (brandMatch && req.method === "PATCH")) {
+          const brand = await saveCatalogBrand(db, actor, await readJson(req, 16000), brandMatch?.[1] || null, randomUUID());
+          sendJson(res, brandMatch ? 200 : 201, { brand }); return;
+        }
+        if (brandMatch && req.method === "DELETE") {
+          const brand = await deleteCatalogBrand(db, actor, brandMatch[1]);
+          sendJson(res, 200, { brand }); return;
+        }
+        sendJson(res, 405, { error: "Usul qo‘llanmaydi" }); return;
+      } catch (error) {
+        sendJson(res, error.statusCode || (error instanceof SyntaxError ? 400 : 500), { error: error.statusCode ? error.message : "Brendni saqlab bo‘lmadi" }); return;
+      }
+    }
 
     if (pathname === "/api/admin/categories") {
       const actor = await getAdminSession(req);

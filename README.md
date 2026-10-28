@@ -43,3 +43,11 @@ npm test uses an isolated PostgreSQL WASM engine (PGlite) for SQL/role/transacti
 Supabase database/pooler hostnames automatically use the official Supabase Root 2021 CA bundled in backend/certs/supabase-prod-ca-2021.crt, alongside Node public roots. Certificate-chain and hostname checks remain enabled. See backend/certs/README.md for official source, fingerprint and rotation date. Other PostgreSQL hosts keep normal certificate verification. PGSSLROOTCERT remains an explicit custom-CA override.
 
 The customer catalog uses icon buttons for brand and price selection, with the shop contact phone between them. Admins edit or clear the public contactPhone field in the homepage content panel; the existing authenticated homepage-content route validates and persists it in settings. Clearing the field hides the phone link.
+
+## Catalog brand sections
+
+The customer catalog displays emerald SVG icon cards for brand sections and product categories. Brand sections are stored as versioned JSON in the existing settings table (catalog_brands_v1), so they survive PostgreSQL restarts and are included in existing backups. The initial twelve sections are supplied by assets/catalog-brands.js until the first edit.
+
+GET /api/catalog-brands returns active sections. Super Admin manages sections in the “Brendlar va bo‘limlar” admin view through GET/POST /api/admin/brands and PATCH/DELETE /api/admin/brands/:id. The editor supports names, match aliases or keywords, icon selection, logo uploads, ordering and visibility. Existing product-image storage handles raster logo uploads. Deleting a section never deletes or renames products. Writes are transactional, audited, and serialized with a PostgreSQL advisory lock or the SQLite transaction queue.
+
+Brand aliases match case-insensitively with punctuation ignored. Product-type sections match keywords in product text or an exact category name, so the combined “Kabel va optika” category does not put every item into both sections. Additional category cards remain available below brand cards.

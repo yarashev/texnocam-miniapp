@@ -1,0 +1,18 @@
+/* Catalog cards share the shop's emerald and white palette. */
+.app.catalog-category-mode>#cats{gap:12px!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;padding-bottom:28px!important}
+.app.catalog-category-mode>#categoryHeading{margin:18px 0 16px!important}
+#cats .catalog-grid-label{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:10px 2px 0;color:#334155;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+#cats .catalog-grid-label small{font-size:10px;font-weight:500;letter-spacing:0;text-transform:none;color:#64748b}
+.app.catalog-category-mode>#cats .cat{display:flex!important;flex-direction:column;justify-content:center;align-items:center;gap:8px;min-height:132px!important;padding:18px 10px!important;border:1px solid #dce9e4;border-radius:20px;background:linear-gradient(145deg,#fff,#f5fbf8);box-shadow:0 5px 16px #064e3b05;color:#153a30;font-size:12px!important;font-weight:750;transition:background .18s,border-color .18s,transform .18s}
+#cats .cat:before{display:none!important}
+#cats .cat:hover{border-color:#6ee7b7;background:#ecfdf5;transform:translateY(-2px)}
+#cats .cat:focus-visible{outline:3px solid #34d399;outline-offset:3px}
+#cats .cat.active{border-color:#34d399!important;background:linear-gradient(135deg,#ecfdf5,#d1fae5)!important;color:#047857!important}
+.catalog-card-icon{display:grid;place-items:center;width:54px;height:54px;flex:none;border-radius:16px;color:#059669;background:linear-gradient(145deg,#ecfdf5,#d1fae5);box-shadow:inset 0 1px #ffffff}
+.catalog-card-icon svg{width:38px;height:38px}
+.catalog-card-icon img{width:100%;height:100%;object-fit:contain;padding:5px}
+.catalog-card-name{line-height:1.35;text-align:center;overflow-wrap:anywhere}
+.catalog-card-count{font-size:10px;font-weight:500;color:#73847d}
+#cats .catalog-load-status{grid-column:1/-1;color:#64748b;font-size:12px;padding:8px 2px}
+@media(max-width:560px){.app.catalog-category-mode>#cats{gap:9px!important}.app.catalog-category-mode>#cats .cat{min-height:116px!important;padding:13px 5px!important;border-radius:16px;font-size:11px!important;gap:6px}.catalog-card-icon{width:45px;height:45px;border-radius:13px}.catalog-card-icon svg{width:32px;height:32px}.catalog-card-count{font-size:9px}}
+@media(prefers-reduced-motion:reduce){#cats .cat{transition:none!important}#cats .cat:hover{transform:none}}

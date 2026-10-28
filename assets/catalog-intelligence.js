@@ -53,7 +53,8 @@
       const tokens = query.split(/\s+/).filter(Boolean);
       const matching = state.items.filter(product =>
         (state.activeCategory === 'Barchasi' || product.cat === state.activeCategory) &&
-        (state.activeBrand === 'Barcha brendlar' || product.brand === state.activeBrand));
+        (state.activeBrand === 'Barcha brendlar' || product.brand === state.activeBrand) &&
+        (window.UzCamBrandCatalog?.matches(product) ?? true));
       let shown = window.UzCamCatalogRanking.rankProducts(matching, { query, priceTier: state.priceTier });
       const initialCatalog = !tokens.length && state.activeCategory === 'Barchasi' && state.activeBrand === 'Barcha brendlar' && state.priceTier === 'all';
       if (initialCatalog) {
