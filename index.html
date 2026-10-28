@@ -183,7 +183,11 @@ body{background:#f8fafc;color:var(--ink)}
 html{scrollbar-width:none;-ms-overflow-style:none}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
-</style></head>
+</style><style>
+/* Brand selection is no longer part of the catalog controls. */
+#brandPickerButton, #brandPicker { display: none !important; }
+</style>
+</head>
 <body><main class="app">
 <header class="top" id="home"><div class="brand"><div class="logo" role="img" aria-label="UzCam kamera belgisi"><svg viewBox="0 0 48 40" aria-hidden="true"><path d="M8 10.5h6.2l3-4h13.6l3 4H40a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-16a4 4 0 0 1 4-4Z" fill="#246bfd"/><circle cx="23" cy="22.5" r="9" fill="#f7fbf4"/><circle cx="23" cy="22.5" r="6.3" fill="#23472d"/><circle cx="23" cy="22.5" r="3.6" fill="#8bc46c"/><circle cx="23" cy="22.5" r="1.7" fill="#f7fbf4"/><circle cx="38" cy="15" r="1.7" fill="#eaf6e2"/></svg></div><div class="brand-copy">UzCam<div class="loc"><span>Zarafshan ·</span><a class="header-phone" id="catalogPhone" href="tel:+998508554187" aria-label="UzCam bilan bog‘lanish: +998 50 855 41 87"><span id="catalogPhoneText">+998 50 855 41 87</span></a></div></div></div><div class="header-actions"><button class="header-cart" id="headerCart" type="button" aria-label="Savatchani ochish"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 1.9-1.4L22 8H6"/><circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/></svg><span class="header-count" id="headerQty">0</span></button><button class="iconbtn" id="profileButton" aria-label="Profilni ochish">👤</button></div></header>
 <nav class="quick-categories" aria-label="Tezkor kategoriyalar"><button type="button" class="quick-category" data-cat="Kameralar"><span aria-hidden="true">📷</span><span>Kamera</span></button><button type="button" class="quick-category" data-cat="DVR/NVR"><span aria-hidden="true">▣</span><span>DVR/NVR</span></button><button type="button" class="quick-category" data-cat="Tarmoq uskunalari"><span aria-hidden="true">✣</span><span>Tarmoq</span></button><button type="button" class="quick-category" data-cat="Kabel va optika"><span aria-hidden="true">⌁</span><span>Kabel</span></button></nav>
