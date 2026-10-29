@@ -95,6 +95,13 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 CREATE INDEX IF NOT EXISTS payments_order_status_idx ON payments(order_id, status);
 
+CREATE TABLE IF NOT EXISTS payment_proof_files (
+  order_id INTEGER PRIMARY KEY REFERENCES orders(id) ON DELETE CASCADE,
+  content_type TEXT NOT NULL CHECK (content_type IN ('image/jpeg','image/png','image/webp')),
+  bytes BLOB NOT NULL CHECK (length(bytes) BETWEEN 1 AND 3145728),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- UNIQUE(order_id) guarantees that only one worker can claim a paid order.
 CREATE TABLE IF NOT EXISTS work_claims (
   id INTEGER PRIMARY KEY,

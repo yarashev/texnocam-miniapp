@@ -1,6 +1,7 @@
 import fs from 'node:fs';
+import { parsePaymentProof } from './payment-proof.js';
 
-export const snapshotTables = ['users','categories','products','exchange_rates','orders','order_items','payments','work_claims','settings','audit_log','support_threads','support_message_links','worker_profiles','worker_ratings'];
+export const snapshotTables = ['users','categories','products','exchange_rates','orders','order_items','payments','payment_proof_files','work_claims','settings','audit_log','support_threads','support_message_links','worker_profiles','worker_ratings'];
 const identifier = value => '"' + value.replaceAll('"','""') + '"';
 
 export async function resetSequences(database) {
@@ -18,14 +19,22 @@ export async function importSnapshot(database, snapshot) {
     }
     const summary = {};
     for (const table of snapshotTables) {
-      const rows = snapshot.tables[table] ?? (table === 'worker_ratings' ? [] : undefined);
+      const rows = snapshot.tables[table] ?? (['worker_ratings','payment_proof_files'].includes(table) ? [] : undefined);
       if (!Array.isArray(rows)) throw new Error('Zaxirada jadval yo‘q: ' + table);
       const allowed = new Set((await database.all('SELECT column_name FROM information_schema.columns WHERE table_schema = ? AND table_name = ?', 'public', table)).map(row=>row.column_name));
       for (const row of rows) {
         const columns = Object.keys(row).filter(column=>allowed.has(column));
         if (!columns.length) throw new Error('Bo‘sh import yozuvi');
         const conflict = table === 'settings' ? ' ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_by = EXCLUDED.updated_by, updated_at = EXCLUDED.updated_at' : '';
-        await database.run(`INSERT INTO ${table} (${columns.map(identifier).join(',')}) VALUES (${columns.map(()=>'?').join(',')})${conflict}`, ...columns.map(column=>row[column]));
+        const values = columns.map(column => {
+          if (table !== 'payment_proof_files' || column !== 'bytes') return row[column];
+          const base64 = typeof row.bytes === 'string' ? row.bytes
+            : row.bytes?.type === 'Buffer' && Array.isArray(row.bytes.data) ? Buffer.from(row.bytes.data).toString('base64')
+              : Buffer.isBuffer(row.bytes) ? row.bytes.toString('base64') : '';
+          try { return parsePaymentProof({ contentType: row.content_type, base64 }).bytes; }
+          catch { throw new Error('Zaxiradagi to‘lov cheki noto‘g‘ri yoki 3 MB dan katta'); }
+        });
+        await database.run(`INSERT INTO ${table} (${columns.map(identifier).join(',')}) VALUES (${columns.map(()=>'?').join(',')})${conflict}`, ...values);
       }
       summary[table] = rows.length;
     }
@@ -56,6 +65,12 @@ export async function initializePostgres(database, options = {}) {
     if (await database.get("SELECT 1 FROM uzcam_migrations WHERE version='worker-areas-ratings-v2'")) return;
     await database.exec(fs.readFileSync(new URL('./supabase/002-worker-areas-ratings.sql',import.meta.url),'utf8'));
     await database.run("INSERT INTO uzcam_migrations(version) VALUES ('worker-areas-ratings-v2')");
+  });
+  await database.transaction(async () => {
+    await database.get('SELECT pg_advisory_xact_lock(8256301)');
+    if (await database.get("SELECT 1 FROM uzcam_migrations WHERE version='payment-proofs-v3'")) return;
+    await database.exec(fs.readFileSync(new URL('./supabase/003-payment-proofs.sql',import.meta.url),'utf8'));
+    await database.run("INSERT INTO uzcam_migrations(version) VALUES ('payment-proofs-v3')");
   });
   const importFile=options.importFile ?? process.env.UZCAM_IMPORT_FILE;
   if (importFile) { await importSnapshot(database,JSON.parse(fs.readFileSync(importFile,'utf8'))); return; }

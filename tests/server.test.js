@@ -68,14 +68,27 @@ test('Telegram session, staff, workers, home content, uploads and restart use as
   await request('/api/home-content','PUT',content);
   const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jL1sAAAAASUVORK5CYII=','base64');
   result=await request('/api/admin/product-images','POST',{base64:png.toString('base64')});assert.equal(result.status,201);const image=result.value.image;
+  const orderBody={initData:initData('91000011'),order:{items:[{id:1,quantity:1}],deliveryMethod:'address',recipientName:'Sinov',phone:'+998901234567',address:'Zarafshon, sinov manzili'},paymentProof:{contentType:'image/png',base64:png.toString('base64')}};
+  assert.equal((await request('/api/orders','POST',{initData:orderBody.initData,order:orderBody.order})).status,400);
+  assert.equal((await request('/api/orders','POST',{...orderBody,paymentProof:{contentType:'image/jpeg',base64:png.toString('base64')}})).status,400);
+  result=await request('/api/orders','POST',orderBody);assert.equal(result.status,201);assert.equal(result.value.paymentStatus,'proof_submitted');
+  const createdOrder=(await request('/api/admin/orders')).value.orders.find(order=>order.order_number===result.value.orderNumber);
+  assert.ok(createdOrder);assert.equal(Number(createdOrder.has_payment_proof),1);assert.equal(Object.hasOwn(createdOrder,'bytes'),false);
+  const privateProofUrl=running.base+'/api/admin/orders/'+createdOrder.id+'/payment-proof';
+  assert.equal((await fetch(privateProofUrl)).status,403);
+  let proofResponse=await fetch(privateProofUrl,{headers:{Cookie:cookie}});
+  assert.equal(proofResponse.status,200);assert.equal(proofResponse.headers.get('content-type'),'image/png');assert.equal(proofResponse.headers.get('cache-control'),'private, no-store');assert.equal(proofResponse.headers.get('x-content-type-options'),'nosniff');assert.deepEqual(Buffer.from(await proofResponse.arrayBuffer()),png);
+  result=await request('/api/admin/orders/'+createdOrder.id+'/payment','PATCH',{action:'confirm'});assert.equal(result.status,200);assert.equal(result.value.paymentStatus,'confirmed');
   const snapshot=exportSqlite(path.join(directory,'texnocam.sqlite'),path.join(directory,'uploads'));
-  assert.equal(snapshot.tables.users.length,3);assert.equal(snapshot.images.length,1);assert.equal(snapshot.tables.worker_profiles[0].experience_years,5);assert.equal(snapshot.tables.worker_profiles[0].service_region,'Toshkent viloyati');assert.equal(snapshot.tables.worker_ratings.length,2);
+  assert.equal(snapshot.tables.users.length,4);assert.equal(snapshot.images.length,1);assert.equal(snapshot.tables.worker_profiles[0].experience_years,5);assert.equal(snapshot.tables.worker_profiles[0].service_region,'Toshkent viloyati');assert.equal(snapshot.tables.worker_ratings.length,2);assert.equal(snapshot.tables.payment_proof_files.length,1);assert.deepEqual(Buffer.from(snapshot.tables.payment_proof_files[0].bytes,'base64'),png);
   await running.stop();running=await startServer(directory);
   assert.equal((await request('/api/home-content')).value.content.hero.title,'Saved Hero');
   assert.equal((await request('/api/home-content')).value.content.contactPhone,'+998508554187');
   publicWorker=(await request('/api/workers')).value.workers[0];assert.equal(publicWorker.full_name,'Yangilangan Usta');assert.equal(publicWorker.rating_average,4);assert.equal(publicWorker.rating_count,2);
   assert.equal((await request('/api/staff')).value.staff.length,3);
   assert.deepEqual(Buffer.from(await (await fetch(running.base+'/'+image)).arrayBuffer()),png);
+  proofResponse=await fetch(running.base+'/api/admin/orders/'+createdOrder.id+'/payment-proof',{headers:{Cookie:cookie}});
+  assert.equal(proofResponse.status,200);assert.deepEqual(Buffer.from(await proofResponse.arrayBuffer()),png);
 });
 
 test('Configured PostgreSQL failure stops startup without exposing URL or creating SQLite',()=>{

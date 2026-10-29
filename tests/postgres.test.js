@@ -39,6 +39,7 @@ test('PostgreSQL schema, seed, roles, CRUD, concurrency, images and restart pers
   await initializePostgres(db);
   assert.equal(Number((await db.get('SELECT count(*) AS count FROM products')).count),2141);
   assert.equal((await db.all("SELECT * FROM pg_tables WHERE schemaname='public' AND rowsecurity=false")).length,0);
+  assert.equal((await db.get("SELECT rowsecurity FROM pg_tables WHERE schemaname='public' AND tablename='payment_proof_files'")).rowsecurity,true);
   const sequence=Number((await db.get('SELECT MAX(id) AS id FROM products')).id);
   for(const [telegram,role] of [['91000001','super_admin'],['91000002','admin'],['91000003','worker']]) await db.run('INSERT INTO users(telegram_id,role) VALUES (?,?)',telegram,role);
   const superAdmin=await db.get('SELECT * FROM users WHERE telegram_id=?','91000001');
@@ -73,6 +74,7 @@ test('PostgreSQL schema, seed, roles, CRUD, concurrency, images and restart pers
   // No direct Data API role can read users or supplier costs.
   await assert.rejects(()=>db.transaction(async()=>{await db.exec('SET LOCAL ROLE anon');await db.all('SELECT * FROM products');}),error=>error.code==='42501');
   await assert.rejects(()=>db.transaction(async()=>{await db.exec('SET LOCAL ROLE authenticated');await db.all('SELECT * FROM users');}),error=>error.code==='42501');
+  await assert.rejects(()=>db.transaction(async()=>{await db.exec('SET LOCAL ROLE anon');await db.all('SELECT * FROM payment_proof_files');}),error=>error.code==='42501');
   // Deliberately empty catalogs are not repopulated on restart.
   await db.run('UPDATE products SET deleted_at=CURRENT_TIMESTAMP,is_active=0');
   await initializePostgres(db);
@@ -90,9 +92,14 @@ test('Empty PostgreSQL imports IDs, private costs, settings, chats and images; r
   snapshot.tables.settings=[{key:'homepage_content',value:'{"news":[{"title":"Saved"}]}',updated_by:15,updated_at:'2026-10-26 00:00:00'}];
   snapshot.tables.support_threads=[{customer_telegram_id:'91000222',is_active:1}];
   snapshot.tables.support_message_links=[{admin_message_id:123,customer_telegram_id:'91000222'}];
-  const summary=await importSnapshot(db,snapshot);assert.equal(summary.products,1);assert.equal(summary.worker_ratings,0);
+  const proofBytes=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jL1sAAAAASUVORK5CYII=','base64');
+  snapshot.tables.orders=[{id:31,order_number:'UC-IMPORT-PROOF',customer_id:15,status:'pending_payment',payment_status:'proof_submitted',delivery_method:'address',delivery_phone:'+998901234567',delivery_address:'Sinov',delivery_fee_uzs:0,subtotal_uzs:100000,total_uzs:100000}];
+  snapshot.tables.payments=[{id:51,order_id:31,amount_uzs:100000,method:'qr',status:'pending'}];
+  snapshot.tables.payment_proof_files=[{order_id:31,content_type:'image/png',bytes:proofBytes.toString('base64')}];
+  const summary=await importSnapshot(db,snapshot);assert.equal(summary.products,1);assert.equal(summary.worker_ratings,0);assert.equal(summary.payment_proof_files,1);
   assert.equal((await db.get('SELECT source_price FROM products WHERE id=9000')).source_price,10);
   assert.equal((await db.get('SELECT customer_telegram_id FROM support_message_links WHERE admin_message_id=123')).customer_telegram_id,'91000222');
+  assert.deepEqual(Buffer.from((await db.get('SELECT bytes FROM payment_proof_files WHERE order_id=31')).bytes),proofBytes);
   const insert=await db.run("INSERT INTO products(model,name,brand,sale_price_uzs) VALUES ('NEXT','Next','EZVIZ',100) RETURNING id");assert.ok(insert.lastInsertRowid>9000);
   await assert.rejects(()=>importSnapshot(db,snapshot),/bo‘sh bazaga/);
   assert.equal((await db.get('SELECT name FROM products WHERE id=9000')).name,'Imported');

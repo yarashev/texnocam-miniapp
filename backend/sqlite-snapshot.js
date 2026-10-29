@@ -9,7 +9,12 @@ export function exportSqlite(file, uploadsDirectory) {
   const tables={};
   try {
     sqlite.exec('BEGIN');
-    for(const table of snapshotTables)tables[table]=sqlite.prepare('SELECT * FROM '+table).all();
+    for(const table of snapshotTables) {
+      const rows=sqlite.prepare('SELECT * FROM '+table).all();
+      tables[table]=table==='payment_proof_files'
+        ? rows.map(row=>({...row,bytes:Buffer.from(row.bytes).toString('base64')}))
+        : rows;
+    }
     sqlite.exec('COMMIT');
   } finally { sqlite.close(); }
   const images=[];
