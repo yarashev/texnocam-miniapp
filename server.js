@@ -1,5 +1,6 @@
 import { listCatalogBrands, saveCatalogBrand, deleteCatalogBrand } from './backend/brand-management.js';
 import { initializeImageStorage, saveProductImage, loadProductImage, imageStorageMode } from "./backend/image-storage.js";
+import { parsePaymentProof } from "./backend/payment-proof.js";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -428,13 +429,32 @@ async function handleRequest(req, res) {
     if (pathname === "/api/admin/orders" && req.method === "GET") {
       const actor = await getAdminSession(req);
       if (!actor || !["admin", "super_admin"].includes(actor.role)) { sendJson(res, 403, { error: "Admin ruxsati talab qilinadi" }); return; }
-      const rows = await db.all("SELECT o.id, o.order_number, o.status, o.payment_status, o.delivery_method, o.recipient_name, o.delivery_phone, o.delivery_address, o.total_uzs, o.created_at, u.full_name, u.telegram_id, u.username, p.status AS payment_record_status FROM orders o JOIN users u ON u.id = o.customer_id LEFT JOIN payments p ON p.order_id = o.id ORDER BY o.created_at DESC, o.id DESC LIMIT 100");
+      const rows = await db.all("SELECT o.id, o.order_number, o.status, o.payment_status, o.delivery_method, o.recipient_name, o.delivery_phone, o.delivery_address, o.total_uzs, o.created_at, u.full_name, u.telegram_id, u.username, p.status AS payment_record_status, CASE WHEN proof.order_id IS NULL THEN 0 ELSE 1 END AS has_payment_proof FROM orders o JOIN users u ON u.id = o.customer_id LEFT JOIN payments p ON p.order_id = o.id LEFT JOIN payment_proof_files proof ON proof.order_id = o.id ORDER BY o.created_at DESC, o.id DESC LIMIT 100");
       const orders = [];
       for (const order of rows) {
         const items = await db.all("SELECT model_snapshot AS model, name_snapshot AS name, quantity, unit_price_uzs, line_total_uzs FROM order_items WHERE order_id = ? ORDER BY id", order.id);
         orders.push({ ...order, items });
       }
       sendJson(res, 200, { orders }); return;
+    }
+    const orderPaymentProofMatch = pathname.match(/^\/api\/admin\/orders\/(\d+)\/payment-proof$/);
+    if (orderPaymentProofMatch && req.method === "GET") {
+      const actor = await getAdminSession(req);
+      if (!actor || !["admin", "super_admin"].includes(actor.role)) { sendJson(res, 403, { error: "Admin ruxsati talab qilinadi" }); return; }
+      const orderId = Number(orderPaymentProofMatch[1]);
+      if (!Number.isSafeInteger(orderId) || orderId <= 0) { sendJson(res, 404, { error: "To‘lov cheki topilmadi" }); return; }
+      const proof = await db.get("SELECT content_type, bytes FROM payment_proof_files WHERE order_id = ?", orderId);
+      if (!proof) { sendJson(res, 404, { error: "To‘lov cheki topilmadi" }); return; }
+      const bytes = Buffer.from(proof.bytes);
+      res.writeHead(200, {
+        "Content-Type": proof.content_type,
+        "Content-Length": bytes.length,
+        "Cache-Control": "private, no-store",
+        "Content-Disposition": 'inline; filename="payment-proof"',
+        "Content-Security-Policy": "default-src 'none'; sandbox",
+        "X-Content-Type-Options": "nosniff"
+      });
+      res.end(bytes); return;
     }
     const orderPaymentMatch = pathname.match(/^\/api\/admin\/orders\/(\d+)\/payment$/);
     if (orderPaymentMatch && req.method === "PATCH") {
@@ -448,7 +468,9 @@ async function handleRequest(req, res) {
           const current = await db.get("SELECT id, order_number, payment_status, customer_id FROM orders WHERE id = ?", orderId);
           if (!current) throw Object.assign(new Error("Buyurtma topilmadi"), { statusCode: 404 });
           if (current.payment_status === "confirmed") throw Object.assign(new Error("Bu buyurtma to‘lovi allaqachon tasdiqlangan"), { statusCode: 409 });
-          if (!["pending", "proof_submitted", "rejected"].includes(current.payment_status)) throw Object.assign(new Error("Bu buyurtma holatini o‘zgartirib bo‘lmaydi"), { statusCode: 409 });
+          if (current.payment_status !== "proof_submitted") throw Object.assign(new Error("Avval mijoz yuborgan to‘lov chekini tekshiring"), { statusCode: 409 });
+          const proof = await db.get("SELECT order_id FROM payment_proof_files WHERE order_id = ?", orderId);
+          if (!proof) throw Object.assign(new Error("To‘lov cheki topilmadi"), { statusCode: 409 });
           await db.run("UPDATE orders SET payment_status = ?, status = CASE WHEN ? = 'confirmed' THEN 'paid' ELSE status END, updated_at = CURRENT_TIMESTAMP WHERE id = ?", paymentStatus, paymentStatus, orderId);
           await db.run("UPDATE payments SET status = ?, confirmed_by = ?, confirmed_at = CASE WHEN ? = 'confirmed' THEN CURRENT_TIMESTAMP ELSE NULL END WHERE order_id = ?", paymentStatus, paymentStatus === "confirmed" ? actor.id : null, paymentStatus, orderId);
           await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'order', ?, ?)", actor.id, paymentStatus === "confirmed" ? "confirm_payment" : "reject_payment", current.order_number, JSON.stringify({ paymentStatus }));
@@ -511,10 +533,11 @@ async function handleRequest(req, res) {
     }
     if (pathname === "/api/orders" && req.method === "POST") {
       try {
-        const body = await readJson(req, 16000), telegramUser = verifyTelegramInitData(body.initData);
+        const body = await readJson(req, 4_300_000), telegramUser = verifyTelegramInitData(body.initData);
         if (!telegramUser?.id) { sendJson(res, 401, { error: "Buyurtma berish uchun Telegram ichidan oching va profilni tasdiqlang" }); return; }
         const incoming = body.order;
         if (!incoming || !Array.isArray(incoming.items) || incoming.items.length < 1 || incoming.items.length > 50) { sendJson(res, 400, { error: "Savatchadagi mahsulotlarni tekshiring" }); return; }
+        const paymentProof = parsePaymentProof(body.paymentProof);
         const deliveryMethod = incoming.deliveryMethod === "bts" ? "bts" : ["courier","address"].includes(incoming.deliveryMethod) ? "address" : "";
         const phone = cleanText(incoming.phone, 24), address = cleanText(incoming.address, 500), recipientName = cleanText(incoming.recipientName, 100);
         if (!deliveryMethod || !/^\+?[0-9 ()-]{7,24}$/.test(phone) || phone.replace(/\D/g, "").length < 7 || !address || (deliveryMethod === "bts" && !recipientName)) { sendJson(res, 400, { error: "Telefon, manzil va yetkazish ma’lumotlarini to‘ldiring" }); return; }
@@ -538,19 +561,20 @@ async function handleRequest(req, res) {
             subtotal += lineTotal; orderItems.push({ product, quantity, lineTotal });
           }
           if (!Number.isSafeInteger(subtotal) || subtotal <= 0 || subtotal > 1e12) throw Object.assign(new Error("Buyurtma summasi ruxsat etilgan chegaradan tashqarida"), { statusCode: 400 });
-          await db.run("INSERT INTO orders(order_number, customer_id, status, payment_status, delivery_method, recipient_name, delivery_phone, delivery_address, delivery_fee_uzs, subtotal_uzs, total_uzs, customer_note) VALUES (?, ?, 'pending_payment', 'pending', ?, ?, ?, ?, 0, ?, ?, ?)", orderNumber, customer.id, deliveryMethod, recipientName, phone, address, subtotal, subtotal, "");
+          await db.run("INSERT INTO orders(order_number, customer_id, status, payment_status, delivery_method, recipient_name, delivery_phone, delivery_address, delivery_fee_uzs, subtotal_uzs, total_uzs, customer_note) VALUES (?, ?, 'pending_payment', 'proof_submitted', ?, ?, ?, ?, 0, ?, ?, ?)", orderNumber, customer.id, deliveryMethod, recipientName, phone, address, subtotal, subtotal, "");
           const order = await db.get("SELECT id FROM orders WHERE order_number = ?", orderNumber);
           for (const line of orderItems) await db.run("INSERT INTO order_items(order_id, product_id, model_snapshot, name_snapshot, quantity, unit_price_uzs, line_total_uzs) VALUES (?, ?, ?, ?, ?, ?, ?)", order.id, line.product.id, line.product.model, line.product.name, line.quantity, Number(line.product.price_uzs), line.lineTotal);
           await db.run("INSERT INTO payments(order_id, amount_uzs, method, status) VALUES (?, ?, 'qr', 'pending')", order.id, subtotal);
-          await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'create', 'order', ?, ?)", customer.id, orderNumber, JSON.stringify({ itemCount: orderItems.length, totalUzs: subtotal, deliveryMethod }));
+          await db.run("INSERT INTO payment_proof_files(order_id, content_type, bytes) VALUES (?, ?, ?)", order.id, paymentProof.contentType, paymentProof.bytes);
+          await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'create', 'order', ?, ?)", customer.id, orderNumber, JSON.stringify({ itemCount: orderItems.length, totalUzs: subtotal, deliveryMethod, paymentProof: true }));
           return { orderNumber, total: subtotal, itemCount: orderItems.length, items: orderItems.map(line => ({ name: line.product.name, model: line.product.model, quantity: line.quantity, total: line.lineTotal })), customerName: fullName || "Telegram mijoz", telegramId, phone, address, deliveryMethod };
         });
         if (superAdminId) {
           const itemLines = saved.items.map(item => "• " + item.model + " — " + item.name + " × " + item.quantity + " = " + new Intl.NumberFormat("uz-UZ").format(item.total) + " so‘m").join("\n");
-          const note = "🛒 Yangi UzCam buyurtma: " + saved.orderNumber + "\nMijoz: " + saved.customerName + "\nTelegram ID: " + saved.telegramId + "\nTelefon: " + saved.phone + "\nYetkazish: " + (saved.deliveryMethod === "bts" ? "BTS" : "Manzilga") + "\nManzil: " + saved.address + "\nMahsulotlar:\n" + itemLines + "\nJami: " + new Intl.NumberFormat("uz-UZ").format(saved.total) + " so‘m\nHolat: to‘lov tasdig‘ini kutmoqda.";
+          const note = "🛒 Yangi UzCam buyurtma: " + saved.orderNumber + "\nMijoz: " + saved.customerName + "\nTelegram ID: " + saved.telegramId + "\nTelefon: " + saved.phone + "\nYetkazish: " + (saved.deliveryMethod === "bts" ? "BTS" : "Manzilga") + "\nManzil: " + saved.address + "\nMahsulotlar:\n" + itemLines + "\nJami: " + new Intl.NumberFormat("uz-UZ").format(saved.total) + " so‘m\nHolat: to‘lov cheki admin tekshiruvi kutilmoqda.";
           try { await telegramApi("sendMessage", { chat_id: superAdminId, text: note }); } catch (error) { console.error("Order notification failed:", error.message); }
         }
-        sendJson(res, 201, { ok: true, orderNumber: saved.orderNumber, total: saved.total, message: "Buyurtma saqlandi. To‘lov admin tomonidan tekshiriladi." }); return;
+        sendJson(res, 201, { ok: true, orderNumber: saved.orderNumber, total: saved.total, paymentStatus: "proof_submitted", message: "Buyurtma va to‘lov cheki saqlandi. Admin tekshiruvidan so‘ng xabar beramiz." }); return;
       } catch (error) { sendJson(res, error.statusCode || 400, { error: error.message || "Buyurtmani saqlab bo‘lmadi" }); return; }
     }
     if (pathname === "/api/home-content" && req.method === "GET") { sendJson(res, 200, { content: await getHomeContent() }); return; }
