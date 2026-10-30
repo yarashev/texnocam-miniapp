@@ -1,7 +1,7 @@
 // Shared catalog grouping for browser previews, API validation and database migration.
 (function () {
   const categories = Object.freeze([
-    'Kameralar', 'DVR/NVR', 'Tarmoq uskunalari', 'Kabel va optika',
+    'Kameralar', 'DVR/NVR', 'Dahua NVR', 'Tarmoq uskunalari', 'Kabel va optika',
     'Xotira qurilmalari', 'Quvvat, UPS va aksessuarlar',
     'Domofon va kirish nazorati', 'Signalizatsiya va yong‘in xavfsizligi',
     'Aqlli uy', 'Elektronika'
