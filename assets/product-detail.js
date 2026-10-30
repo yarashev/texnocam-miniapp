@@ -13,7 +13,7 @@
   const zoom = node('dialog', 'product-zoom');
   zoom.setAttribute('aria-label', 'Mahsulot rasmini kattalashtirib ko‘rish');
   document.body.append(dialog, zoom);
-  let previousFocus, previousOverflow, closingFromTelegramBack = false;
+  let previousFocus, previousOverflow, closingFromTelegramBack = false, closingZoomFromTelegramBack = false;
   function closeButton(label, action) {
     const button = node('button', 'detail-close', '✕');
     button.type = 'button'; button.setAttribute('aria-label', label);
@@ -62,6 +62,7 @@
     photo.append(image(product, 'detail-photo'));
     photo.disabled = !product.image;
     photo.onclick = () => {
+      window.UzCamTelegramBack?.push(() => { closingZoomFromTelegramBack = true; zoom.close(); }, 'product-zoom');
       zoom.replaceChildren(closeButton('Rasmni yopish', () => zoom.close()), image(product, 'zoom-photo'));
       zoom.showModal();
     };
@@ -102,6 +103,10 @@
     closingFromTelegramBack = false;
     document.body.style.overflow = previousOverflow || '';
     previousFocus?.focus({ preventScroll: true });
+  });
+  zoom.addEventListener('close', () => {
+    if (!closingZoomFromTelegramBack) window.UzCamTelegramBack?.discard('product-zoom');
+    closingZoomFromTelegramBack = false;
   });
   zoom.addEventListener('click', event => { if (event.target === zoom) zoom.close(); });
   document.querySelector('#products')?.addEventListener('click', event => {
