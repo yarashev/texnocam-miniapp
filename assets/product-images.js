@@ -1,7 +1,7 @@
-// Exact-model photo replacements. Preserve images uploaded or chosen by admins.
+// Reviewed exact-model replacements; administrator choices remain authoritative.
 (() => {
-  const normalize = value => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const photos = [
+  const normalize = value => String(value || '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+  const bundled = [
   {
     "brand": "EZVIZ",
     "model": "CS-H1C (1080P)",
@@ -45,9 +45,35 @@
     "image": "assets/official-products/cs-c6n-g1-8mp.png"
   }
 ];
-  function resolve(brand, model, original = '') {
-    const entry = photos.find(photo => normalize(photo.brand) === normalize(brand) && normalize(photo.model) === normalize(model));
-    return entry && (original === entry.previousImage || original === entry.image) ? entry.image : original;
+  const entries = [...bundled, ...(window.UzCamReviewedPhotos || []).map(([brand, model, previousImage, image]) => ({ brand, model, previousImage, image }))];
+  const byModel = new Map(), fallbacks = new Map();
+  const key = (brand, model) => normalize(brand) + ':' + normalize(model);
+  for (const entry of entries) {
+    const modelKey = key(entry.brand, entry.model);
+    if (!byModel.has(modelKey)) byModel.set(modelKey, []);
+    byModel.get(modelKey).push(entry);
+    if (entry.previousImage && entry.previousImage.startsWith('assets/')) {
+      if (!fallbacks.has(entry.image)) fallbacks.set(entry.image, []);
+      fallbacks.get(entry.image).push(entry);
+    }
   }
+  function resolve(brand, model, original = '') {
+    const entry = byModel.get(key(brand, model))?.find(photo => original === photo.previousImage || original === photo.image);
+    return entry ? entry.image : original;
+  }
+  function onImageError(event) {
+    const image = event.target;
+    if (image?.tagName !== 'IMG' || image.dataset.reviewedFallbackUsed) return;
+    const choices = fallbacks.get(image.getAttribute('src'));
+    if (!choices?.length) return;
+    const alt = normalize(image.alt);
+    const entry = choices.find(photo => alt.includes(normalize(photo.model))) || choices[0];
+    image.dataset.reviewedFallbackUsed = '1';
+    image.hidden = false;
+    image.src = entry.previousImage;
+    // The legacy inline error handler should run only if the fallback also fails.
+    event.stopImmediatePropagation();
+  }
+  if (typeof document !== 'undefined') document.addEventListener('error', onImageError, true);
   window.UzCamProductImages = { resolve };
 })();
