@@ -27,9 +27,7 @@ test('every compiled replacement preserves custom images and uses an approved so
   for (const [brand, model, previous, selected] of context.window.UzCamReviewedPhotos) {
     assert.equal(resolve(brand, model, previous), selected);
     assert.equal(resolve(brand, model, '/uploads/private-choice.webp'), '/uploads/private-choice.webp');
-    const url = new URL(selected);
-    assert.equal(url.protocol, 'https:');
-    assert.ok(['kss.uz', 'mfs.ezvizlife.com', 'static.tp-link.com'].includes(url.hostname));
+    assert.match(selected, /^\/api\/reviewed-product-images\/\d+\/[a-f0-9]{12}$/);
   }
   for (const id of [77, 884, 885]) {
     assert.equal(report.products.find(row => row.id === id).status, 'needs-model-photo-review');

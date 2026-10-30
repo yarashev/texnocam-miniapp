@@ -54,7 +54,7 @@ Brand aliases match case-insensitively with punctuation ignored. Product-type se
 
 ## Reviewed product photos
 
-The storefront resolves exact brand/model photo replacements through assets/product-images.js. assets/reviewed-product-images.js is generated from the complete public-catalog audit in assets/product-image-audit.json. Seven EZVIZ PNGs are bundled; the larger reviewed set uses manufacturer/distributor HTTPS image sources. A failed source falls back once to the original local photo. Custom admin-uploaded or independently chosen images take precedence. Prices and database product records are unchanged.
+The storefront resolves exact brand/model photo replacements through assets/product-images.js. assets/reviewed-product-images.js is generated from the complete public-catalog audit in assets/product-image-audit.json. Seven EZVIZ PNGs are bundled; the larger reviewed set is served through a same-origin image endpoint that fetches only approved manufacturer/distributor URLs, verifies the pinned SHA-256 and keeps a bounded in-memory cache. A failed source falls back once to the original local photo. Custom admin-uploaded or independently chosen images take precedence. Prices and database product records are unchanged.
 
 The review covers all 2142 public products captured on 2026-10-30. Status counts in the audit are authoritative: unresolved, ambiguous, unavailable, and visually rejected images remain unchanged. Source dimensions describe native files, not AI upscaling. Catalog/detail image areas remain compact.
 

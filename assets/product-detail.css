@@ -37,3 +37,9 @@
 /* Higher source resolution does not increase the catalog card height. */
 #products.catalog-grid .photo{height:clamp(110px,32vw,150px)}
 @media(min-width:900px){#products.catalog-grid .photo{height:150px}}
+
+/* Explicit image bounds avoid grid intrinsic sizing stretching tall photos. */
+#products .photo img{position:absolute;inset:0;width:100%;height:100%;padding:6px;object-fit:contain}
+#products .photo .badge{z-index:1}
+.detail-photo,.detail-related-photo,.zoom-photo{position:relative}
+.detail-photo img,.detail-related-photo img,.zoom-photo img{position:absolute;inset:0;width:100%;height:100%;padding:12px;object-fit:contain}

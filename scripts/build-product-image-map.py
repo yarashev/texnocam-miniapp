@@ -55,7 +55,7 @@ def main():
                 continue
             row['status'] = 'replacement-ready'
             row['selectedImage'] = source
-            compiled.append([row['brand'], row['model'], original, source])
+            compiled.append([row['brand'], row['model'], original, '/api/reviewed-product-images/' + str(row['id']) + '/' + row['sha256'][:12]])
         elif row['status'] == 'keep-resolution-adequate':
             row['status'] = 'keep-existing-quality'
     report['products'] = sorted(records.values(), key=lambda item: item['id'])

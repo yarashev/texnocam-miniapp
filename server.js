@@ -1,4 +1,5 @@
 import { listCatalogBrands, saveCatalogBrand, deleteCatalogBrand } from './backend/brand-management.js';
+import { createReviewedImageLoader } from './backend/reviewed-images.js';
 import { initializeImageStorage, saveProductImage, loadProductImage, imageStorageMode } from "./backend/image-storage.js";
 import http from "node:http";
 import fs from "node:fs";
@@ -9,6 +10,7 @@ import { listManagedProducts, getManagedProduct, saveManagedProduct, changeProdu
 import { listManagedCategories, createCatalogCategory, deactivateCatalogCategory } from "./backend/category-management.js";
 
 const root = process.cwd();
+const reviewedImages = createReviewedImageLoader(JSON.parse(fs.readFileSync(path.join(root, 'assets/product-image-audit.json'), 'utf8')).products);
 const types = { ".html":"text/html; charset=utf-8", ".js":"text/javascript; charset=utf-8", ".css":"text/css; charset=utf-8", ".json":"application/json; charset=utf-8", ".webp":"image/webp", ".png":"image/png", ".jpg":"image/jpeg", ".jpeg":"image/jpeg", ".svg":"image/svg+xml" };
 const sendJson = (res, status, body) => { res.writeHead(status, { "Content-Type":"application/json; charset=utf-8", "Cache-Control":"no-store", "X-Content-Type-Options":"nosniff" }); res.end(JSON.stringify(body)); };
 
@@ -592,6 +594,17 @@ async function handleRequest(req, res) {
       sendJson(res, 200, { user: sessionUser(user) }); return;
     }
     if (req.method !== "GET") { sendJson(res, 405, { error: "Method not allowed" }); return; }
+    const reviewedPhoto = pathname.match(/^\/api\/reviewed-product-images\/(\d+)\/([a-f0-9]{12})$/);
+    if (reviewedPhoto) {
+      try {
+        const image = await reviewedImages.load(reviewedPhoto[1], reviewedPhoto[2]);
+        if (!image) { res.writeHead(404).end('Not found'); return; }
+        const headers = { 'Content-Type': image.contentType, 'Cache-Control': 'public, max-age=86400', ETag: image.etag, 'X-Content-Type-Options': 'nosniff' };
+        if (req.headers['if-none-match'] === image.etag) { res.writeHead(304, headers).end(); return; }
+        res.writeHead(200, headers).end(image.bytes);
+      } catch { res.writeHead(502, { 'Cache-Control': 'no-store' }).end('Image source unavailable'); }
+      return;
+    }
     if (pathname === "/api/health") { await db.get("SELECT 1 AS ready"); sendJson(res,200,{status:"ok",database:"connected",databaseEngine:db.kind,imageStorage:imageStorageMode(),backendStage:"catalog-management"}); return; }
     if (pathname === "/api/products") { try { sendJson(res, 200, { products: await listPublicProducts(), categories: await listPublicCategories() }); } catch { sendJson(res, 500, { error: "Catalog unavailable" }); } return; }
     sendJson(res, 404, { error: "API route not found" }); return;
