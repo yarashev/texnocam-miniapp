@@ -24,7 +24,8 @@
     const title=document.createElement('span'),small=document.createElement('small');title.textContent=text;small.textContent=detail;
     heading.append(title,small);return heading;
   }
-  function showProducts(section){
+  function showProducts(section,{fromBack=false}={}){
+    if(!fromBack)window.UzCamTelegramBack?.push(()=>window.UzCamCatalogNavigation?.showCategories(null,{fromBack:true}));
     selected=section;state.activeCategory='Barchasi';state.activeBrand='Barcha brendlar';state.visibleLimit=40;
     document.getElementById('brandFilter').value='Barcha brendlar';
     document.getElementById('search').value='';
