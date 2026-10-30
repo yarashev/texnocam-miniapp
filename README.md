@@ -51,3 +51,11 @@ The customer catalog displays emerald SVG icon cards for brand sections and prod
 GET /api/catalog-brands returns active sections. Super Admin manages sections in the “Brendlar va bo‘limlar” admin view through GET/POST /api/admin/brands and PATCH/DELETE /api/admin/brands/:id. The editor supports names, match aliases or keywords, icon selection, logo uploads, ordering and visibility. Existing product-image storage handles raster logo uploads. Deleting a section never deletes or renames products. Writes are transactional, audited, and serialized with a PostgreSQL advisory lock or the SQLite transaction queue.
 
 Brand aliases match case-insensitively with punctuation ignored. Product-type sections match keywords in product text or an exact category name, so the combined “Kabel va optika” category does not put every item into both sections. Additional category cards remain available below brand cards.
+
+## Reviewed product photos
+
+The storefront resolves exact brand/model photo replacements through assets/product-images.js. assets/reviewed-product-images.js is generated from the complete public-catalog audit in assets/product-image-audit.json. Seven EZVIZ PNGs are bundled; the larger reviewed set uses manufacturer/distributor HTTPS image sources. A failed source falls back once to the original local photo. Custom admin-uploaded or independently chosen images take precedence. Prices and database product records are unchanged.
+
+The review covers all 2142 public products captured on 2026-10-30. Status counts in the audit are authoritative: unresolved, ambiguous, unavailable, and visually rejected images remain unchanged. Source dimensions describe native files, not AI upscaling. Catalog/detail image areas remain compact.
+
+For another review, install Pillow and requests in a development Python environment and run python scripts/audit-product-images.py, review candidates and assets/official-products/reviewed-sources.json, then run python scripts/build-product-image-map.py. Downloads stay in ignored .data/image-review. Review scripts use public data only; never add supplier costs or credentials to the audit. Regeneration is a review aid and does not independently approve new model substitutions.

@@ -1,0 +1,76 @@
+{
+  "retrievedAt": "2026-10-30",
+  "note": "Original manufacturer PNGs; no AI generation or upscaling. Exact product variant checked on source page.",
+  "products": [
+    {
+      "brand": "EZVIZ",
+      "model": "CS-H1C (1080P)",
+      "previousImage": "assets/ezviz/01.webp",
+      "image": "assets/official-products/cs-h1c-1080p.png",
+      "sourcePage": "https://www.ezviz.com/product/h1c/47789",
+      "sourceImage": "https://mfs.ezvizlife.com/d114c8d2c8321eadd28568d0a122fabf.png",
+      "width": 600,
+      "height": 600
+    },
+    {
+      "brand": "EZVIZ",
+      "model": "CS-H6C pro (1080P)",
+      "previousImage": "assets/ezviz/02.webp",
+      "image": "assets/official-products/cs-h6c-pro-1080p.png",
+      "sourcePage": "https://www.ezviz.com/product/h6c-pro/50430",
+      "sourceImage": "https://mfs.ezvizlife.com/728642a8ede01c201b5f0f2dd1c4960f.png",
+      "width": 600,
+      "height": 600
+    },
+    {
+      "brand": "EZVIZ",
+      "model": "CS-H6C pro (4MP)",
+      "previousImage": "assets/ezviz/03.webp",
+      "image": "assets/official-products/cs-h6c-pro-4mp.png",
+      "sourcePage": "https://www.ezviz.com/product/h6c-pro-2k%E2%81%BA/48977",
+      "sourceImage": "https://mfs.ezvizlife.com/728642a8ede01c201b5f0f2dd1c4960f.png",
+      "width": 600,
+      "height": 600
+    },
+    {
+      "brand": "EZVIZ",
+      "model": "CS-H6c G1 8MP",
+      "previousImage": "assets/ezviz/05.webp",
+      "image": "assets/official-products/cs-h6c-g1-8mp.png",
+      "sourcePage": "https://www.ezviz.com/product/h6c-g1-4k/70921",
+      "sourceImage": "https://mfs.ezvizlife.com/f5f04d640f40f8e40e5ba0cf68dd5d29.png",
+      "width": 600,
+      "height": 600
+    },
+    {
+      "brand": "EZVIZ",
+      "model": "CS-C6N G1 (3MP)",
+      "previousImage": "",
+      "image": "assets/official-products/cs-c6n-g1-3mp.png",
+      "sourcePage": "https://www.ezviz.com/product/c6n-g1-2k/293591",
+      "sourceImage": "https://mfs.ezvizlife.com/7c89327712cec2161940c8ad2524787d.png",
+      "width": 600,
+      "height": 600
+    },
+    {
+      "brand": "EZVIZ",
+      "model": "CS-C6N G1 (5MP)",
+      "previousImage": "assets/ezviz/07.webp",
+      "image": "assets/official-products/cs-c6n-g1-5mp.png",
+      "sourcePage": "https://www.ezviz.com/product/c6n-g1-3k/189684",
+      "sourceImage": "https://mfs.ezvizlife.com/3d23459b9c273b3d5e1ec8cf72d7ba91.png",
+      "width": 600,
+      "height": 600
+    },
+    {
+      "brand": "EZVIZ",
+      "model": "CS-C6N G1 (8MP)",
+      "previousImage": "assets/ezviz/08.webp",
+      "image": "assets/official-products/cs-c6n-g1-8mp.png",
+      "sourcePage": "https://www.ezviz.com/product/c6n-g1-4k/71072",
+      "sourceImage": "https://mfs.ezvizlife.com/3d23459b9c273b3d5e1ec8cf72d7ba91.png",
+      "width": 600,
+      "height": 600
+    }
+  ]
+}

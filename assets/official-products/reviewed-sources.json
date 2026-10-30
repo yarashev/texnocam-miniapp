@@ -1,0 +1,2552 @@
+{
+  "reviewedAt": "2026-10-30",
+  "products": [
+    {
+      "id": 1,
+      "brand": "EZVIZ",
+      "model": "CS-H1C (1080P)",
+      "previousImage": "assets/ezviz/01.webp",
+      "sourcePage": "https://www.ezviz.com/product/h1c/47789",
+      "sourceImage": "https://mfs.ezvizlife.com/d114c8d2c8321eadd28568d0a122fabf.png",
+      "sourceModel": "H1c",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 68093,
+      "sha256": "7372942a95f6ee5fc6dbd1cc861278c426454c41777669723becf5002fd686af",
+      "specCheck": [
+        "Model CS-H1c Camera Image Sensor 1/3&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 2.8mm, view angle:108°(Diagonal), ",
+        "Max. Resolution 1920 × 1080 Frame Rate Self-Adaptive during network transmission Video Compression H.264 H.264 Type Main Profile Video Bit R",
+        "Resolution 1920 × 1080 Frame Rate Self-Adaptive during network transmission Video Compression H.264 H.264 Type Main Profile Video Bit Rate H"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 2,
+      "brand": "EZVIZ",
+      "model": "CS-H6C pro (1080P)",
+      "previousImage": "assets/ezviz/02.webp",
+      "sourcePage": "https://www.ezviz.com/product/h6c-pro/50430",
+      "sourceImage": "https://mfs.ezvizlife.com/728642a8ede01c201b5f0f2dd1c4960f.png",
+      "sourceModel": "H6c Pro",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 165164,
+      "sha256": "4f00a9203605642de0a8dab6417e27b0c5ee055e581ab7ca5d0a706e05f0d6c4",
+      "specCheck": [
+        "Model CS-H6c-R105-1L2WF Camera Image sensor F1.6@1/3&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm, view angle: 9",
+        "Max. Resolution 1920 × 1080 Frame Rate Self-Adaptive during network transmission Network Smart Alarm Motion Detection, Human Detection, Huma",
+        "Resolution 1920 × 1080 Frame Rate Self-Adaptive during network transmission Network Smart Alarm Motion Detection, Human Detection, Human Tra"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 3,
+      "brand": "EZVIZ",
+      "model": "CS-H6C pro (4MP)",
+      "previousImage": "assets/ezviz/03.webp",
+      "sourcePage": "https://www.ezviz.com/product/h6c-pro-2k%E2%81%BA/48977",
+      "sourceImage": "https://mfs.ezvizlife.com/728642a8ede01c201b5f0f2dd1c4960f.png",
+      "sourceModel": "H6c Pro 2K⁺",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 165164,
+      "sha256": "4f00a9203605642de0a8dab6417e27b0c5ee055e581ab7ca5d0a706e05f0d6c4",
+      "specCheck": [
+        "Model CS-H6c-R105-1J4WF Camera Resolution 4MP /2K+ Resolution Image sensor F1.6@1/3&quot; Progressive Scan CMOS Shutter Speed Self-adaptive ",
+        "Max. Resolution 2560 × 1440 Frame Rate Self-Adaptive during network transmission Network Smart Alarm Motion Detection, Human Shape Detection",
+        "Resolution 4MP /2K+ Resolution Image sensor F1.6@1/3&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm, view angle: 9"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 4,
+      "brand": "EZVIZ",
+      "model": "CS-H6c G1 5MP",
+      "previousImage": "assets/ezviz/04.webp",
+      "sourcePage": "https://www.ezviz.com/product/h6c-g1-3k/189927",
+      "sourceImage": "https://mfs.ezvizlife.com/3cfd304f11991ca1acde8f814122d981.png",
+      "sourceModel": "H6c G1 3K",
+      "sourceDimensions": [
+        300,
+        300
+      ],
+      "sourceBytes": 39555,
+      "sha256": "19617c4fc59896189d6867f0cf748afdedfa4b7353db5323ba51af06b908f797",
+      "specCheck": [
+        "Max. Resolution 3K (2880 × 1620） Frame Rate Self-adaptive during network transmission Network Smart Alarm Motion Detection, AI-Powered Human",
+        "Resolution 3K (2880 × 1620） Frame Rate Self-adaptive during network transmission Network Smart Alarm Motion Detection, AI-Powered Human Shap"
+      ],
+      "status": "official-source-too-small"
+    },
+    {
+      "id": 5,
+      "brand": "EZVIZ",
+      "model": "CS-H6c G1 8MP",
+      "previousImage": "assets/ezviz/05.webp",
+      "sourcePage": "https://www.ezviz.com/product/h6c-g1-4k/70921",
+      "sourceImage": "https://mfs.ezvizlife.com/f5f04d640f40f8e40e5ba0cf68dd5d29.png",
+      "sourceModel": "H6c G1 4K",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 145114,
+      "sha256": "f193c35557564a6bb1f67e0015b931ff17555073da42e5aaa653498fc108acbb",
+      "specCheck": [
+        "Max. Resolution 4K (3840 × 2160) Frame Rate Self-adaptive during network transmission Network Smart Alarm PIR Motion detection &nbsp;AI-Powe",
+        "Resolution 4K (3840 × 2160) Frame Rate Self-adaptive during network transmission Network Smart Alarm PIR Motion detection &nbsp;AI-Powered H"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 6,
+      "brand": "EZVIZ",
+      "model": "CS-C6N G1 (3MP)",
+      "previousImage": "",
+      "sourcePage": "https://www.ezviz.com/product/c6n-g1-2k/293591",
+      "sourceImage": "https://mfs.ezvizlife.com/7c89327712cec2161940c8ad2524787d.png",
+      "sourceModel": "C6N G1 2K",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 132408,
+      "sha256": "1435390131886f3a5e461e67c1bb29007075eb4ef7adbb0efaa114ff7a2934f1",
+      "specCheck": [
+        "Model CS-C6N-R200-1L3WFL Camera Image Sensor F2.0 @ 1/2.7&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm @ F2.0, v",
+        "Max. Resolution 2K (2304 × 1296) Frame Rate Self-adaptive during network transmission Network Smart Alarm Smart human motion detection, AI-p",
+        "Resolution 2K (2304 × 1296) Frame Rate Self-adaptive during network transmission Network Smart Alarm Smart human motion detection, AI-powere"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 7,
+      "brand": "EZVIZ",
+      "model": "CS-C6N G1 (5MP)",
+      "previousImage": "assets/ezviz/07.webp",
+      "sourcePage": "https://www.ezviz.com/product/c6n-g1-3k/189684",
+      "sourceImage": "https://mfs.ezvizlife.com/3d23459b9c273b3d5e1ec8cf72d7ba91.png",
+      "sourceModel": "C6N G1 3K",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 170287,
+      "sha256": "cf69dcc2f8e9d6a4523ade94927fc59a996729fcde8bf3514999e52c1b2a7414",
+      "specCheck": [
+        "Model CS-C6N-R200-1Q5WFL Camera Image Sensor 1/3&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm@F1.6, view angle: ",
+        "Max. Resolution 3K (2880 × 1620） Frame Rate Self-adaptive during network transmission Network Smart Alarm Motion Detection, AI-Powered Human",
+        "Resolution 3K (2880 × 1620） Frame Rate Self-adaptive during network transmission Network Smart Alarm Motion Detection, AI-Powered Human Shap"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 8,
+      "brand": "EZVIZ",
+      "model": "CS-C6N G1 (8MP)",
+      "previousImage": "assets/ezviz/08.webp",
+      "sourcePage": "https://www.ezviz.com/product/c6n-g1-4k/71072",
+      "sourceImage": "https://mfs.ezvizlife.com/3d23459b9c273b3d5e1ec8cf72d7ba91.png",
+      "sourceModel": "C6N G1 4K",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 170287,
+      "sha256": "cf69dcc2f8e9d6a4523ade94927fc59a996729fcde8bf3514999e52c1b2a7414",
+      "specCheck": [
+        "Model CS-C6N-R200-8H8WFL Camera Image Sensor 1/3&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm@F1.6, ViewAngle: 1",
+        "Max. Resolution 4K (3840 × 2160) Frame Rate Self-adaptive during network transmission Network Smart Alarm PIR Motion detection AI-Powered Hu",
+        "Resolution 4K (3840 × 2160) Frame Rate Self-adaptive during network transmission Network Smart Alarm PIR Motion detection AI-Powered Human S"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 10,
+      "brand": "EZVIZ",
+      "model": "CS-S10 (4MP)",
+      "previousImage": "assets/ezviz/10.webp",
+      "sourcePage": "https://www.ezviz.com/product/s10/68505",
+      "sourceImage": "https://mfs.ezvizlife.com/9a54d0e65fca6b6f1b319b55254bbbe4.png",
+      "sourceModel": "S10",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 124247,
+      "sha256": "df3192907f55e1aad140ba39bdaa0a30ccaa2b977c9a48951123759a4eea4e6d",
+      "specCheck": [
+        "Max. Resolution 2K+(1504 × 2672) Frame Rate Self-adaptive during network transmission Video Compression H.264 / H.265 Video Bit Rate Adaptiv",
+        "Resolution 2K+(1504 × 2672) Frame Rate Self-adaptive during network transmission Video Compression H.264 / H.265 Video Bit Rate Adaptive bit"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 11,
+      "brand": "EZVIZ",
+      "model": "CS-E4p (6MP)",
+      "previousImage": "assets/ezviz/11.webp",
+      "sourcePage": "https://www.ezviz.com/product/e4p/65325",
+      "sourceImage": "https://mfs.ezvizlife.com/d8c2ce3cffc33a5955035da635bbeea6.png",
+      "sourceModel": "E4p",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 175714,
+      "sha256": "6efbd0380d22d5422cc26ab92e6267264dff92d28557df3eab53222e3a4f81e6",
+      "specCheck": [
+        "Model CS-E4p-R100-8C6WKF Compression Image Sensor 1/2.8” Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens M12 Day &amp; Night ",
+        "Max. Resolution 3K⁺ (2320 × 2320) Frame Rate Network Smart Alarm Motion Detection, AI-Powered Human Shape Detection Wi-Fi Pairing AP pairing",
+        "Resolution 3K⁺ (2320 × 2320) Frame Rate Network Smart Alarm Motion Detection, AI-Powered Human Shape Detection Wi-Fi Pairing AP pairing Prot"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 14,
+      "brand": "EZVIZ",
+      "model": "CS-H4 (3MP)",
+      "previousImage": "assets/ezviz/14.webp",
+      "sourcePage": "https://www.ezviz.com/product/h4/48107",
+      "sourceImage": "https://mfs.ezvizlife.com/bd3a0f89476539a78adf6bf7fbabb566.png",
+      "sourceModel": "H4",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 98564,
+      "sha256": "0c475775abd570adb401df92fe4ab99e3ee278338522affc4120060d58fef170",
+      "specCheck": [
+        "Model CS-H4-R201-1H3WKFL Camera Image sensor 1/2.7” Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 2.8 mm, viewing angle: 10",
+        "Max. Resolution 2304 × 1296 Frame Rate Max: 25fps; Self-Adaptive during network transmission Audio Bit Rate Self-Adaptive Max. Bitrate 3Mbps",
+        "Resolution 2304 × 1296 Frame Rate Max: 25fps; Self-Adaptive during network transmission Audio Bit Rate Self-Adaptive Max. Bitrate 3Mbps Vide"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 15,
+      "brand": "EZVIZ",
+      "model": "CS-C6c 8MP 4K",
+      "previousImage": "assets/ezviz/15.webp",
+      "sourcePage": "https://www.ezviz.com/product/c6c-4k/55046",
+      "sourceImage": "https://mfs.ezvizlife.com/171d3b7678f29960c63062a68cb3dc03.png",
+      "sourceModel": "C6c 4K",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 189778,
+      "sha256": "00c3ae882c502c4c2ff871b16940c9eef589eac8c8eb86827d40e1ce10887229",
+      "specCheck": [
+        "Model CS-C6c-R100-8G8WF Camera Image Sensor 1/2.7&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm @ F1.6, viewing a",
+        "Max. Resolution 3840 × 2160 Frame Rate Self-Adaptive during network transmission Video Compression H.264/H.265 Video Bit Rate HD; Standard. ",
+        "Resolution 3840 × 2160 Frame Rate Self-Adaptive during network transmission Video Compression H.264/H.265 Video Bit Rate HD; Standard. Adapt"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 16,
+      "brand": "EZVIZ",
+      "model": "CS-H3 (5MP)",
+      "previousImage": "assets/ezviz/16.webp",
+      "sourcePage": "https://www.ezviz.com/product/h3-3k/41343",
+      "sourceImage": "https://mfs.ezvizlife.com/8ceae9cb41fbcd7ad070d4d46fb78872.png",
+      "sourceModel": "H3 3K",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 110498,
+      "sha256": "46efec33ddcda09be4bd2e8229b252e07f0967ea139804547febf1c5a59160ff",
+      "specCheck": [
+        "Model CS-H3-R100-1J5WKFL General Dimensions 75.5 × 75.5 × 155 mm (2.97 × 2.97 × 6.10 inch) Package Dimensions 227 × 100 × 92 mm (8.94 × 3.94",
+        "Max. Resolution 2880 × 1620 pixels Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bi",
+        "Resolution 2880 × 1620 pixels Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit Rat"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 17,
+      "brand": "EZVIZ",
+      "model": "CS-H3c (1080P)",
+      "previousImage": "assets/ezviz/17.webp",
+      "sourcePage": "https://www.ezviz.com/product/h3c/42661",
+      "sourceImage": "https://mfs.ezvizlife.com/fb49f00a7114be896237e7decd8e01ed.png",
+      "sourceModel": "H3c",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 85692,
+      "sha256": "afb252aec8c41e734b2545707811d772c6abe6ed6a05d987c7db81e5b9cd894d",
+      "specCheck": [
+        "Model CS-H3c-R100-1K2WF Camera Image Sensor 1/2.7”Progressive Scan CMOS Minimum Illumination 0.01 Lux @ (F2.0, AGC ON), 0 Lux with IR IR Nig",
+        "Max. Resolution 1080p, 1920 × 1080 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bi",
+        "Resolution 1080p, 1920 × 1080 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit Rat"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 18,
+      "brand": "EZVIZ",
+      "model": "CS-H3c (1080p) color",
+      "previousImage": "assets/ezviz/18.webp",
+      "sourcePage": "https://www.ezviz.com/product/h3c-color/42859",
+      "sourceImage": "https://mfs.ezvizlife.com/fb49f00a7114be896237e7decd8e01ed.png",
+      "sourceModel": "H3c Color",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 85692,
+      "sha256": "afb252aec8c41e734b2545707811d772c6abe6ed6a05d987c7db81e5b9cd894d",
+      "specCheck": [
+        "Model CS-H3c-R100-1K2WFL Camera Image Sensor 1/2.7”Progressive Scan CMOS Minimum Illumination 0.01 Lux @ (F2.0, AGC ON), 0 Lux with IR IR Ni",
+        "Max. Resolution 1080p, 1920 × 1080 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bi",
+        "Resolution 1080p, 1920 × 1080 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit Rat"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 19,
+      "brand": "EZVIZ",
+      "model": "CS-H3c (3MP) color",
+      "previousImage": "assets/ezviz/19.webp",
+      "sourcePage": "https://www.ezviz.com/product/h3c-2k/44668",
+      "sourceImage": "https://mfs.ezvizlife.com/666fb8042746f72c2fb19c948a107b59.png",
+      "sourceModel": "H3c 2K",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 129696,
+      "sha256": "abf56ffc76384c909a3a2e22e2eee130f522568e406b9e0886d2319fd554359c",
+      "specCheck": [
+        "Model CS-H3c-R100-1K3WKFL Camera Image Sensor 1/2.7”Progressive Scan CMOS Minimum Illumination 0.01 Lux @ (F2.0, AGC ON), 0 Lux with IR IR N",
+        "Max. Resolution 3MP, 2304 × 1296 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit ",
+        "Resolution 3MP, 2304 × 1296 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit Rate "
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 20,
+      "brand": "EZVIZ",
+      "model": "CS-H3c (4MP) color",
+      "previousImage": "assets/ezviz/20.webp",
+      "sourcePage": "https://www.ezviz.com/product/h3c-2k%E2%81%BA/44686",
+      "sourceImage": "https://mfs.ezvizlife.com/666fb8042746f72c2fb19c948a107b59.png",
+      "sourceModel": "H3c 2K⁺",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 129696,
+      "sha256": "abf56ffc76384c909a3a2e22e2eee130f522568e406b9e0886d2319fd554359c",
+      "specCheck": [
+        "Model CS-H3c-R100-1J4WKFL Camera Image Sensor 1/2.7”Progressive Scan CMOS Minimum Illumination 0.01 Lux @ (F2.0, AGC ON), 0 Lux with IR IR N",
+        "Max. Resolution 4MP, 2560 × 1440 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit ",
+        "Resolution 4MP, 2560 × 1440 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit Rate "
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 21,
+      "brand": "EZVIZ",
+      "model": "CS-CB1 (1080P)",
+      "previousImage": "assets/ezviz/21.webp",
+      "sourcePage": "https://www.ezviz.com/product/cb1/47474",
+      "sourceImage": "https://mfs.ezvizlife.com/87a4e4d546373869b839740a81269eab.png",
+      "sourceModel": "CB1",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 52932,
+      "sha256": "0378cb8619933f5df5dc7733ada226df4be4f3b332941537f9b3d7e926562544",
+      "specCheck": [
+        "Model CS-CB1-R100-1K2WF Camera Image Sensor 1/3 ” 2-Megapixel Progressive Scan CMOS Sensor Shutter Speed Self-Adaptive Shutter Lens 2.8mm@ F",
+        "Max. Resolution 1920 × 1080 Frame Rate 15fps. Self-Adaptive during Network Transmission Video Compression H.265 / H.264 Video Bit Rate Full ",
+        "Resolution 1920 × 1080 Frame Rate 15fps. Self-Adaptive during Network Transmission Video Compression H.265 / H.264 Video Bit Rate Full HD; H"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 22,
+      "brand": "EZVIZ",
+      "model": "CS-CB2 (2MP)",
+      "previousImage": "assets/ezviz/22.webp",
+      "sourcePage": "https://www.ezviz.com/product/cb2/47560",
+      "sourceImage": "https://mfs.ezvizlife.com/1393fe2acdb3a186a582571800cdd765.png",
+      "sourceModel": "CB2",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 52684,
+      "sha256": "4e0725067981aaf5358018c27cedf8ca1038c69edb084954de14b21f0c831272",
+      "specCheck": [
+        "Model CS-CB2-R100-2D2WF Camera Image Sensor 1/2.8” 2-Megapixel Progressive Scan CMOS Sensor Shutter Speed Self-Adaptive Shutter Lens 4 mm @ ",
+        "Max. Resolution 1920 × 1080 Frame Rate 15fps. Self-Adaptive during Network Transmission Video Compression H.265 / H.264 Video Bit Rate Full ",
+        "Resolution 1920 × 1080 Frame Rate 15fps. Self-Adaptive during Network Transmission Video Compression H.265 / H.264 Video Bit Rate Full HD; H"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 23,
+      "brand": "EZVIZ",
+      "model": "CS-CB2 (3MP) 4G",
+      "previousImage": "assets/ezviz/23.webp",
+      "sourcePage": "https://www.ezviz.com/product/cb2-4g/58788",
+      "sourceImage": "https://mfs.ezvizlife.com/7dc320a315cfff1b3d6e817894c065cd.png",
+      "sourceModel": "CB2 4G",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 149268,
+      "sha256": "fcd9f37337a6e456dba3f8792934b3245a15926af1d05ec8b44af80fdabacb4a",
+      "specCheck": [
+        "Model CS-CB2-R105-1K3F4GA Camera Image Sensor 1/2.8&quot; 3-Megapixel Progressive Scan CMOS Sensor Minimum Illumination 0.01 Lux Shutter Spe",
+        "Max. Resolution 2304 × 1296 Frame Rate 15 fps. Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit Rate Ultr",
+        "Resolution 2304 × 1296 Frame Rate 15 fps. Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit Rate Ultra-HD;"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 25,
+      "brand": "EZVIZ",
+      "model": "CS-EB3 4G (3MP)",
+      "previousImage": "assets/ezviz/25.webp",
+      "sourcePage": "https://www.ezviz.com/product/eb3-4g/59788",
+      "sourceImage": "https://mfs.ezvizlife.com/e38c3b1adf6f4dcffe67bf32c884edd6.png",
+      "sourceModel": "EB3 4G",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 122737,
+      "sha256": "2800c64a5bd82c4a977b639084d17277710feb643dfc4e17e2e8bebe2922bdb9",
+      "specCheck": [
+        "Model CS-EB3-R200-1K3FL4GA Camera Image Sensor 1/2.8” 3-Megapixel Progressive Scan CMOS Sensor Minimum Illumination 0.01 Lux @(F1.6, AGC ON)",
+        "Max. Resolution 2304 × 1296 Frame Rate Max:15fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit Rate U",
+        "Resolution 2304 × 1296 Frame Rate Max:15fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit Rate Ultra-"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 26,
+      "brand": "EZVIZ",
+      "model": "CS-EB3 4G KIT (3MP)",
+      "previousImage": "assets/ezviz/26.webp",
+      "sourcePage": "https://www.ezviz.com/product/eb3-4g-kit/71528",
+      "sourceImage": "https://mfs.ezvizlife.com/f56710c3af67fbf1dad4c69f148026ce.png",
+      "sourceModel": "EB3 4G Kit",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 202000,
+      "sha256": "bb2ccf21e313d3777bd2478f3936c1e0f00d6c8af7f1d11a427db7f1ca2d0236",
+      "specCheck": [
+        "Model CS-EB3-R200-1K3FL4GA Camera Image Sensor 1/2.8” 3-Megapixel Progressive Scan CMOS Sensor Minimum Illumination 0.01 Lux @(F1.6, AGC ON)",
+        "Max. Resolution 2K (2304 × 1296) Frame Rate Max:15fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit R",
+        "Resolution 2K (2304 × 1296) Frame Rate Max:15fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit Rate Q"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 27,
+      "brand": "EZVIZ",
+      "model": "CS-EB5 4K",
+      "previousImage": "assets/ezviz/27.webp",
+      "sourcePage": "https://www.ezviz.com/product/eb5-4k/54971",
+      "sourceImage": "https://mfs.ezvizlife.com/73cd2e58d54ca81d24f940e9dd2c3acd.png",
+      "sourceModel": "EB5 4K",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 118451,
+      "sha256": "02fbd6d2af566dc9e8a3c1599badcee0eb406481842b6dea87a14128f8bfc5ee",
+      "specCheck": [
+        "Model CS-EB5-R100-2F8WFL Camera Image Sensor 1/2.7” 8-Megapixel Progressive Scan CMOS Sensor Minimum Illumination 0.01 Lux @(F1.6, AGC ON), ",
+        "Max. Resolution 3840 × 2160 Frame Rate 15fps. Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit Rate Ultra",
+        "Resolution 3840 × 2160 Frame Rate 15fps. Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit Rate Ultra HD; "
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 28,
+      "brand": "EZVIZ",
+      "model": "CS-LC3 (4MP)",
+      "previousImage": "assets/ezviz/28.webp",
+      "sourcePage": "https://www.ezviz.com/product/lc3/31513",
+      "sourceImage": "https://mfs.ezvizlife.com/a2a2571c7d0de2a9d781d5926d218d7d.png",
+      "sourceModel": "LC3",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 46794,
+      "sha256": "8d5965eaf17e611d4b4596c4b82b6c25fb4ee63a5fad74c3d02c7d312dcb0423",
+      "specCheck": [
+        "Model CS-LC3-A0 Light Parameters Lamp 1 LED SMD LED Brightness 700 Lumen (+/-10%) Color Temperature 3000K Life-span @Ta 25°C 30000H LED Lumi",
+        "Max. Resolution 4MP (2560 × 1440) Camera Viewing Angle 157° (Diagonal), 140° (Horizontal), 75° (Vertical) IR Range Max. 10 m (33 ft) Ingress",
+        "Resolution 4MP (2560 × 1440) Camera Viewing Angle 157° (Diagonal), 140° (Horizontal), 75° (Vertical) IR Range Max. 10 m (33 ft) Ingress Prot"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 29,
+      "brand": "EZVIZ",
+      "model": "CS-EL3 (3MP)",
+      "previousImage": "assets/ezviz/29.webp",
+      "sourcePage": "https://www.ezviz.com/product/el3/47930",
+      "sourceImage": "https://mfs.ezvizlife.com/9a27843953cacca650574fd1304960e4.png",
+      "sourceModel": "EL3",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 43076,
+      "sha256": "e69d8956e84d67f1eb5c0978382f4664cdfeea7c69e14ec31c8e0cde0a74a7e7",
+      "specCheck": [
+        "Model CS-EL3 Light Parameters Lamp 1 LED SMD LED Brightness 780LM(+/-10%), Adjustable brightness Color Temperature 3000K-5700K, Adjustable c",
+        "Max. Resolution 3MP(2048*1536) Camera Viewing Angle 130° (Diagonal), 99° (Horizontal), 71° (Vertical) IR Range Max. 15m Ingress Protection G",
+        "Resolution 3MP(2048*1536) Camera Viewing Angle 130° (Diagonal), 99° (Horizontal), 71° (Vertical) IR Range Max. 15m Ingress Protection Grade "
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 30,
+      "brand": "EZVIZ",
+      "model": "CS-C8C (1080)",
+      "previousImage": "assets/ezviz/30.webp",
+      "sourcePage": "https://www.ezviz.com/product/c8c-1080p/58028",
+      "sourceImage": "https://mfs.ezvizlife.com/11bd5e54966eb8aeb67ed629b361611a.png",
+      "sourceModel": "C8c 1080p",
+      "sourceDimensions": [
+        300,
+        300
+      ],
+      "sourceBytes": 28449,
+      "sha256": "4327e7161c2692118aaf50558229ed45e2b6a9751eaeb232456bf1d4c86234e0",
+      "specCheck": [
+        "Model CS-C8c-R100-1K2WKFL Camera Image Sensor 1/2.8&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm@ F1.6, viewing ",
+        "Max. Resolution 1920 × 1080 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main",
+        "Resolution 1920 × 1080 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main Prof"
+      ],
+      "status": "official-source-too-small"
+    },
+    {
+      "id": 31,
+      "brand": "EZVIZ",
+      "model": "CS-C8C (5MP)",
+      "previousImage": "assets/ezviz/31.webp",
+      "sourcePage": "https://www.ezviz.com/product/c8c-3k/51295",
+      "sourceImage": "https://mfs.ezvizlife.com/6c62bf358e63da579aa5b96bcf87d106.png",
+      "sourceModel": "C8c 3K",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 87509,
+      "sha256": "8d5bf6b849bfde2b74031c156ebb2f10185430738c4ee941b9bc31eb449cd851",
+      "specCheck": [
+        "Model CS-C8c-5MP Camera Image Sensor 1/3&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm@ F1.6, viewing angle: 48° ",
+        "Max. Resolution 2880 × 1620 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main",
+        "Resolution 2880 × 1620 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main Prof"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 32,
+      "brand": "EZVIZ",
+      "model": "CS-H8C (1080P)",
+      "previousImage": "assets/ezviz/32.webp",
+      "sourcePage": "https://www.ezviz.com/product/h8c/43162",
+      "sourceImage": "https://mfs.ezvizlife.com/98853e93607e47bb3847e4b9a6ab80ad.png",
+      "sourceModel": "H8c",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 77054,
+      "sha256": "f79dd6285090ba883abbf8795b0d41fa32d145822b50a33e27208f914d19a017",
+      "specCheck": [
+        "Model Model CS-H8c (1080P) Camera Image Sensor 1/3&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm @ F2.0, viewing ",
+        "Max. Resolution 1920 × 1080 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main",
+        "Resolution 1920 × 1080 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main Prof"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 33,
+      "brand": "EZVIZ",
+      "model": "CS-H8c (3MP)",
+      "previousImage": "assets/ezviz/33.webp",
+      "sourcePage": "https://www.ezviz.com/product/h8c-2k/45058",
+      "sourceImage": "https://mfs.ezvizlife.com/98853e93607e47bb3847e4b9a6ab80ad.png",
+      "sourceModel": "H8c 2K",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 77054,
+      "sha256": "f79dd6285090ba883abbf8795b0d41fa32d145822b50a33e27208f914d19a017",
+      "specCheck": [
+        "Model CS-H8c (2K) Camera Image Sensor 1/2.8&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm@ F1.6, viewing angle: 4",
+        "Max. Resolution 2304 × 1296 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main",
+        "Resolution 2304 × 1296 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main Prof"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 34,
+      "brand": "EZVIZ",
+      "model": "CS-H8C (4MP)",
+      "previousImage": "assets/ezviz/34.webp",
+      "sourcePage": "https://www.ezviz.com/product/h8c-2k%E2%81%BA/45189",
+      "sourceImage": "https://mfs.ezvizlife.com/98853e93607e47bb3847e4b9a6ab80ad.png",
+      "sourceModel": "H8c 2K⁺",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 77054,
+      "sha256": "f79dd6285090ba883abbf8795b0d41fa32d145822b50a33e27208f914d19a017",
+      "specCheck": [
+        "Model CS-H8c (2K⁺) Camera Image Sensor 1/3&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm@ F1.6, viewing angle: 46",
+        "Max. Resolution 2560 × 1440 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main",
+        "Resolution 2560 × 1440 Frame Rate Max: 30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main Prof"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 35,
+      "brand": "EZVIZ",
+      "model": "CS-H8c 4G (3MP)",
+      "previousImage": "assets/ezviz/35.webp",
+      "sourcePage": "https://www.ezviz.com/product/h8c-4g/51967",
+      "sourceImage": "https://mfs.ezvizlife.com/65ad4620a6c23d669041a5e94f5f01a2.png",
+      "sourceModel": "H8c 4G",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 72496,
+      "sha256": "48b35d4e04d9f5e4e918d3fc5e8a701ed996523f4a06a1c6c03eb91b0a8017b4",
+      "specCheck": [
+        "Model CS-H8c-R200-1K3KFL4GA Camera Image Sensor 1/2.8&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm@ F1.6, viewin",
+        "Resolution 2304 × 1296 Frame Rate Max:30fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main Profi"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 37,
+      "brand": "EZVIZ",
+      "model": "CS-H8c pro (8MP)",
+      "previousImage": "assets/ezviz/37.webp",
+      "sourcePage": "https://www.ezviz.com/product/h8c-pro-4k/61817",
+      "sourceImage": "https://mfs.ezvizlife.com/5e1bac3c96c5d4d4e0915b5e26c28f0f.png",
+      "sourceModel": "H8c Pro 4K",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 61908,
+      "sha256": "3dd87bbeea0d47a22222bf1d63ac00f289c66c7a1ec07faa4d1d9aa9b360692e",
+      "specCheck": [
+        "Model CS-H8c-R200-8H8WKFL Camera Image Sensor 1/2.7&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm@ F1.6, viewing ",
+        "Resolution 3840 × 2160 Frame Rate Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main Profile Video Bi"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 38,
+      "brand": "EZVIZ",
+      "model": "CS-H8c pro 4G (5MP)",
+      "previousImage": "assets/ezviz/38.webp",
+      "sourcePage": "https://www.ezviz.com/product/h8c-pro-4g/290172",
+      "sourceImage": "https://mfs.ezvizlife.com/226371f82b4d51f8bf2f4ab4f47b71e5.png",
+      "sourceModel": "H8c Pro 4G",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 160015,
+      "sha256": "4439f5b31e4ead299d6664d580cb665562989f5f3d9493cb583e55d4172443a3",
+      "specCheck": [
+        "Model CS-H8c-R210-1R5WFL4G Camera Image Sensor 1/3&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4 mm @ F1.6, viewing",
+        "Resolution 3K (2880 × 1620) Frame Rate Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main Profile Vid"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 41,
+      "brand": "EZVIZ",
+      "model": "CS-H80X (8MP+2MP)",
+      "previousImage": "assets/ezviz/41.webp",
+      "sourcePage": "https://www.ezviz.com/product/h80x-dual/61002",
+      "sourceImage": "https://mfs.ezvizlife.com/89c4010aecda21bbab03657b0e58af14.png",
+      "sourceModel": "H80x Dual",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 118992,
+      "sha256": "5f1f33929d24a2a087d19efadeef17efdb7ef2fce6aa7de96259d5ce4089a71f",
+      "specCheck": [
+        "Model CS-H80x-R100-8G82WKFL Camera Image Sensor 1/2.7” + 1/2.9” Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm @ F1.0, v",
+        "Resolution 3840 × 2160 Frame Rate Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main Profile Video Bi"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 42,
+      "brand": "EZVIZ",
+      "model": "CS-H8X (4MP)",
+      "previousImage": "assets/ezviz/42.webp",
+      "sourcePage": "https://www.ezviz.com/product/h8x-2k%E2%81%BA/60814",
+      "sourceImage": "https://mfs.ezvizlife.com/10733201902ef2fdc883cce5adf2f2d8.png",
+      "sourceModel": "H8x 2K⁺",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 128820,
+      "sha256": "c9962851320bb41fe03647d374cef5134b5172b1c80d74be81969c31f4ffdee6",
+      "specCheck": [
+        "Model CS-H8x-R100-8H4WKFL Camera Image Sensor 1/1.8&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens 4mm @ F1.0 Field of",
+        "Max. Resolution 2K+ (2560 × 1440) Frame Rate Self-adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main profi",
+        "Resolution 2K+ (2560 × 1440) Frame Rate Self-adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main profile Vi"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 43,
+      "brand": "EZVIZ",
+      "model": "CS-H80F (4+4+4MP)",
+      "previousImage": "assets/ezviz/43.webp",
+      "sourcePage": "https://www.ezviz.com/product/h80f-multi-2k%E2%81%BA/62547",
+      "sourceImage": "https://mfs.ezvizlife.com/854b6033772f29eb042a132c0615921e.png",
+      "sourceModel": "H80f Multi 2K⁺",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 132291,
+      "sha256": "74fcf575cbe6a5f90a4c78a173391feead0b28a25e24f0dbbe1ebb14ad28c8cd",
+      "specCheck": [
+        "Model CS-H80f-R100-8G444WKFL Camera Image Sensor 1/3” Progressive Scan CMOS * 3 Shutter Speed Self-adaptive shutter Lens 2.8mm @ F1.6, viewi",
+        "Max. Resolution 2560 × 1440 Frame Rate Self-adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main Profile Vid",
+        "Resolution 2560 × 1440 Frame Rate Self-adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main Profile Video Bi"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 44,
+      "brand": "EZVIZ",
+      "model": "CS-H90 Dual (4MP+4MP)",
+      "previousImage": "",
+      "sourcePage": "https://www.ezviz.com/product/h90-dual-2k%E2%81%BA/62160",
+      "sourceImage": "https://mfs.ezvizlife.com/a41cf29635055aaaaffb352d5c6e5c75.png",
+      "sourceModel": "H90 Dual 2K⁺",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 176528,
+      "sha256": "be2f19eeff549b994174b916cc607b05c0e3a29f4fa781b33072603a62a6a4cd",
+      "specCheck": [
+        "Model CS-H90-R100-8H44WKFL Camera Image Sensor 1/3&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens Top Lens: 2.8mm @ F1",
+        "Resolution 2K+ (2560 × 1440) Frame Rate Self-adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main Profile Vi"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 45,
+      "brand": "EZVIZ",
+      "model": "CS-H9c (3MP+3MP)",
+      "previousImage": "assets/ezviz/45.webp",
+      "sourcePage": "https://www.ezviz.com/product/h9c-dual-2k/52810",
+      "sourceImage": "https://mfs.ezvizlife.com/1d8a5e6e404b5a2490b99051a6bf63c2.png",
+      "sourceModel": "H9c Dual 2K",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 124496,
+      "sha256": "21328eae0fec9763354f47afa63b22b0e8b7c003224d208a1dc2d8079501d1dd",
+      "specCheck": [
+        "Model CS-H9c-R100-8H33WKFL Camera Image Sensor 1/2.7&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens Upper Camera: 2.8m",
+        "Resolution 2304 × 1296 Frame Rate Max:15fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main Profi"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 46,
+      "brand": "EZVIZ",
+      "model": "CS-H9c (5MP+5MP)",
+      "previousImage": "assets/ezviz/46.webp",
+      "sourcePage": "https://www.ezviz.com/product/h9c-dual-3k/56091",
+      "sourceImage": "https://mfs.ezvizlife.com/da1b4aad8b1326810160ddbb8aa8c150.png",
+      "sourceModel": "H9c Dual 3K",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 124496,
+      "sha256": "21328eae0fec9763354f47afa63b22b0e8b7c003224d208a1dc2d8079501d1dd",
+      "specCheck": [
+        "Model CS-H9c-R100-8G55WKFL Camera Image Sensor 1/2.7&quot; Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens Fix Lens: 2.8mm@ F",
+        "Resolution 2880 × 1620 Frame Rate Max:15fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main Profi"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 47,
+      "brand": "EZVIZ",
+      "model": "CS-H9c 4G (5MP+5MP)",
+      "previousImage": "assets/ezviz/47.webp",
+      "sourcePage": "https://www.ezviz.com/product/h9c-dual-4g/195024",
+      "sourceImage": "https://mfs.ezvizlife.com/5bd5ca3b27e03bbd74d1d3a50ec9f10c.png",
+      "sourceModel": "H9c Dual 4G",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 139277,
+      "sha256": "4cca240385e5886f6f2e11b550c4ef8f37d3a3daf89536c359eedac94dbbf98e",
+      "specCheck": [
+        "Model CS-H9c-R105-8H55WFL4GA / CS-H9c (5MP+5MP,4G) Camera Image Sensor 1/3” Progressive Scan CMOS Shutter Speed Self-adaptive shutter Lens T",
+        "Max. Resolution 3K (2880 × 1620) Frame Rate Self-adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main profil",
+        "Resolution 3K (2880 × 1620) Frame Rate Self-adaptive during network transmission Video Compression H.265 / H.264 H.265 Type Main profile Vid"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 48,
+      "brand": "EZVIZ",
+      "model": "CS-EB8 4G (3MP)",
+      "previousImage": "assets/ezviz/48.webp",
+      "sourcePage": "https://www.ezviz.com/product/eb8-4g/46565",
+      "sourceImage": "https://mfs.ezvizlife.com/f4271cddb1247cd300ef3b964b3f8685.png",
+      "sourceModel": "EB8 4G",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 122579,
+      "sha256": "b78e7989bb3d5819e45a44487188627d00aba5cd68e0317505c701a6ec242b81",
+      "specCheck": [
+        "Model CS-EB8 (3MP,4GA) Camera Image Sensor 1/2.8” 3-Megapixel Progressive Scan CMOS Sensor Minimum Illumination 0.01 Lux @(F1.6, AGC ON), 0 ",
+        "Resolution 2304 x 1296 Frame Rate Max. 15fps; Self-Adaptive during network transmission Video Compression H.265 / H.264 Video Bit Rate Quad-"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 57,
+      "brand": "EZVIZ",
+      "model": "CS-DP2C",
+      "previousImage": "assets/ezviz/57.webp",
+      "sourcePage": "https://www.ezviz.com/product/dp2c/38395",
+      "sourceImage": "https://mfs.ezvizlife.com/c6979f3ee5e33fa43a7c3fbebcd033ca.png",
+      "sourceModel": "DP2C",
+      "sourceDimensions": [
+        300,
+        300
+      ],
+      "sourceBytes": 58838,
+      "sha256": "8e6d46c9c36870d08ee9d2cee9f8718e212f92500e9f39cf94d1dc5fe510a9ce",
+      "specCheck": [
+        "Model CS-DP2C Installation Parameters Supported Hole Diameter 16.5 to 50 mm (0.65 to 1.97 inch) Supported Door Diameter 35 to 105 mm (1.38 t",
+        "Max. Resolution 1080p / 2MP Video Frame Rate 15fps PIR Detection Angle 110° Distance Max. 6m (20 ft) Sensitivity Adjustable Interface Storag",
+        "Resolution 1080p / 2MP Video Frame Rate 15fps PIR Detection Angle 110° Distance Max. 6m (20 ft) Sensitivity Adjustable Interface Storage Int"
+      ],
+      "status": "official-source-too-small"
+    },
+    {
+      "id": 58,
+      "brand": "EZVIZ",
+      "model": "CS-DP2 (3MP)",
+      "previousImage": "assets/ezviz/58.webp",
+      "sourcePage": "https://www.ezviz.com/product/dp2-2k/47961",
+      "sourceImage": "https://mfs.ezvizlife.com/08d17da5be234102c51bfd45fc57fccf.png",
+      "sourceModel": "DP2 2K",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 195100,
+      "sha256": "e7e82b33c2d4fd12000f60f07efd8e94583ba6247475a809745d67e366193770",
+      "specCheck": [
+        "Model CS-DP2-R100-6E3WPFBS General Dimension Screen and Base: 115.5 x 85.5 x 24.5 mm (4.55 x 3.37 x 0.96 inch) Camera: 71 x 71 x 48.3 mm (2.",
+        "Max. Resolution 2K / 3MP Day / Night Switch ICR infrared filter IR Night Vision Distance Up to 16.4 ft / 5 m Video &amp; Audio Video Frame R",
+        "Resolution 2K / 3MP Day / Night Switch ICR infrared filter IR Night Vision Distance Up to 16.4 ft / 5 m Video &amp; Audio Video Frame Rate 1"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 59,
+      "brand": "EZVIZ",
+      "model": "CS-HP2 (1080p)",
+      "previousImage": "assets/ezviz/59.webp",
+      "sourcePage": "https://www.ezviz.com/product/hp2/54485",
+      "sourceImage": "https://mfs.ezvizlife.com/7b9b8fcb282de33fbd513797ae34fbcd.png",
+      "sourceModel": "HP2",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 89590,
+      "sha256": "53149de27df411a6e8df347effcc44da5a3a3c6774db7b1896bf4031183e4494",
+      "specCheck": [
+        "Model CS-HP2-R100-6E2WB-GD, CS-HP2-R100-6E2WB-GR Installation Parameters Supportive Hole Diameter 14 to 26 mm (0.55 to 1.0 inch) Supportive ",
+        "Max. Resolution 1080p / 2MP Video Frame Rate 15fps Interface Buttons 1. Screen Wake-up Button （Reset button） 2. On/off Button Network Protoc",
+        "Resolution 1080p / 2MP Video Frame Rate 15fps Interface Buttons 1. Screen Wake-up Button （Reset button） 2. On/off Button Network Protocol EZ"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 60,
+      "brand": "EZVIZ",
+      "model": "CS-HP4 (1080p)",
+      "previousImage": "assets/ezviz/60.webp",
+      "sourcePage": "https://www.ezviz.com/product/hp4/48540",
+      "sourceImage": "https://mfs.ezvizlife.com/5cc2c7ed014edd0b80b7ca705f7e3cc0.png",
+      "sourceModel": "HP4",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 207585,
+      "sha256": "6463e3fb791c7d19f9ec1ef5b52a23a233b77177a2ab89cc94f4b24f4238e768",
+      "specCheck": [
+        "Model CS-HP4 Installation Parameters Supportive Hole Diameter 15.5 to 50 mm Supportive Door Diameter 35 to 105 mm (1.38 to 4.13 inch) Camera",
+        "Max. Resolution 1080p / 2MP Video Frame Rate 15fps Interface Storage Interface MicroSD card slot (max. 512 GB) Audio Input Built-in high sen",
+        "Resolution 1080p / 2MP Video Frame Rate 15fps Interface Storage Interface MicroSD card slot (max. 512 GB) Audio Input Built-in high sensitiv"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 61,
+      "brand": "EZVIZ",
+      "model": "CS-EP4 (8MP)",
+      "previousImage": "assets/ezviz/61.webp",
+      "sourcePage": "https://www.ezviz.com/product/ep4/70199",
+      "sourceImage": "https://mfs.ezvizlife.com/7e28af1a0e46050871a055676fb5b5a8.png",
+      "sourceModel": "EP4",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 90419,
+      "sha256": "bbe0bf7414e93f29257043cf870970e6ea1bf3d16cfd3ca03a6e0950ba867c08",
+      "specCheck": [
+        "Model CS-EP4 Installation Parameters Supportive Hole Diameter 14 to 50 mm (0.55 to 1.97 inch) Supportive Door Diameter 35 to 105 mm (1.38 to",
+        "Max. Resolution 4K (3840 × 2160) Video Frame Rate 15 fps PIR Detection Angle 110° Distance Max. 6 m (20 ft) Sensitivity Adjustable Interface",
+        "Resolution 4K (3840 × 2160) Video Frame Rate 15 fps PIR Detection Angle 110° Distance Max. 6 m (20 ft) Sensitivity Adjustable Interface Stor"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 62,
+      "brand": "EZVIZ",
+      "model": "CS-HP5(1080P)",
+      "previousImage": "assets/ezviz/62.webp",
+      "sourcePage": "https://www.ezviz.com/product/hp5/56867",
+      "sourceImage": "https://mfs.ezvizlife.com/94cdf7e64752c2a4575fb1d8c0f5c539.png",
+      "sourceModel": "HP5",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 129012,
+      "sha256": "5e27f53b4d71f7f3850d988f01c53d7229e581ea8285ec66eeba6f0c3a9ab6c4",
+      "specCheck": [
+        "Model CS-HP5-R100-1W2TFC Outdoor Doorbell Image Sensor 1/2.7&quot; Progressive Scan CMOS (Supports low light sensitivity) Lens 2.0 mm @ F1.6",
+        "Max. Resolution 1920 × 1080 (1080p) DNR 2D / 3D DNR Video Compression H.265 / H.264 Frame Rate Max: 15fps; Self-Adaptive during network tran",
+        "Resolution 1920 × 1080 (1080p) DNR 2D / 3D DNR Video Compression H.265 / H.264 Frame Rate Max: 15fps; Self-Adaptive during network transmiss"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 63,
+      "brand": "EZVIZ",
+      "model": "CS-HP7(3MP)",
+      "previousImage": "assets/ezviz/63.webp",
+      "sourcePage": "https://www.ezviz.com/product/hp7/46757",
+      "sourceImage": "https://mfs.ezvizlife.com/mall/b7090c82bb1f06eae1df2a4933626d84.png",
+      "sourceModel": "HP7",
+      "sourceDimensions": [
+        300,
+        300
+      ],
+      "sourceBytes": 46640,
+      "sha256": "ccf78e2fc43b0d2d667b71d92224a516c8701f49b32c4ece8b77d9bc7eaece60",
+      "specCheck": [
+        "Model CS-HP7-R105-1W2TFC Outdoor Doorbell Image Sensor 1/2.7&quot; Progressive Scan CMOS (Supports low light sensitivity) Lens 2.0 mm @ F2.2",
+        "Max. Resolution 2048 × 1296 DNR 2D / 3D DNR Video Compression H.265 / H.264 Frame Rate Max: 15fps; Self-Adaptive during network transmission",
+        "Resolution 2048 × 1296 DNR 2D / 3D DNR Video Compression H.265 / H.264 Frame Rate Max: 15fps; Self-Adaptive during network transmission Conn"
+      ],
+      "status": "official-source-too-small"
+    },
+    {
+      "id": 64,
+      "brand": "EZVIZ",
+      "model": "CS-SD7 Умный экран",
+      "previousImage": "assets/ezviz/64.webp",
+      "sourcePage": "https://www.ezviz.com/product/sd7/53661",
+      "sourceImage": "https://mfs.ezvizlife.com/e7306073619952567fd52a8f733af36d.png",
+      "sourceModel": "SD7",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 97004,
+      "sha256": "781c2fe5e7be99f70901f167af2e0417eb5525a063f31034a6eb926ea794ee1c",
+      "specCheck": [
+        "Model CS-SD7-R100-1WTC Screen Screen size 6.97 inch Resolution 1024 × 600 Touch Screen Supports Screen Type IPS Full Screen Battery Battery ",
+        "Resolution 1024 × 600 Touch Screen Supports Screen Type IPS Full Screen Battery Battery Capacity 4600 mAh Interface Audio Input Built-in hig"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 65,
+      "brand": "EZVIZ",
+      "model": "CS-DL03 pro",
+      "previousImage": "assets/ezviz/65.webp",
+      "sourcePage": "https://www.ezviz.com/product/dl03-pro/57675",
+      "sourceImage": "https://mfs.ezvizlife.com/1fd1b589d4dcca5f5deef341850a2763.png",
+      "sourceModel": "DL03 Pro",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 54036,
+      "sha256": "b34a45c9f875e93e601d41ef2198473a65c6817000de3c7b93932a0aad9d8d97",
+      "specCheck": [
+        "Model CS-DL03 Pro Technical Specification Product material Aluminum + Plastic Dimensions Front Panel：154mm × 61mm × 18mm Rear Panel：155mm × "
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 66,
+      "brand": "EZVIZ",
+      "model": "CS-DL04 pro",
+      "previousImage": "assets/ezviz/66.webp",
+      "sourcePage": "https://www.ezviz.com/product/dl04-pro/57672",
+      "sourceImage": "https://mfs.ezvizlife.com/2e5797c00f30d4c4dca2a4ba1864d5b5.png",
+      "sourceModel": "DL04 Pro",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 129059,
+      "sha256": "4143eb0e05b37f484226a305ede60c9655c6dcf244f79a65a34ca3d2207646af",
+      "specCheck": [
+        "Model CS-DL04 Pro Technical Specification Product material Aluminum + Plastic Dimensions Front Panel: 160 × 67 × 25 mm (6.29 × 2.63 × 0.98 i"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 69,
+      "brand": "EZVIZ",
+      "model": "CS-DL06 PRO (WBCP) Double protection",
+      "previousImage": "assets/ezviz/69.webp",
+      "sourcePage": "https://www.ezviz.com/product/dl06-pro/66414",
+      "sourceImage": "https://mfs.ezvizlife.com/48cb78547ef0e39fc34de5f40ae63d98.png",
+      "sourceModel": "DL06 Pro",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 92084,
+      "sha256": "93e0e2b8ff46a234ac08d82ce858d91779c625c09440c82c77d70ea827026ac8",
+      "specCheck": [
+        "Model CS-DL06-R101-WBCP-GR(M) Material and Specification Panel Material Aluminum Alloy Panel Size 331 × 40 × 25.8 mm Color Metallic Grey Loc"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 70,
+      "brand": "EZVIZ",
+      "model": "CS-DL06 (WBCP)",
+      "previousImage": "",
+      "sourcePage": "https://www.ezviz.com/product/dl06/77590",
+      "sourceImage": "https://mfs.ezvizlife.com/c89eb74f56b14ddb465c9ebe9f4dc280.png",
+      "sourceModel": "DL06",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 90191,
+      "sha256": "a1f6281a7097cbe7c6e00a2aaadbdb4ab79de2a223866feeaac16afc0ede07ef",
+      "specCheck": [
+        "Model CS-DL06-R100-WBCP-GR Material and Specification Panel Material Aluminum Alloy Panel Size 331 × 40 × 25.8 mm Color Metallic Grey Lock B"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 78,
+      "brand": "EZVIZ",
+      "model": "CS-T36",
+      "previousImage": "assets/ezviz/78.webp",
+      "sourcePage": "https://www.ezviz.com/product/t36/49830",
+      "sourceImage": "https://mfs.ezvizlife.com/61f61ae9277a9da06be89a5188ab837c.png",
+      "sourceModel": "T36",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 133640,
+      "sha256": "9585a2b87974552794cdeb060fa7641303835bf9c1f49a9cbae67595a373c5e9",
+      "specCheck": [
+        "Model CS-T36 Physical Sensor type Wi-Fi Relay Radio frequency 2.4GHz Size 38.4*43.8*18.5mm Net weight 31.2g With package 94.1g Mounting Wall"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 80,
+      "brand": "EZVIZ",
+      "model": "CS-T31-16E-EU Умная розетка",
+      "previousImage": "",
+      "sourcePage": "https://www.ezviz.com/product/t31-16e-eu/69928",
+      "sourceImage": "https://mfs.ezvizlife.com/2d9a78a0d54bf3f95950fe7bf659269f.png",
+      "sourceModel": "T31-16E-EU",
+      "sourceDimensions": [
+        600,
+        600
+      ],
+      "sourceBytes": 67016,
+      "sha256": "5c19bfc609905162b6d0d77061afe85ec2e9227ff3ed6e96a8d56c3d3ae8a564",
+      "specCheck": [
+        "Model CS-T31-16E-EU Mechanical Specification Material PC V0 Flame Retardance 750°C fire-retardance Ingress Protection (IP) No Electrical Spe"
+      ],
+      "status": "official-candidate"
+    },
+    {
+      "id": 785,
+      "brand": "Tapo",
+      "model": "Tapo A201",
+      "previousImage": "assets/kss/0785.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-a201-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_A201_UN_2.20_Overview_01_normal_20250717061053i.png",
+      "sourceModel": "Tapo A201",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 185829,
+      "sha256": "a120bf4bfcf07c7bcb877ac201c8b79e35f3c789913a0cd2844631f1059bf2e3",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1866,
+      "brand": "Tapo",
+      "model": "Tapo A201 (SOLAR PANEL 5.2V  2.5W)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-a201-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_A201_UN_2.20_Overview_01_normal_20250717061053i.png",
+      "sourceModel": "Tapo A201",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 185829,
+      "sha256": "a120bf4bfcf07c7bcb877ac201c8b79e35f3c789913a0cd2844631f1059bf2e3",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1541,
+      "brand": "Tapo",
+      "model": "Tapo C206",
+      "previousImage": "assets/kss/1541.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c206-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C206_EU_1.0_overview_normal_20250321074953d.png",
+      "sourceModel": "Tapo C206",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 210593,
+      "sha256": "e6638cde70df6fb467a6bd37af4745664bd1de5bfe4c4d52c67e9d3faa108760",
+      "status": "official-candidate"
+    },
+    {
+      "id": 328,
+      "brand": "Tapo",
+      "model": "Tapo C206 (2MP WIFI 360 Valli )",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c206-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C206_EU_1.0_overview_normal_20250321074953d.png",
+      "sourceModel": "Tapo C206",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 210593,
+      "sha256": "e6638cde70df6fb467a6bd37af4745664bd1de5bfe4c4d52c67e9d3faa108760",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1542,
+      "brand": "Tapo",
+      "model": "Tapo C210",
+      "previousImage": "assets/kss/1542.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c210-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C200_EU_5.0_overview_1_pack_normal_20241226064227u.png",
+      "sourceModel": "Tapo C210",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 138971,
+      "sha256": "f5765b060d822a83d4ece12afb54da2faaffd884bd3f920417abfd42935e58c2",
+      "status": "official-candidate"
+    },
+    {
+      "id": 329,
+      "brand": "Tapo",
+      "model": "Tapo C210 (3MP WIFI 360)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c210-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C200_EU_5.0_overview_1_pack_normal_20241226064227u.png",
+      "sourceModel": "Tapo C210",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 138971,
+      "sha256": "f5765b060d822a83d4ece12afb54da2faaffd884bd3f920417abfd42935e58c2",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1546,
+      "brand": "Tapo",
+      "model": "Tapo C216",
+      "previousImage": "assets/kss/1546.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c216-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C216_EU_1.0_overview_normal_20250401093841y.png",
+      "sourceModel": "Tapo C216",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 212168,
+      "sha256": "9a621767b023f2a8c64c5b3701e4499f0afa7440906d831f627e3476bb2acbc3",
+      "status": "official-candidate"
+    },
+    {
+      "id": 333,
+      "brand": "Tapo",
+      "model": "Tapo C216 (3MP WIFI 360 Valli )",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c216-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C216_EU_1.0_overview_normal_20250401093841y.png",
+      "sourceModel": "Tapo C216",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 212168,
+      "sha256": "9a621767b023f2a8c64c5b3701e4499f0afa7440906d831f627e3476bb2acbc3",
+      "status": "official-candidate"
+    },
+    {
+      "id": 337,
+      "brand": "Tapo",
+      "model": "Tapo C245D",
+      "previousImage": "assets/kss/0337.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c245d-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C245D_UN_1.0_Overview_normal_20251126053636j.png",
+      "sourceModel": "Tapo C245D",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 187579,
+      "sha256": "7a8fe65f0caa910d5da405248061c8955a7515eb53ce339b14f7bc6377f8257c",
+      "status": "official-candidate"
+    },
+    {
+      "id": 338,
+      "brand": "Tapo",
+      "model": "Tapo C245D (3MP WIFI 2-CAM 360)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c245d-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C245D_UN_1.0_Overview_normal_20251126053636j.png",
+      "sourceModel": "Tapo C245D",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 187579,
+      "sha256": "7a8fe65f0caa910d5da405248061c8955a7515eb53ce339b14f7bc6377f8257c",
+      "status": "official-candidate"
+    },
+    {
+      "id": 339,
+      "brand": "Tapo",
+      "model": "Tapo C246D",
+      "previousImage": "assets/kss/0339.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c246d-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C246D_UN_1.0_product_images_01_normal_20250519022854b.png",
+      "sourceModel": "Tapo C246D",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 180859,
+      "sha256": "09594658a94124d6acc6cfe866c811fedda7fef271c01a4d20edfbd09a868c10",
+      "status": "official-candidate"
+    },
+    {
+      "id": 340,
+      "brand": "Tapo",
+      "model": "Tapo C246D (3MP WIFI 2-CAM 360)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c246d-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C246D_UN_1.0_product_images_01_normal_20250519022854b.png",
+      "sourceModel": "Tapo C246D",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 180859,
+      "sha256": "09594658a94124d6acc6cfe866c811fedda7fef271c01a4d20edfbd09a868c10",
+      "status": "official-candidate"
+    },
+    {
+      "id": 341,
+      "brand": "Tapo",
+      "model": "Tapo C250",
+      "previousImage": "assets/kss/0341.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c250-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C250_US_1.0_overview_normal_20250908030256v.png",
+      "sourceModel": "Tapo C250",
+      "sourceDimensions": [
+        2000,
+        2000
+      ],
+      "sourceBytes": 1332887,
+      "sha256": "12052b507e898e5b9cd241dc3b4ccfeb0c54c9c0b100fef591a5fac1533c83cc",
+      "status": "official-candidate"
+    },
+    {
+      "id": 342,
+      "brand": "Tapo",
+      "model": "Tapo C250 (8MP Wifi 360)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c250-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C250_US_1.0_overview_normal_20250908030256v.png",
+      "sourceModel": "Tapo C250",
+      "sourceDimensions": [
+        2000,
+        2000
+      ],
+      "sourceBytes": 1332887,
+      "sha256": "12052b507e898e5b9cd241dc3b4ccfeb0c54c9c0b100fef591a5fac1533c83cc",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1550,
+      "brand": "Tapo",
+      "model": "Tapo C425",
+      "previousImage": "assets/kss/1550.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c425-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C425_US_2.0__overview_normal_20250219082201w.png",
+      "sourceModel": "Tapo C425",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 174542,
+      "sha256": "19989ed8b120894d09af9ffe465b380a8b0cca576200d7887697646085bea965",
+      "status": "official-candidate"
+    },
+    {
+      "id": 349,
+      "brand": "Tapo",
+      "model": "Tapo C425 (4MP WIFI BATTERY)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c425-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C425_US_2.0__overview_normal_20250219082201w.png",
+      "sourceModel": "Tapo C425",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 174542,
+      "sha256": "19989ed8b120894d09af9ffe465b380a8b0cca576200d7887697646085bea965",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1553,
+      "brand": "Tapo",
+      "model": "Tapo C460",
+      "previousImage": "assets/kss/1553.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c460-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C460_EU_1.0_overview_01_normal_20250523212500o.png",
+      "sourceModel": "Tapo C460",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 116198,
+      "sha256": "e54a9af7ecf9c333ed9a18a38225de70e7a45283d1a5d3c7f5c01a8b7406c409",
+      "status": "official-candidate"
+    },
+    {
+      "id": 350,
+      "brand": "Tapo",
+      "model": "Tapo C460 (8MP WIFI BATTERY)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c460-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C460_EU_1.0_overview_01_normal_20250523212500o.png",
+      "sourceModel": "Tapo C460",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 116198,
+      "sha256": "e54a9af7ecf9c333ed9a18a38225de70e7a45283d1a5d3c7f5c01a8b7406c409",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1124,
+      "brand": "Tapo",
+      "model": "Tapo C610 KIT",
+      "previousImage": "assets/kss/1124.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c610-kit-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C610_KIT_UN_1.0_Product_Images_01_normal_20250625082811j.png",
+      "sourceModel": "Tapo C610 KIT",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 127711,
+      "sha256": "39b54f828b9ca9a6b5eb4cdd3dd7cd05558472c0d024e70fc2cd225beb01b8f7",
+      "status": "official-candidate"
+    },
+    {
+      "id": 353,
+      "brand": "Tapo",
+      "model": "Tapo C610 KIT (3MP WIFI 360 SOLAR)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c610-kit-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C610_KIT_UN_1.0_Product_Images_01_normal_20250625082811j.png",
+      "sourceModel": "Tapo C610 KIT",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 127711,
+      "sha256": "39b54f828b9ca9a6b5eb4cdd3dd7cd05558472c0d024e70fc2cd225beb01b8f7",
+      "status": "official-candidate"
+    },
+    {
+      "id": 354,
+      "brand": "Tapo",
+      "model": "Tapo C615G KIT",
+      "previousImage": "assets/kss/0354.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c615g-kit-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C615G_KIT_EU_1.0_overview_02_normal_20250716092716a.png",
+      "sourceModel": "Tapo C615G KIT",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 211671,
+      "sha256": "d272867a98882daded3b347b16e1fc399a89fd7ab2c558a2390ef17781781a54",
+      "status": "official-candidate"
+    },
+    {
+      "id": 355,
+      "brand": "Tapo",
+      "model": "Tapo C615G KIT (3MP 4G 360 SOLAR)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c615g-kit-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C615G_KIT_EU_1.0_overview_02_normal_20250716092716a.png",
+      "sourceModel": "Tapo C615G KIT",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 211671,
+      "sha256": "d272867a98882daded3b347b16e1fc399a89fd7ab2c558a2390ef17781781a54",
+      "status": "official-candidate"
+    },
+    {
+      "id": 356,
+      "brand": "Tapo",
+      "model": "Tapo C665G KIT",
+      "previousImage": "assets/kss/0356.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c665g-kit-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C665G_KIT_UN_1.0_overview_normal_20250822071215b.png",
+      "sourceModel": "Tapo C665G KIT",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 253312,
+      "sha256": "7bb0e5b4fa5fced88e77996cee05d6ed34f219f72edbe45be91ccb5fb76a3bce",
+      "status": "official-candidate"
+    },
+    {
+      "id": 357,
+      "brand": "Tapo",
+      "model": "Tapo C665G KIT (8MP 4G+Wifi 360 Zoom 18x)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c665g-kit-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C665G_KIT_UN_1.0_overview_normal_20250822071215b.png",
+      "sourceModel": "Tapo C665G KIT",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 253312,
+      "sha256": "7bb0e5b4fa5fced88e77996cee05d6ed34f219f72edbe45be91ccb5fb76a3bce",
+      "status": "official-candidate"
+    },
+    {
+      "id": 358,
+      "brand": "Tapo",
+      "model": "Tapo C675D KIT",
+      "previousImage": "assets/kss/0358.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c675d-kit-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/main-GI_1000x1000px_normal_20260423183034n.png",
+      "sourceModel": "Tapo C675D KIT",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 189974,
+      "sha256": "7b9df1ea707ff06d8ceefbc7179655b9b7fa20aa812c6ad7f53e7852292a4b50",
+      "status": "official-candidate"
+    },
+    {
+      "id": 359,
+      "brand": "Tapo",
+      "model": "Tapo C675D KIT (8MP WIFI 2-CAM Солнечный)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c675d-kit-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/main-GI_1000x1000px_normal_20260423183034n.png",
+      "sourceModel": "Tapo C675D KIT",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 189974,
+      "sha256": "7b9df1ea707ff06d8ceefbc7179655b9b7fa20aa812c6ad7f53e7852292a4b50",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1556,
+      "brand": "Tapo",
+      "model": "Tapo C720",
+      "previousImage": "assets/kss/1556.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c720-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C720_US_1.0_normal_20250624081232x.png",
+      "sourceModel": "Tapo C720",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 153437,
+      "sha256": "de3090645df7ad5e1fb17e478a052702d659be8ef3e4c436e2fe0b6499227ddd",
+      "status": "official-candidate"
+    },
+    {
+      "id": 360,
+      "brand": "Tapo",
+      "model": "Tapo C720 (4MP WIFI с прожектором)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-c720-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_C720_US_1.0_normal_20250624081232x.png",
+      "sourceModel": "Tapo C720",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 153437,
+      "sha256": "de3090645df7ad5e1fb17e478a052702d659be8ef3e4c436e2fe0b6499227ddd",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1199,
+      "brand": "Tapo",
+      "model": "Tapo D210",
+      "previousImage": "assets/kss/1199.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-d210-smart-doorbell/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_D210_EU_2.0_Overview_01_normal_20250922080132b.png",
+      "sourceModel": "Tapo D210",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 132253,
+      "sha256": "65c46be338b887247221ff0b5471017f0ee4d11e6d3db5261659509d281edce2",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1867,
+      "brand": "Tapo",
+      "model": "Tapo D210 ( 3MP DOMOFON)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-d210-smart-doorbell/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_D210_EU_2.0_Overview_01_normal_20250922080132b.png",
+      "sourceModel": "Tapo D210",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 132253,
+      "sha256": "65c46be338b887247221ff0b5471017f0ee4d11e6d3db5261659509d281edce2",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1200,
+      "brand": "Tapo",
+      "model": "Tapo D230S1",
+      "previousImage": "assets/kss/1200.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-d230s1-smart-doorbell/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/D230_normal_20241101063325n.png",
+      "sourceModel": "Tapo D230S1",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 92707,
+      "sha256": "c911094319d46553a08b50435bcce96711e7fa367cc5a0e7cccc12e86e099ae9",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1868,
+      "brand": "Tapo",
+      "model": "Tapo D230S1 ( 5MP DOMOFON)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-d230s1-smart-doorbell/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/D230_normal_20241101063325n.png",
+      "sourceModel": "Tapo D230S1",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 92707,
+      "sha256": "c911094319d46553a08b50435bcce96711e7fa367cc5a0e7cccc12e86e099ae9",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1201,
+      "brand": "Tapo",
+      "model": "Tapo DL105",
+      "previousImage": "assets/kss/1201.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-dl105-smart-lock/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo-DL105_US_1.6_overview_normal_20251203041736p.png",
+      "sourceModel": "Tapo DL105",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 226851,
+      "sha256": "9bf527ab5d4f925ae9bc2de0f2ec7e70c6d0d33beb9959fdf3718029f1d99f83",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1343,
+      "brand": "Tapo",
+      "model": "Tapo DL105 (Дверной замок Smart Wi-Fi)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-dl105-smart-lock/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo-DL105_US_1.6_overview_normal_20251203041736p.png",
+      "sourceModel": "Tapo DL105",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 226851,
+      "sha256": "9bf527ab5d4f925ae9bc2de0f2ec7e70c6d0d33beb9959fdf3718029f1d99f83",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1202,
+      "brand": "Tapo",
+      "model": "Tapo DL110",
+      "previousImage": "assets/kss/1202.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-dl110-smart-lock/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_DL110_US_2.6_overview_compressed_normal_20250909065516o.png",
+      "sourceModel": "Tapo DL110",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 192784,
+      "sha256": "5d0253cf55e8da9b89d32a6a40501347441be87a76e2a4d184c40c45201cf7e1",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1344,
+      "brand": "Tapo",
+      "model": "Tapo DL110 (Дверной замок Smart Wi-Fi)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-dl110-smart-lock/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_DL110_US_2.6_overview_compressed_normal_20250909065516o.png",
+      "sourceModel": "Tapo DL110",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 192784,
+      "sha256": "5d0253cf55e8da9b89d32a6a40501347441be87a76e2a4d184c40c45201cf7e1",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1557,
+      "brand": "Tapo",
+      "model": "Tapo H100",
+      "previousImage": "assets/kss/1557.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-h100-smart-hub/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_H100(EU)1.20_normal_20240207030034i.png",
+      "sourceModel": "Tapo H100",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 98029,
+      "sha256": "ba6437a1ed6f6ea64e15548ead5d4410a8be388fa62dd141309e1bf05d3eb6b6",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1869,
+      "brand": "Tapo",
+      "model": "Tapo H100 (HUB 64)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-h100-smart-hub/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_H100(EU)1.20_normal_20240207030034i.png",
+      "sourceModel": "Tapo H100",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 98029,
+      "sha256": "ba6437a1ed6f6ea64e15548ead5d4410a8be388fa62dd141309e1bf05d3eb6b6",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1558,
+      "brand": "Tapo",
+      "model": "Tapo H110",
+      "previousImage": "assets/kss/1558.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-h110-smart-hub/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/1-pack_normal_20240826082900p.png",
+      "sourceModel": "Tapo H110",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 62838,
+      "sha256": "47124c654046d1106353b2815f756f1f0677dd6aeac85022e90723bb206a1d1e",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1870,
+      "brand": "Tapo",
+      "model": "Tapo H110 (HUB 64 ик пульт)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-h110-smart-hub/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/1-pack_normal_20240826082900p.png",
+      "sourceModel": "Tapo H110",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 62838,
+      "sha256": "47124c654046d1106353b2815f756f1f0677dd6aeac85022e90723bb206a1d1e",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1559,
+      "brand": "Tapo",
+      "model": "Tapo H200",
+      "previousImage": "assets/kss/1559.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-h200-smart-hub/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/04_normal_20230412103139z.png",
+      "sourceModel": "Tapo H200",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 103901,
+      "sha256": "bddecf5b86c3182116931d0f0a6585159bebb7f71deef246d3ba4f9f2b36b5c8",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1871,
+      "brand": "Tapo",
+      "model": "Tapo H200 (HUB 64+4cam)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-h200-smart-hub/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/04_normal_20230412103139z.png",
+      "sourceModel": "Tapo H200",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 103901,
+      "sha256": "bddecf5b86c3182116931d0f0a6585159bebb7f71deef246d3ba4f9f2b36b5c8",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1801,
+      "brand": "Tapo",
+      "model": "Tapo L510B",
+      "previousImage": "assets/kss/1801.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-l510b-smart-light-bulb/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_L510B_EU_3.0_1-pack_normal_20241101060625a.png",
+      "sourceModel": "Tapo L510B",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 111033,
+      "sha256": "fe41cca3ed0919e0b5e49ad6b2569de0bb58b87404564f9ec59937599fe82e2f",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1875,
+      "brand": "Tapo",
+      "model": "Tapo L510B (Smart-лампа Limon EU)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-l510b-smart-light-bulb/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_L510B_EU_3.0_1-pack_normal_20241101060625a.png",
+      "sourceModel": "Tapo L510B",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 111033,
+      "sha256": "fe41cca3ed0919e0b5e49ad6b2569de0bb58b87404564f9ec59937599fe82e2f",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1802,
+      "brand": "Tapo",
+      "model": "Tapo L510E",
+      "previousImage": "assets/kss/1802.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-l510e-smart-light-bulb/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_L510E_EU_3_normal_20241101061050h.png",
+      "sourceModel": "Tapo L510E",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 121885,
+      "sha256": "d94773582635986b15f25cbc4f1f76d4fda30a1ae5fb2771cfc3f1efef022657",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1876,
+      "brand": "Tapo",
+      "model": "Tapo L510E (Smart-лампа Limon)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-l510e-smart-light-bulb/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_L510E_EU_3_normal_20241101061050h.png",
+      "sourceModel": "Tapo L510E",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 121885,
+      "sha256": "d94773582635986b15f25cbc4f1f76d4fda30a1ae5fb2771cfc3f1efef022657",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1803,
+      "brand": "Tapo",
+      "model": "Tapo L520E",
+      "previousImage": "assets/kss/1803.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-l520e-smart-light-bulb/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_L520E_EU_2.0_normal_20241101060524o.png",
+      "sourceModel": "Tapo L520E",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 108793,
+      "sha256": "6a63f9c63c4e8b0602fe1dd92a350ee497e35dad1645d1e008184a8998dec958",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1877,
+      "brand": "Tapo",
+      "model": "Tapo L520E (Smart-лампа White)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-l520e-smart-light-bulb/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_L520E_EU_2.0_normal_20241101060524o.png",
+      "sourceModel": "Tapo L520E",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 108793,
+      "sha256": "6a63f9c63c4e8b0602fe1dd92a350ee497e35dad1645d1e008184a8998dec958",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1804,
+      "brand": "Tapo",
+      "model": "Tapo L535B",
+      "previousImage": "assets/kss/1804.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-l535b-smart-light-bulb/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_L535B_EU_3.0_normal_20241101030646x.png",
+      "sourceModel": "Tapo L535B",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 168992,
+      "sha256": "42656d630807178022110eb0e58b718e8321475522cee56696b134c4c40819d8",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1878,
+      "brand": "Tapo",
+      "model": "Tapo L535B (Smart-лампа RGB EU)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-l535b-smart-light-bulb/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_L535B_EU_3.0_normal_20241101030646x.png",
+      "sourceModel": "Tapo L535B",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 168992,
+      "sha256": "42656d630807178022110eb0e58b718e8321475522cee56696b134c4c40819d8",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1805,
+      "brand": "Tapo",
+      "model": "Tapo L535E",
+      "previousImage": "assets/kss/1805.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-l535e-smart-light-bulb/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo-L535E_EU_3.0_1-pack_normal_20241101030552w.png",
+      "sourceModel": "Tapo L535E",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 169912,
+      "sha256": "da67553c6c10cdb9753d332e106b56983b1e0d8f7b338b1714ba7967057e16e4",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1879,
+      "brand": "Tapo",
+      "model": "Tapo L535E (Smart-лампа RGB)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-l535e-smart-light-bulb/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo-L535E_EU_3.0_1-pack_normal_20241101030552w.png",
+      "sourceModel": "Tapo L535E",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 169912,
+      "sha256": "da67553c6c10cdb9753d332e106b56983b1e0d8f7b338b1714ba7967057e16e4",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1811,
+      "brand": "Tapo",
+      "model": "Tapo RV20 Max Plus",
+      "previousImage": "assets/kss/1811.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-rv20-max-plus-robot-vacuum/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/01_normal_20240911093228w.png",
+      "sourceModel": "Tapo RV20 Max Plus",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 224106,
+      "sha256": "b59c323879d28d62026bd4e6b3186b2eabb8275199673c1d1326831b4d6d44ce",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1881,
+      "brand": "Tapo",
+      "model": "Tapo RV20 Max Plus( Smart-пылесос + док станция)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-rv20-max-plus-robot-vacuum/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/01_normal_20240911093228w.png",
+      "sourceModel": "Tapo RV20 Max Plus",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 224106,
+      "sha256": "b59c323879d28d62026bd4e6b3186b2eabb8275199673c1d1326831b4d6d44ce",
+      "status": "official-candidate"
+    },
+    {
+      "id": 496,
+      "brand": "Tapo",
+      "model": "Tapo S112",
+      "previousImage": "assets/kss/0496.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-s112-smart-switch/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_S112_EU_1.0_overview_normal_20250331130922h.png",
+      "sourceModel": "Tapo S112",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 78280,
+      "sha256": "034b467b2dbb5c0392092f75f9524971148f7750d76da9cb1b39f21dc235d44e",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1882,
+      "brand": "Tapo",
+      "model": "Tapo S112 (Умная реле 6A)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-s112-smart-switch/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_S112_EU_1.0_overview_normal_20250331130922h.png",
+      "sourceModel": "Tapo S112",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 78280,
+      "sha256": "034b467b2dbb5c0392092f75f9524971148f7750d76da9cb1b39f21dc235d44e",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1345,
+      "brand": "Tapo",
+      "model": "Tapo S200D",
+      "previousImage": "assets/kss/1345.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-s200d-smart-switch/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/01_normal_20221207103221w.png",
+      "sourceModel": "Tapo S200D",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 68011,
+      "sha256": "8a2cb50aeaa7d11d519cc1d06ca104f3fedeb56b5891e35892b1861ddc2ea3c2",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1883,
+      "brand": "Tapo",
+      "model": "Tapo S200D (Умный диммер)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-s200d-smart-switch/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/01_normal_20221207103221w.png",
+      "sourceModel": "Tapo S200D",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 68011,
+      "sha256": "8a2cb50aeaa7d11d519cc1d06ca104f3fedeb56b5891e35892b1861ddc2ea3c2",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1812,
+      "brand": "Tapo",
+      "model": "Tapo S210",
+      "previousImage": "assets/kss/1812.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-s210-smart-switch/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo-S210(EU)-1.0-product_image_normal_20220810094743d.png",
+      "sourceModel": "Tapo S210",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 83237,
+      "sha256": "b8a8c3fd11ae64c2de41db0d4892c44ad1eb4396822d619cdf8c2346acda8b08",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1884,
+      "brand": "Tapo",
+      "model": "Tapo S210 (Умный включатель 1)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-s210-smart-switch/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo-S210(EU)-1.0-product_image_normal_20220810094743d.png",
+      "sourceModel": "Tapo S210",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 83237,
+      "sha256": "b8a8c3fd11ae64c2de41db0d4892c44ad1eb4396822d619cdf8c2346acda8b08",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1562,
+      "brand": "Tapo",
+      "model": "Tapo S220",
+      "previousImage": "assets/kss/1562.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-s220-smart-switch/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo-S220(EU)-1.0-package-1000x1000_normal_20220812074432a.png",
+      "sourceModel": "Tapo S220",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 63306,
+      "sha256": "cb522e8b20724fd0770ed6081708fe255710d15084a2fccf18ac4fa83486fa24",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1885,
+      "brand": "Tapo",
+      "model": "Tapo S220 (Умный включатель 2)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-s220-smart-switch/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo-S220(EU)-1.0-package-1000x1000_normal_20220812074432a.png",
+      "sourceModel": "Tapo S220",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 63306,
+      "sha256": "cb522e8b20724fd0770ed6081708fe255710d15084a2fccf18ac4fa83486fa24",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1813,
+      "brand": "Tapo",
+      "model": "Tapo T100",
+      "previousImage": "assets/kss/1813.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-t100-smart-sensor/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/1_normal_20240118032525x.png",
+      "sourceModel": "Tapo T100",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 217193,
+      "sha256": "9058187e6ff9ea723f9deec8d494a45d1fadbdb358017885c5287c7e2273d745",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1886,
+      "brand": "Tapo",
+      "model": "Tapo T100 (Умный датчик движения)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-t100-smart-sensor/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/1_normal_20240118032525x.png",
+      "sourceModel": "Tapo T100",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 217193,
+      "sha256": "9058187e6ff9ea723f9deec8d494a45d1fadbdb358017885c5287c7e2273d745",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1814,
+      "brand": "Tapo",
+      "model": "Tapo T110",
+      "previousImage": "assets/kss/1814.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-t110-smart-sensor/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_T110_normal_20240223065742u.png",
+      "sourceModel": "Tapo T110",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 145026,
+      "sha256": "b172cbdf1a57de6c987807054bbf3ab478579fd4f2b41907f46b8d1271c6421c",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1887,
+      "brand": "Tapo",
+      "model": "Tapo T110 (Умный СМК)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-t110-smart-sensor/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_T110_normal_20240223065742u.png",
+      "sourceModel": "Tapo T110",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 145026,
+      "sha256": "b172cbdf1a57de6c987807054bbf3ab478579fd4f2b41907f46b8d1271c6421c",
+      "status": "official-candidate"
+    },
+    {
+      "id": 2009,
+      "brand": "Tapo",
+      "model": "Tapo T300",
+      "previousImage": "assets/kss/2009.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-t300-smart-sensor/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/1_normal_20230725013856v.png",
+      "sourceModel": "Tapo T300",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 97968,
+      "sha256": "2d6c8b2d362b4e71fd24e3ad4e4ede896bc1e41ccd71873667f4ad728bf5106c",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1888,
+      "brand": "Tapo",
+      "model": "Tapo T300 (Умный датчик протечки воды)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-t300-smart-sensor/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/1_normal_20230725013856v.png",
+      "sourceModel": "Tapo T300",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 97968,
+      "sha256": "2d6c8b2d362b4e71fd24e3ad4e4ede896bc1e41ccd71873667f4ad728bf5106c",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1815,
+      "brand": "Tapo",
+      "model": "Tapo T310",
+      "previousImage": "assets/kss/1815.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-t310-smart-sensor/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_T310_1.0_normal_20231208011457h.png",
+      "sourceModel": "Tapo T310",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 90949,
+      "sha256": "f22b5136ef39d92e3d9e47f59263c7e715697c6b5e09680116c19c0eb9f23b7c",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1889,
+      "brand": "Tapo",
+      "model": "Tapo T310 (Умный датчик температуры+влажности)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-t310-smart-sensor/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_T310_1.0_normal_20231208011457h.png",
+      "sourceModel": "Tapo T310",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 90949,
+      "sha256": "f22b5136ef39d92e3d9e47f59263c7e715697c6b5e09680116c19c0eb9f23b7c",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1727,
+      "brand": "Tapo",
+      "model": "Tapo T315",
+      "previousImage": "assets/kss/1727.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-t315-smart-sensor/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_T315_1.0_normal_20231208010814d.png",
+      "sourceModel": "Tapo T315",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 219492,
+      "sha256": "637a6bfff2f813cfb60d7bb14cb772e94dbbefc4eb0d6805a20bcd1476f0cf63",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1890,
+      "brand": "Tapo",
+      "model": "Tapo T315 (Умный монитор температуры и влажности)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tapo-t315-smart-sensor/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/Tapo_T315_1.0_normal_20231208010814d.png",
+      "sourceModel": "Tapo T315",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 219492,
+      "sha256": "637a6bfff2f813cfb60d7bb14cb772e94dbbefc4eb0d6805a20bcd1476f0cf63",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1570,
+      "brand": "Tapo",
+      "model": "Tapo TC82 KIT",
+      "previousImage": "assets/kss/1570.webp",
+      "sourcePage": "https://www.tapo.com/en/product/tc82-kit-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/1-pack_normal_20240717183014y.png",
+      "sourceModel": "TC82 KIT",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 283053,
+      "sha256": "5d62ad07a5e4f1bbbdf733671f256511a2affb844820b8141bd30b4dcd6b3cd1",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1900,
+      "brand": "Tapo",
+      "model": "Tapo TC82 KIT (3MP WIFI SOLAR)",
+      "previousImage": "",
+      "sourcePage": "https://www.tapo.com/en/product/tc82-kit-security-camera/",
+      "sourceImage": "https://static.tp-link.com/upload/image-header/1-pack_normal_20240717183014y.png",
+      "sourceModel": "TC82 KIT",
+      "sourceDimensions": [
+        590,
+        590
+      ],
+      "sourceBytes": 283053,
+      "sha256": "5d62ad07a5e4f1bbbdf733671f256511a2affb844820b8141bd30b4dcd6b3cd1",
+      "status": "official-candidate"
+    },
+    {
+      "id": 1445,
+      "brand": "Bolid",
+      "model": "USB-RS485 Преобразователь интерфейса Болид",
+      "previousImage": "",
+      "previousDimensions": null,
+      "sourcePage": "https://kss.uz/product/preobrazovatel-interfejsov-usb-rs485/",
+      "sourceImage": "https://kss.uz/wp-content/themes/kss-child/images/products/brd/b-9408.jpg",
+      "sourceBrand": "Bolid",
+      "sourceDimensions": [
+        800,
+        800
+      ],
+      "sourceBytes": 18304,
+      "sha256": "bd09b3174707098cd139a018eda50cbe1c0dff55b059a220d7dc5924e1c5756f",
+      "status": "candidate-exact-model",
+      "matchRule": "Manual hardware-code and variant check; description or HTML-entity differences only",
+      "sourceModel": "Преобразователь интерфейсов USB-RS485"
+    },
+    {
+      "id": 398,
+      "brand": "Hikvision",
+      "model": "DS-7732NXI-I4/VPro(STD)",
+      "previousImage": "assets/kss/0398.webp",
+      "previousDimensions": [
+        360,
+        144
+      ],
+      "sourcePage": "https://kss.uz/product/ds-7732nxi-i4-vpro/",
+      "sourceImage": "https://kss.uz/wp-content/themes/kss-child/images/products/hik2/h2-1091.jpg",
+      "sourceBrand": "",
+      "status": "source-unavailable",
+      "error": "503 Server Error: Service Unavailable for url: https://kss.uz/wp-content/themes/kss-child/images/products/hik2/h2-1091.jpg",
+      "sourceModel": "DS-7732NXI-I4/Vpro",
+      "matchRule": "Manual hardware-code and variant check; description or HTML-entity differences only"
+    },
+    {
+      "id": 1529,
+      "brand": "Rubezh",
+      "model": "Рубеж-2ОП прот.R3 с ключом HASP ProПрибор приёмно-контрольный и управления охранно-пожарный адресный",
+      "previousImage": "assets/kss/1529.webp",
+      "previousDimensions": [
+        116,
+        97
+      ],
+      "sourcePage": "https://kss.uz/product/%d1%80%d1%83%d0%b1%d0%b5%d0%b6-2%d0%be%d0%bf-%d0%bf%d1%80%d0%be%d1%82-r3-%d1%81-%d0%ba%d0%bb%d1%8e%d1%87%d0%be%d0%bc-hasp-pro%d0%bf%d1%80%d0%b8%d0%b1%d0%be%d1%80-%d0%bf%d1%80%d0%b8%d1%91%d0%bc%d0%bd/",
+      "sourceImage": "https://kss.uz/wp-content/themes/kss-child/images/1354.jpg",
+      "sourceBrand": "",
+      "status": "source-unavailable",
+      "error": "503 Server Error: Service Unavailable for url: https://kss.uz/wp-content/themes/kss-child/images/1354.jpg",
+      "sourceModel": "Рубеж-2ОП прот.R3 с ключом HASP ProПрибор приёмно-контрольный и управления охранно-пожарный адресный ППКОПУ 011249-2-1 (FireSec \"Оперативная задача",
+      "matchRule": "Manual hardware-code and variant check; description or HTML-entity differences only"
+    },
+    {
+      "id": 1530,
+      "brand": "Rubezh",
+      "model": "Рубеж-2ОП с ключом HASP Прибор приёмно-контрольный охранно-пожарный адресный ППКОП 011249-2-1 (FireS",
+      "previousImage": "assets/kss/1530.webp",
+      "previousDimensions": [
+        119,
+        97
+      ],
+      "sourcePage": "https://kss.uz/product/%d1%80%d1%83%d0%b1%d0%b5%d0%b6-2%d0%be%d0%bf-%d1%81-%d0%ba%d0%bb%d1%8e%d1%87%d0%be%d0%bc-hasp-%d0%bf%d1%80%d0%b8%d0%b1%d0%be%d1%80-%d0%bf%d1%80%d0%b8%d1%91%d0%bc%d0%bd%d0%be-%d0%ba%d0%be%d0%bd%d1%82/",
+      "sourceImage": "https://kss.uz/wp-content/themes/kss-child/images/1353.jpg",
+      "sourceBrand": "",
+      "status": "source-unavailable",
+      "error": "503 Server Error: Service Unavailable for url: https://kss.uz/wp-content/themes/kss-child/images/1353.jpg",
+      "sourceModel": "Рубеж-2ОП с ключом HASP Прибор приёмно-контрольный охранно-пожарный адресный ППКОП 011249-2-1 (FireSec \"Оперативная задача\")",
+      "matchRule": "Manual hardware-code and variant check; description or HTML-entity differences only"
+    },
+    {
+      "id": 1499,
+      "brand": "RUBEZH",
+      "model": "ИВЭПР 12/2 RS-R3  <исп. 2х7 БР> Источник вторичного электропитания резервированный адресный",
+      "previousImage": "assets/kss/1499.webp",
+      "previousDimensions": [
+        116,
+        79
+      ],
+      "sourcePage": "https://kss.uz/product/ivepr-12-2-rs-r3-2h7-br-k1/",
+      "sourceImage": "https://kss.uz/wp-content/themes/kss-child/images/products/rbz/rbz-rbz216595.jpg",
+      "sourceBrand": "Rubezh",
+      "status": "source-unavailable",
+      "error": "503 Server Error: Service Unavailable for url: https://kss.uz/wp-content/themes/kss-child/images/products/rbz/rbz-rbz216595.jpg",
+      "sourceModel": "ИВЭПР 12/2 RS-R3  &lt;исп. 2х7 БР&gt; Источник вторичного электропитания резервированный адресный",
+      "matchRule": "Manual hardware-code and variant check; description or HTML-entity differences only"
+    },
+    {
+      "id": 1500,
+      "brand": "RUBEZH",
+      "model": "ИВЭПР 12/2 RS-R3 <исп. 2х17 БР> Источник вторичного электропитания резервированный адресный",
+      "previousImage": "assets/kss/1500.webp",
+      "previousDimensions": [
+        121,
+        93
+      ],
+      "sourcePage": "https://kss.uz/product/ivepr-12-2-rs-r3-2h17-br-k4/",
+      "sourceImage": "https://kss.uz/wp-content/themes/kss-child/images/products/rbz/rbz-rbz216598.jpg",
+      "sourceBrand": "Rubezh",
+      "status": "source-unavailable",
+      "error": "503 Server Error: Service Unavailable for url: https://kss.uz/wp-content/themes/kss-child/images/products/rbz/rbz-rbz216598.jpg",
+      "sourceModel": "ИВЭПР 12/2 RS-R3 &lt;исп. 2х17 БР&gt; Источник вторичного электропитания резервированный адресный",
+      "matchRule": "Manual hardware-code and variant check; description or HTML-entity differences only"
+    },
+    {
+      "id": 1501,
+      "brand": "RUBEZH",
+      "model": "ИВЭПР 12/3,5 RS-R3  <исп. 2х7 БР> Источник вторичного электропитания резервированный адресный",
+      "previousImage": "assets/kss/1501.webp",
+      "previousDimensions": [
+        140,
+        93
+      ],
+      "sourcePage": "https://kss.uz/product/ivepr-12-35-rs-r3-2h7-br-k1/",
+      "sourceImage": "https://kss.uz/wp-content/themes/kss-child/images/products/rbz/rbz-rbz216599.jpg",
+      "sourceBrand": "Rubezh",
+      "status": "source-unavailable",
+      "error": "503 Server Error: Service Unavailable for url: https://kss.uz/wp-content/themes/kss-child/images/products/rbz/rbz-rbz216599.jpg",
+      "sourceModel": "ИВЭПР 12/3,5 RS-R3  &lt;исп. 2х7 БР&gt; Источник вторичного электропитания резервированный адресный",
+      "matchRule": "Manual hardware-code and variant check; description or HTML-entity differences only"
+    },
+    {
+      "id": 1502,
+      "brand": "RUBEZH",
+      "model": "ИВЭПР 12/5 RS-R3 <исп. 2х17 БР> Источник вторичного электропитания резервированный адресный",
+      "previousImage": "assets/kss/1502.webp",
+      "previousDimensions": [
+        134,
+        101
+      ],
+      "sourcePage": "https://kss.uz/product/ivepr-12-5-rs-r3-2h17-br-k4/",
+      "sourceImage": "https://kss.uz/wp-content/themes/kss-child/images/products/rbz/rbz-rbz216606.jpg",
+      "sourceBrand": "Rubezh",
+      "status": "source-unavailable",
+      "error": "503 Server Error: Service Unavailable for url: https://kss.uz/wp-content/themes/kss-child/images/products/rbz/rbz-rbz216606.jpg",
+      "sourceModel": "ИВЭПР 12/5 RS-R3 &lt;исп. 2х17 БР&gt; Источник вторичного электропитания резервированный адресный",
+      "matchRule": "Manual hardware-code and variant check; description or HTML-entity differences only"
+    },
+    {
+      "id": 1533,
+      "brand": "RUBEZH",
+      "model": "УДП 513-11-R3 <\"ПУСК ДЫМОУДАЛЕНИЯ\",цвет оранжевый>",
+      "previousImage": "assets/kss/1533.webp",
+      "previousDimensions": [
+        71,
+        75
+      ],
+      "sourcePage": "https://kss.uz/product/udp-513-11-r3/",
+      "sourceImage": "https://kss.uz/wp-content/themes/kss-child/images/products/rbz/rbz-rbz122220.jpg",
+      "sourceBrand": "Rubezh",
+      "status": "source-unavailable",
+      "error": "503 Server Error: Service Unavailable for url: https://kss.uz/wp-content/themes/kss-child/images/products/rbz/rbz-rbz122220.jpg",
+      "sourceModel": "УДП 513-11-R3 &lt;\"ПУСК ДЫМОУДАЛЕНИЯ\",цвет оранжевый&gt;",
+      "matchRule": "Manual hardware-code and variant check; description or HTML-entity differences only"
+    },
+    {
+      "id": 1125,
+      "brand": "Turli brendlar",
+      "model": "DS-UPS3000-R(O-STD)/EU/Uni(E)",
+      "previousImage": "",
+      "previousDimensions": null,
+      "sourcePage": "https://kss.uz/product/ds-ups3000-r-eu-unie/",
+      "sourceImage": "https://kss.uz/wp-content/themes/kss-child/images/products/hik/hik-286bf9645df367.jpg",
+      "sourceBrand": "Hikvision",
+      "status": "source-unavailable",
+      "error": "503 Server Error: Service Unavailable for url: https://kss.uz/wp-content/themes/kss-child/images/products/hik/hik-286bf9645df367.jpg",
+      "sourceModel": "DS-UPS3000-R/EU/Uni(E)",
+      "matchRule": "Manual hardware-code and variant check; description or HTML-entity differences only"
+    },
+    {
+      "id": 552,
+      "brand": "Turli brendlar",
+      "model": "Медиаконвертeр 1GB (A-B комплект)",
+      "previousImage": "assets/kss/0552.webp",
+      "previousDimensions": [
+        170,
+        223
+      ],
+      "sourcePage": "https://kss.uz/product/mediakonverter-1gb-a-b-komplekt/",
+      "sourceImage": "https://kss.uz/wp-content/themes/kss-child/images/products/kssp/kssp-0f523ff931e2a1.jpg",
+      "sourceBrand": "",
+      "sourceDimensions": [
+        480,
+        480
+      ],
+      "sourceBytes": 25502,
+      "sha256": "5fa45fc851a36799db3f4bcaca4ca7aeabee6fbea0c414db0ca99ba21163583f",
+      "status": "candidate-exact-model",
+      "matchRule": "Manual hardware-code and variant check; description or HTML-entity differences only",
+      "sourceModel": "Медиаконвертор 1GB (A-B комплект)"
+    },
+    {
+      "id": 553,
+      "brand": "Turli brendlar",
+      "model": "Медиаконвертер 100MB (A-B комплект)",
+      "previousImage": "assets/kss/0553.webp",
+      "previousDimensions": [
+        117,
+        63
+      ],
+      "sourcePage": "https://kss.uz/product/%d0%bc%d0%b5%d0%b4%d0%b8%d0%b0%d0%ba%d0%be%d0%bd%d0%b2%d0%b5%d1%80%d1%82%d0%be%d1%80-100mb-a-b-%d0%ba%d0%be%d0%bc%d0%bf%d0%bb%d0%b5%d0%ba%d1%82/",
+      "sourceImage": "https://kss.uz/wp-content/themes/kss-child/images/1214.jpg",
+      "sourceBrand": "",
+      "sourceDimensions": [
+        1200,
+        1200
+      ],
+      "sourceBytes": 159319,
+      "sha256": "4fe31510472c1f02ffd2a3c949cc3e77c556da03fbd3ee88ca01895e9b668100",
+      "status": "candidate-exact-model",
+      "matchRule": "Manual hardware-code and variant check; description or HTML-entity differences only",
+      "sourceModel": "Медиаконвертор 100MB (A-B комплект)"
+    },
+    {
+      "id": 1410,
+      "brand": "Zkteco",
+      "model": "ZKTeco SL01-U530N Умный накладной электронный замок с поддержкой Wi-Fi",
+      "previousImage": "",
+      "previousDimensions": null,
+      "sourcePage": "https://kss.uz/product/zkteco-sl01-u530n-umnaya-nakladnaya-biometricheskaya-zashhelka-smart-zamok-s-podderzhkoj-wi-fi/",
+      "sourceImage": "https://kss.uz/wp-content/themes/kss-child/images/products/zk/zk-d1f4db7ee54d04.jpg",
+      "sourceBrand": "ZKTeco",
+      "sourceDimensions": [
+        480,
+        480
+      ],
+      "sourceBytes": 15271,
+      "sha256": "fbb3f69377f9773a183d1e02c72b3a860bf670de93b2ed3e8d9e0cc9d9b8daed",
+      "status": "candidate-exact-model",
+      "matchRule": "Manual hardware-code and variant check; description or HTML-entity differences only",
+      "sourceModel": "ZKTeco SL01-U530N Умная накладная биометрическая защелка (смарт-замок) с поддержкой Wi-Fi"
+    }
+  ]
+}
