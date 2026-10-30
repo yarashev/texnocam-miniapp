@@ -214,3 +214,65 @@ Brend va narx selectlari ixcham bitta qatorga almashtirildi: chapda Brend ikonka
 assets/catalog-controls.js ochilish, tanlash, yopilish va telefon formatini boshqaradi. Mavjud katalog qidiruvi va narx saralash mantiqi saqlandi. Bosh sahifa kontentiga contactPhone qo‘shildi; server raqamni tekshiradi va E.164 formatida saqlaydi. Admin panel → Bosh sahifa kontenti → Promo banner va aloqa → Aloqa telefon raqami orqali o‘zgartiriladi. Bo‘sh qoldirish telefonni yashiradi. Eski klient contactPhone yubormasa saqlangan raqam saqlanib qoladi.
 
 9 ta avtomatik test (shu jumladan aloqa raqamining validatsiya, saqlash, bo‘shatish va restartdan keyingi holati) o‘tdi. Brauzerda 320/390/768 px bo‘yicha menyular, qidiruv, narx, reset, keyboard, tel havola va sig‘ish tekshirildi. Mahalliy preview o‘sha 31317 portda. O‘zgarishlar hali GitHub push/deploy talab qiladi; kategoriya birlashtirish o‘zgarishlari ham shu ishchi papkada turibdi.
+
+
+## 2026-10-30 — Mahsulot oynasi, katalog rasmlari va deploy yakuni
+
+### Amaldagi loyiha va manbalar
+- Brend: UzCam; GitHub repozitoriy nomi o‘zgarmagan: `yarashev/texnocam-miniapp`, asosiy tarmoq `main`.
+- Jonli sayt: https://texnocam-miniapp.onrender.com/ ; katalog bo‘limlari: `#catalog-categories`.
+- Render xizmati: `texnocam-miniapp`; `main`ga commit kelganda avtomatik deploy yoqilgan.
+- Oxirgi jonli texnik commit: `ca9d5c460d8c52b8a8ffb700ad6b52e37600731b` — reviewed product images delivery/cache va ixcham rasm o‘lchamlari.
+- Render deploy `dep-dbi65p8473hc73ems9l0` LIVE holatida tekshirildi. `/api/health`: database connected, PostgreSQL va PostgreSQL image storage.
+- Arxivga keyin qo‘shilgan faqat hujjat commitlari `[skip render]` bilan yuborilishi mumkin; ular jonli texnik commitdan oldinda bo‘lishi normal.
+
+### Mahsulot oynasi
+- Katalog kartasini bosish yoki klaviatura orqali ochish: katta rasm, model, brend, kategoriya, mavjud tavsif va sotuv narxi.
+- Rasm bosilganda to‘liq kattalashtirish oynasi ochiladi.
+- Pastda doim ko‘rinadigan “Savatga qo‘shish” tugmasi.
+- Pastga surilganda 12 tagacha o‘xshash mahsulot; ularni ochish va savatga qo‘shish mumkin.
+- `assets/product-detail.js` va `assets/product-detail.css` boshqaradi.
+- Katalogdagi rasm joyi 110–150 px; mahsulot oynasida 190–260 px. User talabi: rasm joyi juda katta bo‘lmasin; PNG ham mumkin.
+- Rasm asl nisbatida ko‘rsatiladi. Grid ichidagi rasmning ortiqcha cho‘zilishi aniq chegaralar bilan tuzatildi.
+
+### Barcha rasmlar bo‘yicha tekshiruv (30.10.2026 dagi snapshot)
+Jami 2142 ta ommaviy mahsulot tekshirildi:
+- 2050 ta almashtirish tayyorlangan va saytga chiqarilgan: 7 ta lokal 600×600 EZVIZ PNG va 2043 ta tekshirilgan manba rasmi.
+- 11 ta mavjud, yaxshiroq yoki admin tanlagan rasm saqlangan.
+- 81 ta hal etilmagan holat qo‘lda tekshirish ro‘yxatiga ajratilgan: aniq model/manba topilmagan, rasm kichik, manba ochilmagan, variant noaniq yoki rasm modelga mos emas.
+- Manbalar: EZVIZ rasmiy platformasi, TP-Link/Tapo rasmiy platformasi va KSS ochiq distribyutor katalogi. Aniq model, MP/variant va to‘plam sonini saqlash muhim; taxminiy boshqa model rasmi qo‘yilmaydi.
+- User ruxsati: sifati yaxshi va modeli mos mavjud rasmlarni tekshirib, o‘z holida qoldirish mumkin.
+- Kirill model nomlari bir-biriga aralashmasligi va adminning mustaqil yuklagan rasmi almashtirilmasligi testlarda tekshirildi.
+- Linkff switch ID 884 va 885 uchun yetkazib beruvchi manbasidagi rasm noto‘g‘ri; bu almashtirishlar rad etilgan. ID 77 CPU-card uchun mavjud rasm ham qo‘lda tekshirishga ajratilgan.
+- To‘liq holatlar, manbalar, o‘lchamlar va SHA-256: `assets/product-image-audit.json`.
+- Qo‘shimcha rasmiy/qo‘lda tekshirilgan manbalar: `assets/official-products/reviewed-sources.json`.
+- 7 lokal PNG va ularning manbalari: `assets/official-products/`.
+- Xaritalash: `assets/reviewed-product-images.js`, `assets/product-images.js`.
+- Qayta tekshirish/yig‘ish skriptlari: `scripts/audit-product-images.py`, `scripts/build-product-image-map.py`; Python Pillow va requests kerak. Xom kataloglar va yuklash keshi faqat Git’dan chiqarilgan `.data/image-review`da.
+
+### Rasm yetkazishdagi topilgan muammo va tuzatish
+Dastlabki deployda ayrim tashqi rasm manbalari brauzerda ochilmadi va past sifatli eski rasmga qaytdi. Shu sababli yakuniy versiya rasmlarni to‘g‘ridan-to‘g‘ri uchinchi tomon saytiga hotlink qilish o‘rniga saytning o‘z endpointi orqali beradi:
+- `GET /api/reviewed-product-images/:id/:sha256Prefix`.
+- Faqat oldindan tasdiqlangan model/manba ro‘yxatidagi HTTPS manzillar; erkin URL-proxy emas.
+- SHA-256 tekshiruvi, rasm formati/hajmi chegarasi, redirectni rad etish, timeout, parallel yuklash va navbat chegaralari.
+- 32 MiB bilan chegaralangan xotira keshi va bir xil rasm uchun birgalikdagi yuklash; fayl tizimiga doimiy saqlash talab qilinmaydi.
+- Manba ochilmasa eski rasmga bir marta qaytadi; admin tanlagan rasmlar ustuvor.
+- `backend/reviewed-images.js` va `server.js` endpointni boshqaradi.
+- Jonli brauzerda Hikvision ID 196 va 175 ning 800 px rasmlari yuklangani, katalogdagi ko‘rinadigan rasm balandligi 148 px ekani tekshirildi.
+- HTTP tekshiruv: ID 196 — 800×605, ID 175 — 800×800, Tapo ID 1557 — 590×590; barchasi 200 va kutilgan checksumga mos.
+- Mahsulot narxlari, ID’lari va database’dagi admin rasm tanlovlari qayta yozilmagan.
+
+### 81 model uchun qo‘lda ishlash PDF
+- Fayl: `UzCam_81_model_tekshiruv.pdf`.
+- 9 sahifa; 81 modelning raqami, mahsulot ID, brend, to‘liq model va tekshirish sababi.
+- Har mahsulotga “Yangi rasm havolasi / izoh” tahrirlanadigan maydon va “OK” checkbox: jami 162 ta interaktiv maydon.
+- PDF’ni kompyuterda to‘ldirish yoki chop etib qo‘lda belgilash mumkin. Tayyor fayl foydalanuvchiga berilgan.
+- Ro‘yxatni keyin qayta yaratishda statuslardan quyidagilarni chiqarib tashlash kerak: `replacement-ready`, `replacement-ready-local`, `keep-existing-quality`, `keep-source-not-better`, `keep-custom-image`. Ushbu snapshotda qolganlari aniq 81 ta.
+- Keyingi muhim ish: shu 81 modelning aniq rasm/variantlarini qo‘lda tekshirish, topilgan rasmlarni mahsulot ID bo‘yicha joylash va statuslarni yangilash.
+
+### Tekshiruv va davom ettirish
+- Yakuniy `npm test`: 41 ta test muvaffaqiyatli. UI’da yangi rasmlar, mahsulot ma’lumotlari va ixcham ko‘rinish tekshirildi.
+- PR #5 (mahsulot oynasi) va PR #6 (butun katalog rasmlari) main’ga birlashtirilgan. Rasm yetkazishning yakuniy tuzatishi yuqoridagi `ca9d5c4` commitida.
+- Keyingi suhbatda ushbu arxiv va joriy repository holatini o‘qib davom etish kerak. Eski arxiv bosqichlari keyingi yangilanishlar bilan eskirgan bo‘lishi mumkin.
+- Bot tokeni, DATABASE_URL, parollar yoki boshqa maxfiy ma’lumotlarni arxivga/GitHub’ga qo‘shmang.
+
