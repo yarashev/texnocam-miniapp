@@ -5,6 +5,7 @@
   const sections=[
     ['hikvision','Hikvision','camera',['Hikvision']],
     ['hilook','HiLook','camera',['HiLook']],
+    ['dahua','Dahua','camera',['Dahua']],
     ['tplink','TP-Link','router',['TP-Link','TpLink']],
     ['tapo','Tapo','home',['Tapo']],
     ['mercusys','Mercusys','router',['Mercusys']],
