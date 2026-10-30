@@ -69,7 +69,6 @@
       if (loadMore) loadMore.innerHTML = shown.length > state.visibleLimit ? '<button class="load-more" id="loadMore">Ko‘proq mahsulot</button>' : '';
       document.querySelector('#loadMore')?.addEventListener('click', () => { state.visibleLimit += 40; state.renderProducts(false); });
       host.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', event => { event.stopPropagation(); track('add', Number(button.dataset.add)); state.add(Number(button.dataset.add)); }));
-      host.querySelectorAll('[data-product-id]').forEach(card => card.addEventListener('click', () => track('view', Number(card.dataset.productId)), { once: true }));
       renderBundle(); window.UzCamCatalogControls?.refresh();
     };
     state.renderProducts();
