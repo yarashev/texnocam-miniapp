@@ -58,3 +58,7 @@
 /* Make every featured product surface visibly interactive and keyboard reachable. */
 .camera-card,[data-promo-brand]{cursor:pointer}
 .camera-card:focus-visible,[data-promo-brand]:focus-visible{outline:3px solid #246bfd;outline-offset:3px}
+
+/* Keep product detail independently scrollable on touch devices. */
+.product-detail.is-open{overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior-y:contain}
+.detail-related-loading{color:#718096;font-size:13px}

@@ -45,18 +45,32 @@
     return 'Birga kerak bo‘lishi mumkin';
   };
   const forProduct = product => {
-    const seen = new Set(), limits = { recorder: 1, camera: 3, network: 1, cable: 1, storage: 1 };
-    return [...(window.UzCamCatalogState?.items || [])]
-      .filter(item => item.id !== product.id)
-      .map(item => ({ item, score: score(product, item), role: role(item) }))
-      .filter(entry => Number.isFinite(entry.score))
-      .sort((a, b) => b.score - a.score || Number(a.item.price) - Number(b.item.price))
-      .filter(entry => {
-        const max = limits[entry.role] || 1, count = seen.has(entry.role) ? seen.get(entry.role) : 0;
-        if (count >= max) return false; seen.set(entry.role, count + 1); return true;
-      })
-      .slice(0, 6)
-      .map(entry => entry.item);
+    const limits = { recorder: 1, camera: 3, network: 1, cable: 1, storage: 1 };
+    const candidates = [];
+    for (const item of window.UzCamCatalogState?.items || []) {
+      if (String(item.id) === String(product.id)) continue;
+      const itemRole = role(item);
+      const itemScore = score(product, item);
+      if (!Number.isFinite(itemScore)) continue;
+      const entry = { item, score: itemScore, role: itemRole };
+      let position = candidates.findIndex(current =>
+        itemScore > current.score ||
+        (itemScore === current.score && Number(item.price) < Number(current.item.price))
+      );
+      if (position < 0) position = candidates.length;
+      candidates.splice(position, 0, entry);
+      if (candidates.length > 24) candidates.pop();
+    }
+    const counts = Object.create(null);
+    const selected = [];
+    for (const entry of candidates) {
+      const max = limits[entry.role] || 1;
+      if ((counts[entry.role] || 0) >= max) continue;
+      counts[entry.role] = (counts[entry.role] || 0) + 1;
+      selected.push(entry.item);
+      if (selected.length === 6) break;
+    }
+    return selected;
   };
   window.UzCamProductRecommendations = { for: forProduct, label, role };
 })();
