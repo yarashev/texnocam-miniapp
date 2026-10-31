@@ -121,7 +121,7 @@
 
   function closeProduct(fromBack = false) {
     if (panel.hidden) return;
-    closeZoom(true);
+    closeZoom(fromBack);
     panel.hidden = true;
     panel.classList.remove('is-open');
     panel.replaceChildren();
