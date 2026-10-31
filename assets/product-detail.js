@@ -14,8 +14,13 @@
   zoom.setAttribute('aria-label', 'Mahsulot rasmini kattalashtirib ko‘rish');
   document.body.append(dialog, zoom);
   const openDialog = target => {
-    if (typeof target.showModal === 'function') target.showModal();
-    else { target.setAttribute('open', ''); target.classList.add('dialog-fallback'); }
+    try {
+      if (typeof target.showModal === 'function') { target.showModal(); return; }
+    } catch (error) {
+      console.warn('Dialog API ishlamadi, zaxira rejim yoqildi:', error);
+    }
+    target.setAttribute('open', '');
+    target.classList.add('dialog-fallback');
   };
   const closeDialog = target => {
     if (typeof target.close === 'function') target.close();
@@ -119,10 +124,17 @@
     closingZoomFromTelegramBack = false;
   });
   zoom.addEventListener('click', event => { if (event.target === zoom) closeDialog(zoom); });
-  document.querySelector('#products')?.addEventListener('click', event => {
-    if (event.target.closest('[data-add]')) return;
-    const card = event.target.closest('[data-product-id]'); if (card) open(card.dataset.productId);
-  });
+  // Capture at document level so other catalog scripts cannot swallow card clicks.
+  document.addEventListener('click', event => {
+    const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+    if (!target) return;
+    if (target.closest('#products [data-add]')) return;
+    const card = target.closest('#products [data-product-id]');
+    if (card) {
+      event.preventDefault();
+      open(card.dataset.productId);
+    }
+  }, true);
   document.querySelector('#products')?.addEventListener('keydown', event => {
     if (!['Enter', ' '].includes(event.key) || event.target.closest('button')) return;
     const card = event.target.closest('[data-product-id]');
