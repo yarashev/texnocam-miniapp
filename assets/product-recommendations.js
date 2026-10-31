@@ -46,29 +46,31 @@
   };
   const forProduct = product => {
     const limits = { recorder: 1, camera: 3, network: 1, cable: 1, storage: 1 };
-    const selected = [];
-    const counts = Object.create(null);
+    const candidates = [];
     for (const item of window.UzCamCatalogState?.items || []) {
       if (String(item.id) === String(product.id)) continue;
       const itemRole = role(item);
-      const max = limits[itemRole] || 1;
-      if ((counts[itemRole] || 0) >= max) continue;
       const itemScore = score(product, item);
       if (!Number.isFinite(itemScore)) continue;
-      const entry = { item, score: itemScore };
-      let position = selected.findIndex(current =>
+      const entry = { item, score: itemScore, role: itemRole };
+      let position = candidates.findIndex(current =>
         itemScore > current.score ||
         (itemScore === current.score && Number(item.price) < Number(current.item.price))
       );
-      if (position < 0) position = selected.length;
-      selected.splice(position, 0, entry);
-      counts[itemRole] = (counts[itemRole] || 0) + 1;
-      if (selected.length > 6) {
-        const removed = selected.pop();
-        counts[role(removed.item)]--;
-      }
+      if (position < 0) position = candidates.length;
+      candidates.splice(position, 0, entry);
+      if (candidates.length > 24) candidates.pop();
     }
-    return selected.map(entry => entry.item);
+    const counts = Object.create(null);
+    const selected = [];
+    for (const entry of candidates) {
+      const max = limits[entry.role] || 1;
+      if ((counts[entry.role] || 0) >= max) continue;
+      counts[entry.role] = (counts[entry.role] || 0) + 1;
+      selected.push(entry.item);
+      if (selected.length === 6) break;
+    }
+    return selected;
   };
   window.UzCamProductRecommendations = { for: forProduct, label, role };
 })();
