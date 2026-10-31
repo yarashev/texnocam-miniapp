@@ -203,19 +203,24 @@
     window.UzCamCatalogIntelligence?.track('view', product.id);
   }
 
-  // One capture-phase listener handles all product cards, including cards
-  // recreated later by catalog rendering and filtering.
+  // Open product cards without hijacking links, buttons, or controls inside them.
+  // In particular, promo CTA links must reach the promo carousel's own handler.
   document.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : event.target?.parentElement;
     if (!target) return;
-    if (target.closest('[data-add], .add, .camera-add, .detail-add, .detail-related-add')) return;
+    if (target.closest('a, button, input, textarea, select, summary, label, [data-promo-index], [data-add], .add, .camera-add, .detail-add, .detail-related-add')) return;
     const card = target.closest('[data-product-id]');
     if (!card) return;
     const id = card.getAttribute('data-product-id');
     if (!id) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    openProduct(id);
+
+    try {
+      openProduct(id);
+      event.preventDefault();
+      event.stopPropagation();
+    } catch (error) {
+      console.error('[UzCam] Mahsulot oynasini ochishda xatolik:', error);
+    }
   }, true);
 
   document.addEventListener('keydown', event => {
@@ -238,15 +243,21 @@
     if (event.target === panel) closeProduct();
   });
 
+  // Catalog cards are recreated during search/filtering. Observe only that
+  // container instead of the whole document to avoid rescanning the app on
+  // unrelated UI updates (cart, profile, promo carousel, and detail panel).
+  const productsHost = document.querySelector('#products');
   const improveCards = () => {
-    document.querySelectorAll('[data-product-id]').forEach(card => {
+    productsHost?.querySelectorAll('[data-product-id]').forEach(card => {
       card.tabIndex = 0;
       card.setAttribute('role', 'button');
       card.setAttribute('aria-label', (card.querySelector('.name')?.textContent || 'Mahsulot') + ' — ma’lumotlarni ko‘rish');
     });
   };
-  const observer = new MutationObserver(improveCards);
-  observer.observe(document.body, { childList: true, subtree: true });
+  if (productsHost) {
+    const observer = new MutationObserver(improveCards);
+    observer.observe(productsHost, { childList: true, subtree: true });
+  }
   improveCards();
 
   // Keep these functions available for diagnostics and controlled navigation.
