@@ -47,3 +47,10 @@
 /* Telegram WebView fallback when native dialog.showModal is unavailable. */
 .product-detail.dialog-fallback,.product-zoom.dialog-fallback{display:block;z-index:120}
 .product-zoom.dialog-fallback{z-index:121}
+
+
+/* Product detail uses custom panels, not the native dialog element. */
+.product-detail[hidden],.product-zoom[hidden]{display:none!important}
+.product-detail.is-open{display:block;z-index:120;box-shadow:0 0 0 100vmax #08152bbd}
+.product-zoom{display:block;z-index:121;box-shadow:0 0 0 100vmax #08152bbd}
+.product-zoom[hidden]{display:none!important}
