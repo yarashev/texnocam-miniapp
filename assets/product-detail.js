@@ -1,149 +1,251 @@
 (() => {
+  'use strict';
   const state = window.UzCamCatalogState;
   if (!state) return;
-  const money = value => new Intl.NumberFormat('uz-UZ').format(value) + ' so‘m';
-  const node = (tag, className, text) => {
-    const element = document.createElement(tag);
-    if (className) element.className = className;
-    if (text !== undefined) element.textContent = text;
-    return element;
+
+  const money = value => new Intl.NumberFormat('uz-UZ').format(Number(value) || 0) + ' so‘m';
+  const make = (tag, className, text) => {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    if (text !== undefined) el.textContent = text;
+    return el;
   };
-  const dialog = node('dialog', 'product-detail');
-  dialog.setAttribute('aria-labelledby', 'productDetailTitle');
-  const zoom = node('dialog', 'product-zoom');
+
+  // Use ordinary elements instead of the native <dialog> API:
+  // this works consistently in mobile browsers and Telegram WebView.
+  const panel = make('section', 'product-detail');
+  panel.id = 'productDetailPanel';
+  panel.hidden = true;
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-modal', 'true');
+  panel.setAttribute('aria-labelledby', 'productDetailTitle');
+  document.body.append(panel);
+
+  const zoom = make('div', 'product-zoom');
+  zoom.hidden = true;
+  zoom.setAttribute('role', 'dialog');
+  zoom.setAttribute('aria-modal', 'true');
   zoom.setAttribute('aria-label', 'Mahsulot rasmini kattalashtirib ko‘rish');
-  document.body.append(dialog, zoom);
-  const openDialog = target => {
-    try {
-      if (typeof target.showModal === 'function') { target.showModal(); return; }
-    } catch (error) {
-      console.warn('Dialog API ishlamadi, zaxira rejim yoqildi:', error);
-    }
-    target.setAttribute('open', '');
-    target.classList.add('dialog-fallback');
-  };
-  const closeDialog = target => {
-    if (typeof target.close === 'function') target.close();
-    else if (target.hasAttribute('open')) { target.removeAttribute('open'); target.dispatchEvent(new Event('close')); }
-  };
-  let previousFocus, previousOverflow, closingFromTelegramBack = false, closingZoomFromTelegramBack = false;
+  document.body.append(zoom);
+
+  let activeProductId = null;
+  let previousFocus = null;
+  let backEntryAdded = false;
+  let zoomBackEntryAdded = false;
+  let closingFromBack = false;
+  let closingZoomFromBack = false;
+
   function closeButton(label, action) {
-    const button = node('button', 'detail-close', '✕');
-    button.type = 'button'; button.setAttribute('aria-label', label);
-    button.onclick = action; return button;
+    const button = make('button', 'detail-close', '✕');
+    button.type = 'button';
+    button.setAttribute('aria-label', label);
+    button.addEventListener('click', action);
+    return button;
   }
-  function image(product, className) {
-    const holder = node('div', className);
-    const fallback = node('span', 'detail-image-fallback', 'Rasm mavjud emas');
+
+  function productImage(product, className) {
+    const holder = make('div', className);
     if (product.image) {
-      const img = node('img'); img.src = product.image; img.alt = product.name;
-      img.decoding = 'async'; img.loading = className === 'detail-related-photo' ? 'lazy' : 'eager'; img.onerror = () => { img.remove(); holder.append(fallback); };
+      const img = make('img');
+      img.src = product.image;
+      img.alt = product.name || 'Mahsulot rasmi';
+      img.loading = className === 'detail-related-photo' ? 'lazy' : 'eager';
+      img.onerror = () => {
+        img.remove();
+        holder.append(make('span', 'detail-image-fallback', 'Rasm mavjud emas'));
+      };
       holder.append(img);
-    } else holder.append(fallback);
+    } else {
+      holder.append(make('span', 'detail-image-fallback', 'Rasm mavjud emas'));
+    }
     return holder;
   }
-  function addButton(product, className = 'detail-add') {
-    const button = node('button', className, 'Savatga qo‘shish'); button.type = 'button';
-    button.onclick = () => {
+
+  function addToCart(product, className) {
+    const button = make('button', className, 'Savatga qo‘shish');
+    button.type = 'button';
+    button.addEventListener('click', event => {
+      event.stopPropagation();
       window.UzCamCatalogIntelligence?.track('add', product.id);
       state.add(Number(product.id));
       button.textContent = 'Qo‘shildi ✓';
-      setTimeout(() => { button.textContent = 'Savatga qo‘shish'; }, 1000);
-    };
+      button.disabled = true;
+      window.setTimeout(() => {
+        button.textContent = 'Savatga qo‘shish';
+        button.disabled = false;
+      }, 1000);
+    });
     return button;
   }
-  function related(product) {
-    const compatible = window.UzCamProductRecommendations?.for(product);
-    if (compatible?.length) return compatible;
-    return state.items.filter(item => item.id !== product.id && item.cat === product.cat)
-      .map(item => ({ item, score: (item.brand === product.brand ? 2 : 0) - Math.abs(Number(item.price) - Number(product.price)) / Math.max(Number(product.price), 1) }))
-      .sort((a, b) => b.score - a.score || Number(a.item.id) - Number(b.item.id))
-      .slice(0, 6).map(entry => entry.item);
+
+  function relatedProducts(product) {
+    const recommended = window.UzCamProductRecommendations?.for(product);
+    if (recommended?.length) return recommended;
+    return state.items
+      .filter(item => Number(item.id) !== Number(product.id) && item.cat === product.cat)
+      .map(item => ({
+        item,
+        score: (item.brand === product.brand ? 2 : 0) -
+          Math.abs(Number(item.price) - Number(product.price)) / Math.max(Number(product.price), 1)
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6)
+      .map(entry => entry.item);
   }
-  function open(id) {
-    const product = state.items.find(item => Number(item.id) === Number(id));
-    if (!product) return;
-    if (!dialog.open) window.UzCamTelegramBack?.push(() => { closingFromTelegramBack = true; closeDialog(dialog); });
-    if (!dialog.open) {
-      previousFocus = document.activeElement; previousOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
+
+  function closeZoom(fromBack = false) {
+    if (zoom.hidden) return;
+    zoom.hidden = true;
+    zoom.replaceChildren();
+    if (zoomBackEntryAdded && !fromBack) window.UzCamTelegramBack?.discard('product-zoom');
+    zoomBackEntryAdded = false;
+    closingZoomFromBack = false;
+  }
+
+  function showZoom(product) {
+    if (!product.image) return;
+    zoom.replaceChildren(
+      closeButton('Rasmni yopish', () => closeZoom()),
+      productImage(product, 'zoom-photo')
+    );
+    zoom.hidden = false;
+    if (!zoomBackEntryAdded) {
+      window.UzCamTelegramBack?.push(() => {
+        closingZoomFromBack = true;
+        closeZoom(true);
+      }, 'product-zoom');
+      zoomBackEntryAdded = true;
     }
-    dialog.replaceChildren();
-    const header = node('header', 'detail-header');
-    header.append(node('span', '', 'Mahsulot haqida'), closeButton('Mahsulotni yopish', () => closeDialog(dialog)));
-    const content = node('div', 'detail-content');
-    const photo = node('button', 'detail-photo-button'); photo.type = 'button';
+    zoom.querySelector('button')?.focus();
+  }
+
+  function closeProduct(fromBack = false) {
+    if (panel.hidden) return;
+    closeZoom(true);
+    panel.hidden = true;
+    panel.classList.remove('is-open');
+    panel.replaceChildren();
+    document.body.style.overflow = '';
+    activeProductId = null;
+    if (backEntryAdded && !fromBack) window.UzCamTelegramBack?.discard('product-detail');
+    backEntryAdded = false;
+    closingFromBack = false;
+    if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+  }
+
+  function openProduct(id) {
+    const product = state.items.find(item => String(item.id) === String(id));
+    if (!product) return;
+
+    if (panel.hidden) {
+      previousFocus = document.activeElement;
+      document.body.style.overflow = 'hidden';
+      window.UzCamTelegramBack?.push(() => {
+        closingFromBack = true;
+        closeProduct(true);
+      }, 'product-detail');
+      backEntryAdded = true;
+    }
+
+    activeProductId = String(product.id);
+    const header = make('header', 'detail-header');
+    header.append(
+      make('span', '', 'Mahsulot haqida'),
+      closeButton('Mahsulotni yopish', () => closeProduct())
+    );
+
+    const content = make('div', 'detail-content');
+    const photo = make('button', 'detail-photo-button');
+    photo.type = 'button';
     photo.setAttribute('aria-label', 'Rasmni kattalashtirish');
-    photo.append(image(product, 'detail-photo'));
+    photo.append(productImage(product, 'detail-photo'));
     photo.disabled = !product.image;
-    photo.onclick = () => {
-      window.UzCamTelegramBack?.push(() => { closingZoomFromTelegramBack = true; closeDialog(zoom); }, 'product-zoom');
-      zoom.replaceChildren(closeButton('Rasmni yopish', () => closeDialog(zoom)), image(product, 'zoom-photo'));
-      openDialog(zoom);
-    };
-    const title = node('h1', '', product.name); title.id = 'productDetailTitle';
-    const price = node('div', 'detail-price', money(product.price));
-    const info = node('section', 'detail-info');
-    info.append(node('h2', '', 'Mahsulot ma’lumotlari'));
-    const list = node('dl');
-    [['Brend', product.brand], ['Model', product.model || product.name], ['Kategoriya', product.cat]].forEach(([label, value]) => {
-      list.append(node('dt', '', label), node('dd', '', value || 'Ko‘rsatilmagan'));
-    });
-    info.append(list, node('p', 'detail-description', product.spec || 'Qo‘shimcha ma’lumot hali kiritilmagan.'));
+    photo.addEventListener('click', () => showZoom(product));
+
+    const title = make('h1', '', product.name || 'Mahsulot');
+    title.id = 'productDetailTitle';
+    const price = make('div', 'detail-price', money(product.price));
+    const info = make('section', 'detail-info');
+    info.append(make('h2', '', 'Mahsulot ma’lumotlari'));
+    const details = make('dl');
+    [['Brend', product.brand], ['Model', product.model || product.name], ['Kategoriya', product.cat]]
+      .forEach(([label, value]) => {
+        details.append(make('dt', '', label || ''), make('dd', '', value || 'Ko‘rsatilmagan'));
+      });
+    info.append(details, make('p', 'detail-description', product.spec || 'Qo‘shimcha ma’lumot hali kiritilmagan.'));
     content.append(photo, title, price, info);
-    const recommendations = related(product);
-    if (recommendations.length) {
-      const section = node('section', 'detail-related'); section.append(node('h2', '', window.UzCamProductRecommendations?.label(product) || 'O‘xshash mahsulotlar'));
-      const grid = node('div', 'detail-related-grid');
-      recommendations.forEach(item => {
-        const card = node('article', 'detail-related-card');
-        const link = node('button', 'detail-related-open'); link.type = 'button';
-        link.append(image(item, 'detail-related-photo'), node('h3', '', item.name));
-        link.onclick = () => open(item.id);
-        card.append(link, node('div', 'detail-related-price', money(item.price)), addButton(item, 'detail-related-add'));
+
+    const suggestions = relatedProducts(product);
+    if (suggestions.length) {
+      const section = make('section', 'detail-related');
+      section.append(make('h2', '', window.UzCamProductRecommendations?.label(product) || 'O‘xshash mahsulotlar'));
+      const grid = make('div', 'detail-related-grid');
+      suggestions.forEach(item => {
+        const card = make('article', 'detail-related-card');
+        const openButton = make('button', 'detail-related-open');
+        openButton.type = 'button';
+        openButton.append(productImage(item, 'detail-related-photo'), make('h3', '', item.name));
+        openButton.addEventListener('click', () => openProduct(item.id));
+        card.append(openButton, make('div', 'detail-related-price', money(item.price)), addToCart(item, 'detail-related-add'));
         grid.append(card);
       });
-      section.append(grid); content.append(section);
+      section.append(grid);
+      content.append(section);
     }
-    const footer = node('footer', 'detail-footer');
-    footer.append(node('strong', '', money(product.price)), addButton(product));
-    dialog.append(header, content, footer);
-    if (!dialog.open) openDialog(dialog);
-    dialog.scrollTop = 0; header.querySelector('button').focus();
+
+    const footer = make('footer', 'detail-footer');
+    footer.append(make('strong', '', money(product.price)), addToCart(product, 'detail-add'));
+    panel.replaceChildren(header, content, footer);
+    panel.hidden = false;
+    panel.classList.add('is-open');
+    panel.scrollTop = 0;
+    header.querySelector('button')?.focus();
     window.UzCamCatalogIntelligence?.track('view', product.id);
   }
-  dialog.addEventListener('close', () => {
-    if (zoom.open) closeDialog(zoom);
-    if (!closingFromTelegramBack) window.UzCamTelegramBack?.discard();
-    closingFromTelegramBack = false;
-    document.body.style.overflow = previousOverflow || '';
-    previousFocus?.focus({ preventScroll: true });
-  });
-  zoom.addEventListener('close', () => {
-    if (!closingZoomFromTelegramBack) window.UzCamTelegramBack?.discard('product-zoom');
-    closingZoomFromTelegramBack = false;
-  });
-  zoom.addEventListener('click', event => { if (event.target === zoom) closeDialog(zoom); });
-  // Capture at document level so other catalog scripts cannot swallow card clicks.
+
+  // One capture-phase listener handles all product cards, including cards
+  // recreated later by catalog rendering and filtering.
   document.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : event.target?.parentElement;
     if (!target) return;
     if (target.closest('#products [data-add]')) return;
     const card = target.closest('#products [data-product-id]');
+    if (!card) return;
+    event.preventDefault();
+    openProduct(card.getAttribute('data-product-id'));
+  }, true);
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      if (!zoom.hidden) { closeZoom(); event.preventDefault(); }
+      else if (!panel.hidden) { closeProduct(); event.preventDefault(); }
+      return;
+    }
+    if (panel.hidden || !['Enter', ' '].includes(event.key)) return;
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target || target.closest('button')) return;
+    const card = target.closest('#products [data-product-id]');
     if (card) {
       event.preventDefault();
-      open(card.dataset.productId);
+      openProduct(card.getAttribute('data-product-id'));
     }
-  }, true);
-  document.querySelector('#products')?.addEventListener('keydown', event => {
-    if (!['Enter', ' '].includes(event.key) || event.target.closest('button')) return;
-    const card = event.target.closest('[data-product-id]');
-    if (card) { event.preventDefault(); open(card.dataset.productId); }
   });
-  const enhanceCards = () => document.querySelectorAll('#products [data-product-id]').forEach(card => {
-    card.tabIndex = 0; card.setAttribute('aria-label', card.querySelector('.name')?.textContent + ' — ma’lumotlarni ko‘rish');
+
+  panel.addEventListener('click', event => {
+    if (event.target === panel) closeProduct();
   });
-  const host = document.querySelector('#products');
-  if (host) new MutationObserver(enhanceCards).observe(host, { childList: true });
-  enhanceCards();
+
+  const improveCards = () => {
+    document.querySelectorAll('#products [data-product-id]').forEach(card => {
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', (card.querySelector('.name')?.textContent || 'Mahsulot') + ' — ma’lumotlarni ko‘rish');
+    });
+  };
+  const catalog = document.querySelector('#products');
+  if (catalog) new MutationObserver(improveCards).observe(catalog, { childList: true });
+  improveCards();
+
+  // Keep these functions available for diagnostics and controlled navigation.
+  window.UzCamProductDetail = { open: openProduct, close: closeProduct, get activeId() { return activeProductId; } };
 })();
