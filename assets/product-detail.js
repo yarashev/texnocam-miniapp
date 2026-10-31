@@ -13,6 +13,14 @@
   const zoom = node('dialog', 'product-zoom');
   zoom.setAttribute('aria-label', 'Mahsulot rasmini kattalashtirib ko‘rish');
   document.body.append(dialog, zoom);
+  const openDialog = target => {
+    if (typeof target.showModal === 'function') target.showModal();
+    else { target.setAttribute('open', ''); target.classList.add('dialog-fallback'); }
+  };
+  const closeDialog = target => {
+    if (typeof target.close === 'function') target.close();
+    else if (target.hasAttribute('open')) { target.removeAttribute('open'); target.dispatchEvent(new Event('close')); }
+  };
   let previousFocus, previousOverflow, closingFromTelegramBack = false, closingZoomFromTelegramBack = false;
   function closeButton(label, action) {
     const button = node('button', 'detail-close', '✕');
@@ -50,23 +58,23 @@
   function open(id) {
     const product = state.items.find(item => Number(item.id) === Number(id));
     if (!product) return;
-    if (!dialog.open) window.UzCamTelegramBack?.push(() => { closingFromTelegramBack = true; dialog.close(); });
+    if (!dialog.open) window.UzCamTelegramBack?.push(() => { closingFromTelegramBack = true; closeDialog(dialog); });
     if (!dialog.open) {
       previousFocus = document.activeElement; previousOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
     }
     dialog.replaceChildren();
     const header = node('header', 'detail-header');
-    header.append(node('span', '', 'Mahsulot haqida'), closeButton('Mahsulotni yopish', () => dialog.close()));
+    header.append(node('span', '', 'Mahsulot haqida'), closeButton('Mahsulotni yopish', () => closeDialog(dialog)));
     const content = node('div', 'detail-content');
     const photo = node('button', 'detail-photo-button'); photo.type = 'button';
     photo.setAttribute('aria-label', 'Rasmni kattalashtirish');
     photo.append(image(product, 'detail-photo'));
     photo.disabled = !product.image;
     photo.onclick = () => {
-      window.UzCamTelegramBack?.push(() => { closingZoomFromTelegramBack = true; zoom.close(); }, 'product-zoom');
-      zoom.replaceChildren(closeButton('Rasmni yopish', () => zoom.close()), image(product, 'zoom-photo'));
-      zoom.showModal();
+      window.UzCamTelegramBack?.push(() => { closingZoomFromTelegramBack = true; closeDialog(zoom); }, 'product-zoom');
+      zoom.replaceChildren(closeButton('Rasmni yopish', () => closeDialog(zoom)), image(product, 'zoom-photo'));
+      openDialog(zoom);
     };
     const title = node('h1', '', product.name); title.id = 'productDetailTitle';
     const price = node('div', 'detail-price', money(product.price));
@@ -95,12 +103,12 @@
     const footer = node('footer', 'detail-footer');
     footer.append(node('strong', '', money(product.price)), addButton(product));
     dialog.append(header, content, footer);
-    if (!dialog.open) dialog.showModal();
+    if (!dialog.open) openDialog(dialog);
     dialog.scrollTop = 0; header.querySelector('button').focus();
     window.UzCamCatalogIntelligence?.track('view', product.id);
   }
   dialog.addEventListener('close', () => {
-    if (zoom.open) zoom.close();
+    if (zoom.open) closeDialog(zoom);
     if (!closingFromTelegramBack) window.UzCamTelegramBack?.discard();
     closingFromTelegramBack = false;
     document.body.style.overflow = previousOverflow || '';
@@ -110,7 +118,7 @@
     if (!closingZoomFromTelegramBack) window.UzCamTelegramBack?.discard('product-zoom');
     closingZoomFromTelegramBack = false;
   });
-  zoom.addEventListener('click', event => { if (event.target === zoom) zoom.close(); });
+  zoom.addEventListener('click', event => { if (event.target === zoom) closeDialog(zoom); });
   document.querySelector('#products')?.addEventListener('click', event => {
     if (event.target.closest('[data-add]')) return;
     const card = event.target.closest('[data-product-id]'); if (card) open(card.dataset.productId);
