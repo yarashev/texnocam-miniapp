@@ -54,3 +54,7 @@
 .product-detail.is-open{display:block;z-index:120;box-shadow:0 0 0 100vmax #08152bbd}
 .product-zoom{display:block;z-index:121;box-shadow:0 0 0 100vmax #08152bbd}
 .product-zoom[hidden]{display:none!important}
+
+/* Make every featured product surface visibly interactive and keyboard reachable. */
+.camera-card,[data-promo-brand]{cursor:pointer}
+.camera-card:focus-visible,[data-promo-brand]:focus-visible{outline:3px solid #246bfd;outline-offset:3px}
