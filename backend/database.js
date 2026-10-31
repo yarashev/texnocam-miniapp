@@ -3,6 +3,7 @@ import { postgresTls } from './postgres-tls.js';
 import { createPostgresDatabase, createSqliteDatabase } from './database-adapters.js';
 import { initializePostgres } from './postgres-initialize.js';
 import { importDahuaCatalog } from './dahua-import.js';
+import { normalizeProductCategories } from './product-classification.js';
 
 export async function connectDatabase(env = process.env) {
   if (!env.DATABASE_URL) {
@@ -39,6 +40,7 @@ if (db.kind === 'postgres') {
 
 await mergeCatalogCategories(db);
 await importDahuaCatalog(db);
+await normalizeProductCategories(db);
 export const listPublicCategories=()=>listCatalogCategories(db);
 
 export async function listPublicProducts() {

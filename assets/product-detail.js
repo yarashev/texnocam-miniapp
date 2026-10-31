@@ -40,10 +40,12 @@
     return button;
   }
   function related(product) {
+    const compatible = window.UzCamProductRecommendations?.for(product);
+    if (compatible?.length) return compatible;
     return state.items.filter(item => item.id !== product.id && item.cat === product.cat)
       .map(item => ({ item, score: (item.brand === product.brand ? 2 : 0) - Math.abs(Number(item.price) - Number(product.price)) / Math.max(Number(product.price), 1) }))
       .sort((a, b) => b.score - a.score || Number(a.item.id) - Number(b.item.id))
-      .slice(0, 12).map(entry => entry.item);
+      .slice(0, 6).map(entry => entry.item);
   }
   function open(id) {
     const product = state.items.find(item => Number(item.id) === Number(id));
@@ -78,7 +80,7 @@
     content.append(photo, title, price, info);
     const recommendations = related(product);
     if (recommendations.length) {
-      const section = node('section', 'detail-related'); section.append(node('h2', '', 'O‘xshash mahsulotlar'));
+      const section = node('section', 'detail-related'); section.append(node('h2', '', window.UzCamProductRecommendations?.label(product) || 'O‘xshash mahsulotlar'));
       const grid = node('div', 'detail-related-grid');
       recommendations.forEach(item => {
         const card = node('article', 'detail-related-card');
