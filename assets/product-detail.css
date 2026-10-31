@@ -43,3 +43,7 @@
 #products .photo .badge{z-index:1}
 .detail-photo,.detail-related-photo,.zoom-photo{position:relative}
 .detail-photo img,.detail-related-photo img,.zoom-photo img{position:absolute;inset:0;width:100%;height:100%;padding:12px;object-fit:contain}
+
+/* Telegram WebView fallback when native dialog.showModal is unavailable. */
+.product-detail.dialog-fallback,.product-zoom.dialog-fallback{display:block;z-index:120}
+.product-zoom.dialog-fallback{z-index:121}
