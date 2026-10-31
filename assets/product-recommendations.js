@@ -45,18 +45,30 @@
     return 'Birga kerak bo‘lishi mumkin';
   };
   const forProduct = product => {
-    const seen = new Set(), limits = { recorder: 1, camera: 3, network: 1, cable: 1, storage: 1 };
-    return [...(window.UzCamCatalogState?.items || [])]
-      .filter(item => item.id !== product.id)
-      .map(item => ({ item, score: score(product, item), role: role(item) }))
-      .filter(entry => Number.isFinite(entry.score))
-      .sort((a, b) => b.score - a.score || Number(a.item.price) - Number(b.item.price))
-      .filter(entry => {
-        const max = limits[entry.role] || 1, count = seen.has(entry.role) ? seen.get(entry.role) : 0;
-        if (count >= max) return false; seen.set(entry.role, count + 1); return true;
-      })
-      .slice(0, 6)
-      .map(entry => entry.item);
+    const limits = { recorder: 1, camera: 3, network: 1, cable: 1, storage: 1 };
+    const selected = [];
+    const counts = Object.create(null);
+    for (const item of window.UzCamCatalogState?.items || []) {
+      if (String(item.id) === String(product.id)) continue;
+      const itemRole = role(item);
+      const max = limits[itemRole] || 1;
+      if ((counts[itemRole] || 0) >= max) continue;
+      const itemScore = score(product, item);
+      if (!Number.isFinite(itemScore)) continue;
+      const entry = { item, score: itemScore };
+      let position = selected.findIndex(current =>
+        itemScore > current.score ||
+        (itemScore === current.score && Number(item.price) < Number(current.item.price))
+      );
+      if (position < 0) position = selected.length;
+      selected.splice(position, 0, entry);
+      counts[itemRole] = (counts[itemRole] || 0) + 1;
+      if (selected.length > 6) {
+        const removed = selected.pop();
+        counts[role(removed.item)]--;
+      }
+    }
+    return selected.map(entry => entry.item);
   };
   window.UzCamProductRecommendations = { for: forProduct, label, role };
 })();
