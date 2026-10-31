@@ -36,8 +36,6 @@
   let closingZoomFromBack = false;
   let historyEntryAdded = false;
   let previousBodyOverflow = '';
-  const tgBack = window.Telegram?.WebApp?.BackButton;
-  const onTelegramBack = () => closeProduct();
   const onBrowserBack = () => {
     if (!panel.hidden) closeProduct(true);
   };
@@ -105,7 +103,7 @@
     if (zoom.hidden) return;
     zoom.hidden = true;
     zoom.replaceChildren();
-    if (zoomBackEntryAdded && !fromBack) window.UzCamTelegramBack?.discard('product-zoom');
+    if (zoomBackEntryAdded) window.UzCamTelegramBack?.discard('product-zoom');
     zoomBackEntryAdded = false;
     closingZoomFromBack = false;
   }
@@ -135,10 +133,9 @@
     panel.replaceChildren();
     document.body.style.overflow = previousBodyOverflow;
     activeProductId = null;
-    if (backEntryAdded && !fromBack) window.UzCamTelegramBack?.discard('product-detail');
+    if (backEntryAdded) window.UzCamTelegramBack?.discard('product-detail');
     backEntryAdded = false;
     closingFromBack = false;
-    if (tgBack) { tgBack.offClick?.(onTelegramBack); tgBack.hide?.(); }
     if (historyEntryAdded && !fromBack) {
       historyEntryAdded = false;
       history.back();
@@ -158,10 +155,9 @@
       document.body.style.overflow = 'hidden';
       history.pushState({ ...(history.state || {}), uzcamProductDetail: true }, '', location.href);
       historyEntryAdded = true;
-      if (tgBack) { tgBack.onClick?.(onTelegramBack); tgBack.show?.(); }
       window.UzCamTelegramBack?.push(() => {
         closingFromBack = true;
-        closeProduct(true);
+        closeProduct();
       }, 'product-detail');
       backEntryAdded = true;
     }
