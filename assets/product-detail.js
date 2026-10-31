@@ -34,6 +34,14 @@
   let zoomBackEntryAdded = false;
   let closingFromBack = false;
   let closingZoomFromBack = false;
+  let historyEntryAdded = false;
+  let previousBodyOverflow = '';
+  const tgBack = window.Telegram?.WebApp?.BackButton;
+  const onTelegramBack = () => closeProduct();
+  const onBrowserBack = () => {
+    if (!panel.hidden) closeProduct(true);
+  };
+  window.addEventListener('popstate', onBrowserBack);
 
   function closeButton(label, action) {
     const button = make('button', 'detail-close', '✕');
@@ -125,11 +133,18 @@
     panel.hidden = true;
     panel.classList.remove('is-open');
     panel.replaceChildren();
-    document.body.style.overflow = '';
+    document.body.style.overflow = previousBodyOverflow;
     activeProductId = null;
     if (backEntryAdded && !fromBack) window.UzCamTelegramBack?.discard('product-detail');
     backEntryAdded = false;
     closingFromBack = false;
+    if (tgBack) { tgBack.offClick?.(onTelegramBack); tgBack.hide?.(); }
+    if (historyEntryAdded && !fromBack) {
+      historyEntryAdded = false;
+      history.back();
+    } else {
+      historyEntryAdded = false;
+    }
     if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
   }
 
@@ -139,7 +154,11 @@
 
     if (panel.hidden) {
       previousFocus = document.activeElement;
+      previousBodyOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
+      history.pushState({ ...(history.state || {}), uzcamProductDetail: true }, '', location.href);
+      historyEntryAdded = true;
+      if (tgBack) { tgBack.onClick?.(onTelegramBack); tgBack.show?.(); }
       window.UzCamTelegramBack?.push(() => {
         closingFromBack = true;
         closeProduct(true);
@@ -175,10 +194,26 @@
     info.append(details, make('p', 'detail-description', product.spec || 'Qo‘shimcha ma’lumot hali kiritilmagan.'));
     content.append(photo, title, price, info);
 
-    const suggestions = relatedProducts(product);
-    if (suggestions.length) {
-      const section = make('section', 'detail-related');
-      section.append(make('h2', '', window.UzCamProductRecommendations?.label(product) || 'O‘xshash mahsulotlar'));
+    const relatedHost = make('section', 'detail-related');
+    relatedHost.append(make('h2', '', window.UzCamProductRecommendations?.label(product) || 'O‘xshash mahsulotlar'));
+    const relatedLoading = make('p', 'detail-related-loading', 'Mos mahsulotlar yuklanmoqda…');
+    relatedHost.append(relatedLoading);
+    content.append(relatedHost);
+
+    const footer = make('footer', 'detail-footer');
+    footer.append(make('strong', '', money(product.price)), addToCart(product, 'detail-add'));
+    panel.replaceChildren(header, content, footer);
+    panel.hidden = false;
+    panel.classList.add('is-open');
+    panel.scrollTop = 0;
+    header.querySelector('button')?.focus();
+    window.UzCamCatalogIntelligence?.track('view', product.id);
+    // Paint the detail panel first; recommendation ranking must not delay opening.
+    window.setTimeout(() => {
+      if (panel.hidden || activeProductId !== String(product.id)) return;
+      const suggestions = relatedProducts(product);
+      relatedHost.replaceChildren(make('h2', '', window.UzCamProductRecommendations?.label(product) || 'O‘xshash mahsulotlar'));
+      if (!suggestions.length) { relatedHost.hidden = true; return; }
       const grid = make('div', 'detail-related-grid');
       suggestions.forEach(item => {
         const card = make('article', 'detail-related-card');
@@ -189,18 +224,8 @@
         card.append(openButton, make('div', 'detail-related-price', money(item.price)), addToCart(item, 'detail-related-add'));
         grid.append(card);
       });
-      section.append(grid);
-      content.append(section);
-    }
-
-    const footer = make('footer', 'detail-footer');
-    footer.append(make('strong', '', money(product.price)), addToCart(product, 'detail-add'));
-    panel.replaceChildren(header, content, footer);
-    panel.hidden = false;
-    panel.classList.add('is-open');
-    panel.scrollTop = 0;
-    header.querySelector('button')?.focus();
-    window.UzCamCatalogIntelligence?.track('view', product.id);
+      relatedHost.append(grid);
+    }, 0);
   }
 
   // Open product cards without hijacking links, buttons, or controls inside them.
