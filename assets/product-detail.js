@@ -157,7 +157,7 @@
       historyEntryAdded = true;
       window.UzCamTelegramBack?.push(() => {
         closingFromBack = true;
-        closeProduct(true);
+        closeProduct();
       }, 'product-detail');
       backEntryAdded = true;
     }
