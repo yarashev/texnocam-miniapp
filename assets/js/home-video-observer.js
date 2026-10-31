@@ -1,0 +1,1 @@
+const homeVideoGrid=document.querySelector('#homeVideos');new MutationObserver(()=>homeVideoGrid.classList.toggle('is-single',homeVideoGrid.children.length===1)).observe(homeVideoGrid,{childList:true});
