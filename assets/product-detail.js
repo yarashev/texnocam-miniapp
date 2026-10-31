@@ -208,11 +208,14 @@
   document.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : event.target?.parentElement;
     if (!target) return;
-    if (target.closest('#products [data-add]')) return;
-    const card = target.closest('#products [data-product-id]');
+    if (target.closest('[data-add], .add, .camera-add, .detail-add, .detail-related-add')) return;
+    const card = target.closest('[data-product-id]');
     if (!card) return;
+    const id = card.getAttribute('data-product-id');
+    if (!id) return;
     event.preventDefault();
-    openProduct(card.getAttribute('data-product-id'));
+    event.stopImmediatePropagation();
+    openProduct(id);
   }, true);
 
   document.addEventListener('keydown', event => {
@@ -221,10 +224,10 @@
       else if (!panel.hidden) { closeProduct(); event.preventDefault(); }
       return;
     }
-    if (panel.hidden || !['Enter', ' '].includes(event.key)) return;
+    if (!['Enter', ' '].includes(event.key)) return;
     const target = event.target instanceof Element ? event.target : null;
-    if (!target || target.closest('button')) return;
-    const card = target.closest('#products [data-product-id]');
+    if (!target || target.closest('button, a, input, textarea, select')) return;
+    const card = target.closest('[data-product-id]');
     if (card) {
       event.preventDefault();
       openProduct(card.getAttribute('data-product-id'));
@@ -236,14 +239,14 @@
   });
 
   const improveCards = () => {
-    document.querySelectorAll('#products [data-product-id]').forEach(card => {
+    document.querySelectorAll('[data-product-id]').forEach(card => {
       card.tabIndex = 0;
       card.setAttribute('role', 'button');
       card.setAttribute('aria-label', (card.querySelector('.name')?.textContent || 'Mahsulot') + ' — ma’lumotlarni ko‘rish');
     });
   };
-  const catalog = document.querySelector('#products');
-  if (catalog) new MutationObserver(improveCards).observe(catalog, { childList: true });
+  const observer = new MutationObserver(improveCards);
+  observer.observe(document.body, { childList: true, subtree: true });
   improveCards();
 
   // Keep these functions available for diagnostics and controlled navigation.
