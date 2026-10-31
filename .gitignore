@@ -4,3 +4,8 @@
 !.env.example
 node_modules/
 backups/
+
+# Local IDE and Gradle caches
+.idea/
+.gradle/
+android/.gradle/
