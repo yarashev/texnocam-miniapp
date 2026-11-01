@@ -181,3 +181,8 @@ html{scrollbar-width:none;-ms-overflow-style:none}html::-webkit-scrollbar,body::
 
 /* Brand selection is no longer part of the catalog controls. */
 #brandPickerButton, #brandPicker { display: none !important; }
+
+/* Final mobile override: keep the agreed two-column catalog on phones. */
+@media (max-width: 559px) {
+  #products.catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
