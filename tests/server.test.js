@@ -9,8 +9,8 @@ import { createHmac } from 'node:crypto';
 import { exportSqlite } from '../backend/sqlite-snapshot.js';
 const root=path.resolve('.'),token='LOCAL-TEST-NOT-PRODUCTION',superId='91000001';
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-function initData(id) {
-  const params=new URLSearchParams({auth_date:String(Math.floor(Date.now()/1000)),query_id:'local-test',user:JSON.stringify({id:Number(id),first_name:'Sinov'})});
+function initData(id,authDate=Math.floor(Date.now()/1000)) {
+  const params=new URLSearchParams({auth_date:String(authDate),query_id:'local-test',user:JSON.stringify({id:Number(id),first_name:'Sinov'})});
   const text=[...params].sort(([a],[b])=>a.localeCompare(b)).map(([key,value])=>key+'='+value).join('\n');
   const secret=createHmac('sha256','WebAppData').update(token).digest();params.set('hash',createHmac('sha256',secret).update(text).digest('hex'));return params.toString();
 }
@@ -32,6 +32,7 @@ test('Telegram session, staff, workers, home content, uploads and restart use as
   }
   assert.equal((await request('/api/admin/products')).status,403);
   assert.equal((await request('/api/admin/categories')).status,403);
+  assert.equal((await request('/api/session','POST',{initData:initData(superId,Math.floor(Date.now()/1000)+3600)})).status,401);
   let result=await request('/api/session','POST',{initData:initData(superId)});assert.equal(result.status,200);cookie=result.response.headers.get('set-cookie').split(';')[0];
   assert.equal((await request('/api/session')).value.user.role,'super_admin');
   result=await request('/api/admin/categories');assert.equal(result.status,200);assert.ok(result.value.categories.some(category=>category.name==='Kameralar'&&category.is_active));
