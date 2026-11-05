@@ -2,6 +2,13 @@
 (function(root){
   'use strict';
   const normalize=value=>String(value??'').normalize('NFKC').toLowerCase().replace(/[^a-z0-9а-яёўқғҳ]+/g,'');
+  const logoById=Object.freeze({
+    hikvision:'assets/hikvision-logo.png',hilook:'assets/hilook-logo.png',dahua:'assets/dahua-logo.png',
+    tplink:'assets/tplink-logo.png',tapo:'assets/tapo-logo.png',mercusys:'assets/mercusys-logo.png',
+    witek:'assets/witek-logo.png',kanihad:'assets/kanihad-logo.png',zkteco:'assets/zkteco-logo.png',
+    'ubiquiti-mikrotik':'assets/ubiquiti-mikrotik-logo.png','hard-drives':'assets/hard-drives-section.png',
+    optics:'assets/optics-section.png',cable:'assets/cable-section.png'
+  });
   const sections=[
     ['hikvision','Hikvision','camera',['Hikvision']],
     ['hilook','HiLook','camera',['HiLook']],
@@ -16,7 +23,7 @@
     ['hard-drives','Qattiq disklar','disk',[],['hdd','hard disk','qattiq disk','жестк','жёстк','western digital','seagate']],
     ['optics','Optika','fiber',[],['optik','optical','fiber','sfp','оптик']],
     ['cable','Kabel','cable',[],['kabel','cable','utp','ftp','кабел']]
-  ].map(([id,name,icon,matchBrands,keywords=[]],order)=>({id,name,icon,matchBrands,keywords,kind:matchBrands.length?'brand':'type',logo:'',order,isActive:true}));
+  ].map(([id,name,icon,matchBrands,keywords=[]],order)=>({id,name,icon,matchBrands,keywords,kind:matchBrands.length?'brand':'type',logo:logoById[id]||'',order,isActive:true}));
   const paths={
     camera:'<path d="M8 10h6l3-4h14l3 4h6v28H8z"/><circle cx="24" cy="24" r="9"/><circle cx="24" cy="24" r="4"/><path d="M12 14h4"/>',
     recorder:'<rect x="5" y="14" width="38" height="22" rx="5"/><path d="M10 21h20M10 26h20M10 31h10"/><circle cx="37" cy="25" r="1"/>',
@@ -54,5 +61,5 @@
     if(/aqlli/i.test(name))return 'home';
     return name==='Barchasi'?'all':'chip';
   }
-  root.UzCamBrandConfig=Object.freeze({defaults:sections,normalize,matchesSection,iconSvg,iconNames,categoryIcon});
+  root.UzCamBrandConfig=Object.freeze({defaults:sections,logoById,normalize,matchesSection,iconSvg,iconNames,categoryIcon});
 })(globalThis);

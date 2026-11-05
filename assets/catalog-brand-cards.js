@@ -5,7 +5,7 @@
   const host=document.getElementById('cats'),app=document.querySelector('.app');
   let sections=[],selected=null,loadError='';
   function makeIcon(icon,logo){
-    const holder=document.createElement('span');holder.className='catalog-card-icon';
+    const holder=document.createElement('span');holder.className='catalog-card-icon'+(logo?' catalog-card-logo':'');
     holder.innerHTML=config.iconSvg(icon);
     if(logo){
       const image=document.createElement('img');image.src=logo;image.alt='';image.loading='lazy';
@@ -68,7 +68,7 @@
     try{
       const response=await fetch('/api/catalog-brands',{cache:'no-store'}),result=await response.json();
       if(!response.ok||!Array.isArray(result.brands))throw new Error('Brendlarni yuklab bo‘lmadi. Sahifani yangilang.');
-      sections=result.brands;loadError='';
+      sections=result.brands.map(section=>section.logo?section:{...section,logo:config.logoById[section.id]||''});loadError='';
     }catch{loadError='Brendlarni yuklab bo‘lmadi. Sahifani yangilang.';}
     state.renderCats();
     const sectionId=location.hash.startsWith('#catalog-section-')?location.hash.slice(17):null;

@@ -11,8 +11,12 @@
 .catalog-card-icon{display:grid;place-items:center;width:54px;height:54px;flex:none;border-radius:16px;color:#059669;background:linear-gradient(145deg,#ecfdf5,#d1fae5);box-shadow:inset 0 1px #ffffff}
 .catalog-card-icon svg{width:38px;height:38px}
 .catalog-card-icon img{width:100%;height:100%;object-fit:contain;padding:5px}
+.catalog-card-icon.catalog-card-logo{width:126px;max-width:100%;height:58px;overflow:hidden;background:#fff;box-shadow:none}
+.catalog-card-icon.catalog-card-logo img{padding:0}
+#cats [data-brand-section="dahua"] .catalog-card-logo img{object-fit:cover;object-position:left center}
+#cats [data-brand-section="tapo"] .catalog-card-logo{height:64px}
 .catalog-card-name{line-height:1.35;text-align:center;overflow-wrap:anywhere}
 .catalog-card-count{font-size:10px;font-weight:500;color:#73847d}
 #cats .catalog-load-status{grid-column:1/-1;color:#64748b;font-size:12px;padding:8px 2px}
-@media(max-width:560px){.app.catalog-category-mode>#cats{gap:9px!important}.app.catalog-category-mode>#cats .cat{min-height:116px!important;padding:13px 5px!important;border-radius:16px;font-size:11px!important;gap:6px}.catalog-card-icon{width:45px;height:45px;border-radius:13px}.catalog-card-icon svg{width:32px;height:32px}.catalog-card-count{font-size:9px}}
+@media(max-width:560px){.app.catalog-category-mode>#cats{gap:9px!important}.app.catalog-category-mode>#cats .cat{min-height:116px!important;padding:13px 5px!important;border-radius:16px;font-size:11px!important;gap:6px}.catalog-card-icon{width:45px;height:45px;border-radius:13px}.catalog-card-icon.catalog-card-logo{width:78px;height:45px}.catalog-card-icon svg{width:32px;height:32px}.catalog-card-count{font-size:9px}}
 @media(prefers-reduced-motion:reduce){#cats .cat{transition:none!important}#cats .cat:hover{transform:none}}
