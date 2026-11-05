@@ -20,8 +20,9 @@ test('hard drive section excludes NVRs, cameras and generic intercom storage', (
   const products = [
     { name: 'HL-NVR-464MH-K', model: 'HL-NVR-464MH-K HDD support', description: 'HDD', category: 'Xotira qurilmalari' },
     { name: 'DS-7608NXI-K1', model: 'DS-7608NXI-K1', description: 'PoE', category: 'Xotira qurilmalari' },
+    { name: 'DS-A80624SI(STD) HDD storage system', model: 'DS-A80624SI(STD) HDD', category: 'Xotira qurilmalari' },
     { name: 'DS-2CD2043G2-I', model: 'DS-2CD2043G2-I', category: 'Xotira qurilmalari' },
     { name: 'Накопитель для домофон', model: 'Накопитель для домофон', category: 'Xotira qurilmalari' }
   ];
-  assert.deepEqual(products.map(product => matchesSection(product, hardDrives)), [false, false, false, false]);
+  assert.deepEqual(products.map(product => matchesSection(product, hardDrives)), [false, false, false, false, false]);
 });
