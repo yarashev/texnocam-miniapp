@@ -49,8 +49,8 @@
     const nameAndModel=[product.name,product.model].filter(Boolean).join(' ').toLowerCase();
     if(section.id==='hard-drives'){
       // Ignore cameras and DVR/NVR recorders, even when their descriptions mention HDD support.
-      if(/\\b(?:nvr|dvr)\\b|видеорегистратор|регистратор/i.test(nameAndModel))return false;
-      return /\\bhdd\\b|\\bhard[\\s_-]?disk\\b|\\bqattiq[\\s_-]?disk\\b|жестк|жёстк|флешк|fleshka|flash[\\s_-]?(?:drive|disk)|usb[\\s_-]?flash/i.test(nameAndModel);
+      if(/\b(?:nvr|dvr)\b|видеорегистратор|регистратор/i.test(nameAndModel))return false;
+      return /\bhdd\b|\bhard[\s_-]?disk\b|\bqattiq[\s_-]?disk\b|жестк|жёстк|флешк|fleshka|flash[\s_-]?(?:drive|disk)|usb[\s_-]?flash/i.test(nameAndModel);
     }
     const text=[product.name,product.model,product.spec,product.description,product.brand].filter(Boolean).join(' ').toLowerCase();
     return section.keywords.some(word=>text.includes(word.toLowerCase())||normalize(product.category||product.cat)===normalize(word));
