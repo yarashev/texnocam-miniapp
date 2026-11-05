@@ -22,7 +22,8 @@ function verifyTelegramInitData(raw) {
   const receivedHash = params.get("hash");
   const authDate = Number(params.get("auth_date"));
   if (!receivedHash || !/^[a-f0-9]{64}$/i.test(receivedHash) || !Number.isFinite(authDate)) return null;
-  if (Math.abs(Date.now() / 1000 - authDate) > 86400) return null;
+  const now = Date.now() / 1000;
+  if (authDate > now + 60 || now - authDate > 86400) return null;
   const checkString = [...params.entries()].filter(([key]) => key !== "hash").sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => `${key}=${value}`).join("\n");
   const secret = createHmac("sha256", "WebAppData").update(botToken).digest();
   const expectedHash = createHmac("sha256", secret).update(checkString).digest();
