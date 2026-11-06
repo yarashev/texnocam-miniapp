@@ -50,7 +50,7 @@ export async function dispatchCustomerNotifications(database, sendTelegram, opti
         `UPDATE customer_notifications
             SET delivery_status = ?, next_attempt_at = ?, last_error = ?
           WHERE id = ?`,
-        terminal ? 'failed' : 'pending', new Date(Date.now() + delay * 60000).toISOString(), safeError, row.id
+        terminal ? 'failed' : 'pending', new Date(Date.now() + delay * 60000).toISOString().slice(0, 19).replace('T', ' '), safeError, row.id
       );
     }
   }
