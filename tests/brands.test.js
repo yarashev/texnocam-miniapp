@@ -16,7 +16,7 @@ function database(){
   };
 }
 test('catalog includes requested sections and matches punctuation/case aliases',()=>{
-  assert.equal(config.defaults.length,12);
+  assert.equal(config.defaults.length,13);
   const section=name=>config.defaults.find(item=>item.name===name);
   assert.ok(config.matchesSection({brand:'Hilook'},section('HiLook')));
   assert.ok(config.matchesSection({brand:'Zkteco'},section('ZKTeco')));
@@ -48,14 +48,15 @@ test('create, edit, hide and delete persist without changing products or reseedi
   const db=database();
   const created=await saveCatalogBrand(db,actor,input,null,'test-brand');
   assert.equal(created.name,'EZVIZ');
-  assert.equal((await listCatalogBrands(db)).length,13);
+  const baseline=config.defaults.length;
+  assert.equal((await listCatalogBrands(db)).length,baseline+1);
   await saveCatalogBrand(db,actor,{name:'EZVIZ Home',isActive:false},'test-brand');
-  assert.equal((await listCatalogBrands(db)).length,12);
+  assert.equal((await listCatalogBrands(db)).length,baseline);
   assert.equal((await listCatalogBrands(db,true)).find(item=>item.id==='test-brand').name,'EZVIZ Home');
   await deleteCatalogBrand(db,actor,'hikvision');
   assert.equal((await listCatalogBrands(db,true)).some(item=>item.id==='hikvision'),false);
   await deleteCatalogBrand(db,actor,'test-brand');
-  assert.equal((await listCatalogBrands(db,true)).length,11);
+  assert.equal((await listCatalogBrands(db,true)).length,baseline-2);
   assert.ok(db.history.length>=4);
 });
 test('duplicate names and unknown IDs fail; parallel creates retain both changes',async()=>{
@@ -64,7 +65,7 @@ test('duplicate names and unknown IDs fail; parallel creates retain both changes
   await assert.rejects(()=>saveCatalogBrand(db,actor,input,'missing'),{statusCode:404});
   await Promise.all([
     saveCatalogBrand(db,actor,input,null,'first'),
-    saveCatalogBrand(db,actor,{...input,name:'Dahua',matchBrands:['Dahua']},null,'second')
+    saveCatalogBrand(db,actor,{...input,name:'Test Brand 2',matchBrands:['Test Brand 2']},null,'second')
   ]);
-  assert.equal((await listCatalogBrands(db,true)).length,14);
+  assert.equal((await listCatalogBrands(db,true)).length,config.defaults.length+2);
 });
