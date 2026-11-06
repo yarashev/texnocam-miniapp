@@ -438,6 +438,34 @@ async function handleRequest(req, res) {
       }
       sendJson(res, 200, { orders }); return;
     }
+    if (pathname === "/api/admin/dashboard" && req.method === "GET") {
+      const actor = await getAdminSession(req);
+      if (!actor || !["admin", "super_admin"].includes(actor.role)) { sendJson(res, 403, { error: "Admin ruxsati talab qilinadi" }); return; }
+      const start = new Date();
+      start.setUTCHours(0, 0, 0, 0);
+      const todayStart = start.toISOString().slice(0, 19).replace("T", " ");
+      const summary = await db.get(`SELECT
+        (SELECT COUNT(*) FROM products WHERE is_active = 1 AND deleted_at IS NULL) AS active_products,
+        (SELECT COUNT(*) FROM users WHERE role = 'customer' AND is_active = 1) AS active_customers,
+        (SELECT COUNT(*) FROM users WHERE role = 'worker' AND is_active = 1) AS active_workers,
+        (SELECT COUNT(*) FROM orders) AS total_orders,
+        (SELECT COUNT(*) FROM orders WHERE payment_status IN ('pending', 'proof_submitted')) AS awaiting_payment,
+        (SELECT COUNT(*) FROM orders WHERE created_at >= ?) AS today_orders,
+        (SELECT COALESCE(SUM(total_uzs), 0) FROM orders WHERE payment_status = 'confirmed' AND updated_at >= ?) AS today_confirmed_revenue`, todayStart, todayStart);
+      const recentOrders = await db.all(`SELECT o.order_number, o.status, o.payment_status, o.total_uzs, o.created_at, u.full_name AS customer_name
+        FROM orders o JOIN users u ON u.id = o.customer_id
+        ORDER BY o.created_at DESC, o.id DESC LIMIT 5`);
+      sendJson(res, 200, { summary: {
+        activeProducts: Number(summary.active_products || 0),
+        activeCustomers: Number(summary.active_customers || 0),
+        activeWorkers: Number(summary.active_workers || 0),
+        totalOrders: Number(summary.total_orders || 0),
+        awaitingPayment: Number(summary.awaiting_payment || 0),
+        todayOrders: Number(summary.today_orders || 0),
+        todayConfirmedRevenue: Number(summary.today_confirmed_revenue || 0)
+      }, recentOrders });
+      return;
+    }
     const orderPaymentMatch = pathname.match(/^\/api\/admin\/orders\/(\d+)\/payment$/);
     if (orderPaymentMatch && req.method === "PATCH") {
       const actor = await getAdminSession(req);
