@@ -8,6 +8,7 @@ import { createHmac, timingSafeEqual, randomUUID } from "node:crypto";
 import { listPublicProducts, listPublicCategories, db } from "./backend/database.js";
 import { listManagedProducts, getManagedProduct, saveManagedProduct, changeProductState, productError } from "./backend/product-management.js";
 import { listManagedCategories, createCatalogCategory, deactivateCatalogCategory } from "./backend/category-management.js";
+import { enqueueCustomerNotification, dispatchCustomerNotifications } from "./backend/customer-notifications.js";
 
 const root = process.cwd();
 const reviewedImages = createReviewedImageLoader(JSON.parse(fs.readFileSync(path.join(root, 'assets/product-image-audit.json'), 'utf8')).products);
@@ -167,7 +168,19 @@ async function handleTelegramUpdate(update) {
 
   if (command === "start" || command === "menu") {
     const firstName = String(message.from && message.from.first_name || "").trim();
-    await sendBotMenu(chat.id, "Assalomu alaykum" + (firstName ? ", " + firstName : "") + "! UzCam botiga xush kelibsiz. Katalogni oching yoki kerakli bo‘limni tanlang.");
+    if (command === "start") {
+      const username = String(message.from && message.from.username || "").trim();
+      await db.run(
+        "INSERT INTO users(telegram_id, username, full_name, role) VALUES (?, ?, ?, 'customer') ON CONFLICT(telegram_id) DO UPDATE SET username = COALESCE(excluded.username, users.username), full_name = CASE WHEN excluded.full_name <> '' THEN excluded.full_name ELSE users.full_name END, updated_at = CURRENT_TIMESTAMP",
+        senderId, username || null, firstName
+      );
+      const customer = await db.get("SELECT id FROM users WHERE telegram_id = ?", senderId);
+      await db.run(
+        "INSERT INTO telegram_notification_preferences(user_id, enabled, bot_started_at, updated_at) VALUES (?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(user_id) DO UPDATE SET enabled = 1, bot_started_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP",
+        customer.id
+      );
+    }
+    await sendBotMenu(chat.id, "Assalomu alaykum" + (firstName ? ", " + firstName : "") + "! UzCam botiga xush kelibsiz. Buyurtma holati va to‘lov bo‘yicha shaxsiy xabarnomalar yoqildi. Katalogni oching yoki kerakli bo‘limni tanlang.");
     return;
   }
   if (command === "help") {
@@ -482,15 +495,12 @@ async function handleRequest(req, res) {
           await db.run("UPDATE orders SET payment_status = ?, status = CASE WHEN ? = 'confirmed' THEN 'paid' ELSE status END, updated_at = CURRENT_TIMESTAMP WHERE id = ?", paymentStatus, paymentStatus, orderId);
           await db.run("UPDATE payments SET status = ?, confirmed_by = ?, confirmed_at = CASE WHEN ? = 'confirmed' THEN CURRENT_TIMESTAMP ELSE NULL END WHERE order_id = ?", paymentStatus, paymentStatus === "confirmed" ? actor.id : null, paymentStatus, orderId);
           await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'order', ?, ?)", actor.id, paymentStatus === "confirmed" ? "confirm_payment" : "reject_payment", current.order_number, JSON.stringify({ paymentStatus }));
-          return { ...current, payment_status: paymentStatus };
+          const message = paymentStatus === "confirmed"
+            ? "✅ " + current.order_number + " buyurtmangiz to‘lovi tasdiqlandi. UzCam jamoasi buyurtmangizni keyingi bosqichga o‘tkazadi."
+            : "⚠️ " + current.order_number + " buyurtmangiz to‘lovi tasdiqlanmadi. Iltimos, to‘lov chekini tekshirib, admin bilan bog‘laning.";
+          await enqueueCustomerNotification(db, { userId: current.customer_id, orderId, eventKey: "order:" + orderId + ":payment:" + paymentStatus, title: paymentStatus === "confirmed" ? "To‘lov tasdiqlandi" : "To‘lov rad etildi", message });
+          return { ...current, id: orderId, payment_status: paymentStatus };
         });
-        if (paymentStatus === "confirmed") {
-          const customer = await db.get("SELECT telegram_id FROM users WHERE id = ?", order.customer_id);
-          if (customer?.telegram_id) {
-            try { await telegramApi("sendMessage", { chat_id: customer.telegram_id, text: "✅ " + order.order_number + " buyurtmangiz to‘lovi admin tomonidan tasdiqlandi. UzCam jamoasi siz bilan yetkazib berish bo‘yicha bog‘lanadi." }); }
-            catch (error) { console.error("Payment confirmation notification failed:", error.message); }
-          }
-        }
         sendJson(res, 200, { ok: true, orderNumber: order.order_number, paymentStatus: order.payment_status }); return;
       } catch (error) { sendJson(res, error.statusCode || 400, { error: error.message || "To‘lov holatini saqlab bo‘lmadi" }); return; }
     }
@@ -539,6 +549,19 @@ async function handleRequest(req, res) {
     if (pathname === "/api/public-config" && req.method === "GET") {
       sendJson(res, 200, { analytics: { ga4MeasurementId: process.env.GA4_MEASUREMENT_ID || "", clarityProjectId: process.env.CLARITY_PROJECT_ID || "", sentryBrowserDsn: process.env.SENTRY_BROWSER_DSN || "" } }); return;
     }
+    if (pathname === "/api/customer/notifications" && req.method === "POST") {
+      try {
+        const body = await readJson(req, 9000);
+        const telegramUser = verifyTelegramInitData(String(body.initData || ""));
+        if (!telegramUser?.id) { sendJson(res, 401, { error: "Telegram profilini tasdiqlash talab qilinadi" }); return; }
+        const customer = await db.get("SELECT id FROM users WHERE telegram_id = ? AND is_active = 1", String(telegramUser.id));
+        if (!customer) { sendJson(res, 404, { error: "Mijoz profili topilmadi" }); return; }
+        if (body.action === "read") await db.run("UPDATE customer_notifications SET read_at = CURRENT_TIMESTAMP WHERE user_id = ? AND read_at IS NULL", customer.id);
+        const preference = await db.get("SELECT enabled, bot_started_at FROM telegram_notification_preferences WHERE user_id = ?", customer.id);
+        const notifications = await db.all("SELECT id, order_id, title, message, delivery_status, sent_at, read_at, created_at FROM customer_notifications WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT 50", customer.id);
+        sendJson(res, 200, { notifications, botStarted: Boolean(preference?.enabled), botStartedAt: preference?.bot_started_at || null, unreadCount: notifications.filter(item => !item.read_at).length }); return;
+      } catch (error) { sendJson(res, 400, { error: error.message || "Xabarnomalarni yuklab bo‘lmadi" }); return; }
+    }
     if (pathname === "/api/orders" && req.method === "POST") {
       try {
         const body = await readJson(req, 16000), telegramUser = verifyTelegramInitData(body.initData);
@@ -573,6 +596,7 @@ async function handleRequest(req, res) {
           for (const line of orderItems) await db.run("INSERT INTO order_items(order_id, product_id, model_snapshot, name_snapshot, quantity, unit_price_uzs, line_total_uzs) VALUES (?, ?, ?, ?, ?, ?, ?)", order.id, line.product.id, line.product.model, line.product.name, line.quantity, Number(line.product.price_uzs), line.lineTotal);
           await db.run("INSERT INTO payments(order_id, amount_uzs, method, status) VALUES (?, ?, 'qr', 'pending')", order.id, subtotal);
           await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'create', 'order', ?, ?)", customer.id, orderNumber, JSON.stringify({ itemCount: orderItems.length, totalUzs: subtotal, deliveryMethod }));
+          await enqueueCustomerNotification(db, { userId: customer.id, orderId: order.id, eventKey: "order:" + order.id + ":created", title: "Buyurtma qabul qilindi", message: "🛒 " + orderNumber + " buyurtmangiz qabul qilindi. Jami: " + new Intl.NumberFormat("uz-UZ").format(subtotal) + " so‘m. To‘lov tasdig‘ini kutmoqda." });
           return { orderNumber, total: subtotal, itemCount: orderItems.length, items: orderItems.map(line => ({ name: line.product.name, model: line.product.model, quantity: line.quantity, total: line.lineTotal })), customerName: fullName || "Telegram mijoz", telegramId, phone, address, deliveryMethod };
         });
         if (superAdminId) {
@@ -670,4 +694,8 @@ const port = Number(process.env.PORT || 3000);
 try { await db.get("SELECT 1 AS ready"); await initializeImageStorage(); }
 catch (error) { console.error("Database/storage initialization failed; check environment configuration"); process.exit(1); }
 server.listen(port, "0.0.0.0", () => { console.log(`UzCam backend running on port ${port}`); void configureTelegramWebhook(); });
+const notificationTimer = setInterval(() => {
+  void dispatchCustomerNotifications(db, telegramApi).catch(error => console.error("Customer notification queue failed:", error.message));
+}, 15000);
+notificationTimer.unref();
 for(const signal of ["SIGINT","SIGTERM"]) process.once(signal,()=>{server.close(()=>{void db.close().finally(()=>process.exit(0));});setTimeout(()=>process.exit(1),10000).unref();});
