@@ -57,6 +57,12 @@ export async function initializePostgres(database, options = {}) {
     await database.exec(fs.readFileSync(new URL('./supabase/002-worker-areas-ratings.sql',import.meta.url),'utf8'));
     await database.run("INSERT INTO uzcam_migrations(version) VALUES ('worker-areas-ratings-v2')");
   });
+  await database.transaction(async () => {
+    await database.get('SELECT pg_advisory_xact_lock(8256301)');
+    if (await database.get("SELECT 1 FROM uzcam_migrations WHERE version='customer-notifications-v1'")) return;
+    await database.exec(fs.readFileSync(new URL('./supabase/003-customer-notifications.sql',import.meta.url),'utf8'));
+    await database.run("INSERT INTO uzcam_migrations(version) VALUES ('customer-notifications-v1')");
+  });
   const importFile=options.importFile ?? process.env.UZCAM_IMPORT_FILE;
   if (importFile) { await importSnapshot(database,JSON.parse(fs.readFileSync(importFile,'utf8'))); return; }
   const catalog=options.catalog ?? JSON.parse(fs.readFileSync(new URL('./catalog.json',import.meta.url),'utf8'));
