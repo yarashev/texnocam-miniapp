@@ -181,3 +181,5 @@ html{scrollbar-width:none;-ms-overflow-style:none}html::-webkit-scrollbar,body::
 
 /* Brand selection is no longer part of the catalog controls. */
 #brandPickerButton, #brandPicker { display: none !important; }
+
+.customer-notifications-panel{margin-top:10px;display:grid;gap:8px}.customer-notifications-panel[hidden]{display:none}.customer-notification{background:#f7f9fd;border:1px solid #e5ebf5;border-radius:13px;padding:11px}.customer-notification.unread{border-color:#9dbaff;background:#f1f5ff}.notification-title{display:block;font-size:12px;color:#14213d}.notification-message{white-space:pre-line;font-size:12px;line-height:1.5;color:#52627b;margin:6px 0}.notification-meta{font-size:10px;color:#718096}.notification-empty,.notification-optin,.notification-error,.notification-loading{font-size:12px;line-height:1.5;padding:10px;border-radius:10px;background:#f3f6fb;color:#52627b;margin:0}.notification-error{color:#a52e3a;background:#fff1f2}.notification-read-button{border:0;background:#eaf0ff;color:#246bfd;padding:10px;border-radius:10px;font-weight:750;font-size:11px}
