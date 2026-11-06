@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn,spawnSync } from 'node:child_process';
@@ -57,6 +58,15 @@ test('Telegram session, staff, workers, home content, uploads and restart use as
   assert.equal((await request('/api/workers/91000003/rating','POST',{rating:5})).status,401);
   assert.equal((await request('/api/workers/91000003/rating','POST',{initData:initData('91000003'),rating:5})).status,403);
   assert.equal((await request('/api/workers/91000003','PUT',{...profile,fullName:'Yangilangan Usta'})).status,200);
+  assert.equal((await request('/api/session','POST',{initData:initData('91000007')})).status,200);
+  const notificationDb=new DatabaseSync(path.join(directory,'texnocam.sqlite'));
+  const notificationUser=notificationDb.prepare("SELECT id FROM users WHERE telegram_id=?").get('91000007');
+  notificationDb.prepare("INSERT INTO customer_notifications(user_id,event_key,title,message,delivery_status) VALUES (?,?,?,?,?)").run(notificationUser.id,'test:notification:1','Sinov xabari','Buyurtma xabari sinov uchun','pending');
+  notificationDb.close();
+  let notificationHistory=await request('/api/customer/notifications','POST',{initData:initData('91000007')});
+  assert.equal(notificationHistory.status,200);assert.equal(notificationHistory.value.notifications.length,1);assert.equal(notificationHistory.value.botStarted,false);assert.equal(notificationHistory.value.unreadCount,1);
+  notificationHistory=await request('/api/customer/notifications','POST',{initData:initData('91000007'),action:'read'});
+  assert.equal(notificationHistory.status,200);assert.equal(notificationHistory.value.unreadCount,0);assert.ok(notificationHistory.value.notifications[0].read_at);
   const content={contactPhone:'+998 50 855 41 87',hero:{title:'Saved Hero',productId:1,buttonText:'Ochish'},news:[{title:'Saved',body:'News',active:true}],videos:[{title:'Video',url:'https://youtu.be/abcdefghijk',active:true}]};
   assert.equal((await request('/api/home-content','PUT',content)).status,200);
   assert.equal((await request('/api/home-content')).value.content.contactPhone,'+998508554187');
@@ -71,7 +81,7 @@ test('Telegram session, staff, workers, home content, uploads and restart use as
   const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jL1sAAAAASUVORK5CYII=','base64');
   result=await request('/api/admin/product-images','POST',{base64:png.toString('base64')});assert.equal(result.status,201);const image=result.value.image;
   const snapshot=exportSqlite(path.join(directory,'texnocam.sqlite'),path.join(directory,'uploads'));
-  assert.equal(snapshot.tables.users.length,3);assert.equal(snapshot.images.length,1);assert.equal(snapshot.tables.worker_profiles[0].experience_years,5);assert.equal(snapshot.tables.worker_profiles[0].service_region,'Toshkent viloyati');assert.equal(snapshot.tables.worker_ratings.length,2);
+  assert.equal(snapshot.tables.users.length,4);assert.equal(snapshot.tables.customer_notifications.length,1);assert.equal(snapshot.images.length,1);assert.equal(snapshot.tables.worker_profiles[0].experience_years,5);assert.equal(snapshot.tables.worker_profiles[0].service_region,'Toshkent viloyati');assert.equal(snapshot.tables.worker_ratings.length,2);
   await running.stop();running=await startServer(directory);
   assert.equal((await request('/api/home-content')).value.content.hero.title,'Saved Hero');
   assert.equal((await request('/api/home-content')).value.content.contactPhone,'+998508554187');
