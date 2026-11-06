@@ -9,6 +9,7 @@ import { createPostgresDatabase,postgresSql } from '../backend/database-adapters
 import { initializePostgres,importSnapshot,snapshotTables } from '../backend/postgres-initialize.js';
 import { createProductManager } from '../backend/product-manager.js';
 import { createImageStorage } from '../backend/image-storage-provider.js';
+import { enqueueCustomerNotification, dispatchCustomerNotifications } from '../backend/customer-notifications.js';
 
 async function makeDatabase(t) {
   const engine=new PGlite();await engine.waitReady;
@@ -37,10 +38,20 @@ test('PostgreSQL schema, seed, roles, CRUD, concurrency, images and restart pers
   const {db,engine}=await makeDatabase(t);
   await db.exec('CREATE ROLE anon; CREATE ROLE authenticated;');
   await initializePostgres(db);
+  assert.ok(await db.get("SELECT to_regclass('public.customer_notifications') AS table_name"));
+  assert.ok(await db.get("SELECT to_regclass('public.telegram_notification_preferences') AS table_name"));
   assert.equal(Number((await db.get('SELECT count(*) AS count FROM products')).count),2141);
   assert.equal((await db.all("SELECT * FROM pg_tables WHERE schemaname='public' AND rowsecurity=false")).length,0);
   const sequence=Number((await db.get('SELECT MAX(id) AS id FROM products')).id);
   for(const [telegram,role] of [['91000001','super_admin'],['91000002','admin'],['91000003','worker']]) await db.run('INSERT INTO users(telegram_id,role) VALUES (?,?)',telegram,role);
+  await db.run("INSERT INTO users(telegram_id, full_name, role) VALUES (?, ?, 'customer')", '91000004', 'Notification Test');
+  const notificationCustomer=await db.get("SELECT id FROM users WHERE telegram_id=?", '91000004');
+  await db.run("INSERT INTO telegram_notification_preferences(user_id, enabled, bot_started_at) VALUES (?, 1, CURRENT_TIMESTAMP)", notificationCustomer.id);
+  await enqueueCustomerNotification(db, { userId: notificationCustomer.id, eventKey: 'pg-test:order-created', title: 'Test', message: 'PostgreSQL notification works' });
+  let delivered = 0;
+  const notificationResult=await dispatchCustomerNotifications(db, async (method,payload) => { assert.equal(method,'sendMessage'); assert.equal(payload.chat_id,'91000004'); delivered++; });
+  assert.equal(notificationResult.sent,1); assert.equal(delivered,1);
+  assert.equal((await db.get("SELECT delivery_status FROM customer_notifications WHERE event_key='pg-test:order-created'")).delivery_status,'sent');
   const superAdmin=await db.get('SELECT * FROM users WHERE telegram_id=?','91000001');
   const admin=await db.get('SELECT * FROM users WHERE telegram_id=?','91000002');
   const worker=await db.get('SELECT * FROM users WHERE telegram_id=?','91000003');

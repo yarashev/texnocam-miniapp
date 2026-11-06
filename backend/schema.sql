@@ -165,3 +165,29 @@ CREATE TABLE IF NOT EXISTS worker_ratings (
   PRIMARY KEY (worker_id, customer_telegram_id)
 );
 CREATE INDEX IF NOT EXISTS worker_ratings_worker_idx ON worker_ratings(worker_id);
+
+ 
+-- Customer Telegram notification history and durable delivery queue.
+CREATE TABLE IF NOT EXISTS telegram_notification_preferences (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  enabled INTEGER NOT NULL DEFAULT 0 CHECK (enabled IN (0,1)),
+  bot_started_at TEXT,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS customer_notifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+  event_key TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  delivery_status TEXT NOT NULL DEFAULT 'pending' CHECK (delivery_status IN ('pending','sending','sent','failed')),
+  attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
+  next_attempt_at TEXT,
+  last_error TEXT,
+  sent_at TEXT,
+  read_at TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS customer_notifications_queue_idx ON customer_notifications(delivery_status, next_attempt_at, created_at);
+CREATE INDEX IF NOT EXISTS customer_notifications_user_idx ON customer_notifications(user_id, created_at);

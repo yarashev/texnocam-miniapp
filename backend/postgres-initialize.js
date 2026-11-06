@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 
-export const snapshotTables = ['users','categories','products','exchange_rates','orders','order_items','payments','work_claims','settings','audit_log','support_threads','support_message_links','worker_profiles','worker_ratings'];
+export const snapshotTables = ['users','categories','products','exchange_rates','orders','order_items','payments','work_claims','settings','audit_log','support_threads','support_message_links','worker_profiles','worker_ratings','telegram_notification_preferences','customer_notifications'];
 const identifier = value => '"' + value.replaceAll('"','""') + '"';
 
 export async function resetSequences(database) {
-  for (const table of ['users','categories','products','exchange_rates','orders','order_items','payments','work_claims','audit_log']) {
+  for (const table of ['users','categories','products','exchange_rates','orders','order_items','payments','work_claims','audit_log','customer_notifications']) {
     await database.get(`SELECT setval(pg_get_serial_sequence('${table}', 'id'), COALESCE((SELECT MAX(id) FROM ${table}), 1), EXISTS(SELECT 1 FROM ${table}))`);
   }
 }
@@ -18,7 +18,7 @@ export async function importSnapshot(database, snapshot) {
     }
     const summary = {};
     for (const table of snapshotTables) {
-      const rows = snapshot.tables[table] ?? (table === 'worker_ratings' ? [] : undefined);
+      const rows = snapshot.tables[table] ?? (['worker_ratings','telegram_notification_preferences','customer_notifications'].includes(table) ? [] : undefined);
       if (!Array.isArray(rows)) throw new Error('Zaxirada jadval yo‘q: ' + table);
       const allowed = new Set((await database.all('SELECT column_name FROM information_schema.columns WHERE table_schema = ? AND table_name = ?', 'public', table)).map(row=>row.column_name));
       for (const row of rows) {
@@ -56,6 +56,12 @@ export async function initializePostgres(database, options = {}) {
     if (await database.get("SELECT 1 FROM uzcam_migrations WHERE version='worker-areas-ratings-v2'")) return;
     await database.exec(fs.readFileSync(new URL('./supabase/002-worker-areas-ratings.sql',import.meta.url),'utf8'));
     await database.run("INSERT INTO uzcam_migrations(version) VALUES ('worker-areas-ratings-v2')");
+  });
+  await database.transaction(async () => {
+    await database.get('SELECT pg_advisory_xact_lock(8256301)');
+    if (await database.get("SELECT 1 FROM uzcam_migrations WHERE version='customer-notifications-v1'")) return;
+    await database.exec(fs.readFileSync(new URL('./supabase/003-customer-notifications.sql',import.meta.url),'utf8'));
+    await database.run("INSERT INTO uzcam_migrations(version) VALUES ('customer-notifications-v1')");
   });
   const importFile=options.importFile ?? process.env.UZCAM_IMPORT_FILE;
   if (importFile) { await importSnapshot(database,JSON.parse(fs.readFileSync(importFile,'utf8'))); return; }
