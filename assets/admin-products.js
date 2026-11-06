@@ -25,7 +25,7 @@
         const imageCell=cell(),image=node('img',undefined,'product-thumb');image.alt=product.name;image.loading='lazy';if(product.image)image.src=product.image;else image.hidden=true;image.onerror=()=>{image.hidden=true};imageCell.append(image);row.append(imageCell);
         const nameCell=cell(undefined,'product-name');nameCell.append(node('span',product.name),node('small','Model: '+product.model,'product-model'));row.append(nameCell);
         row.append(cell(product.category||'—'),cell(product.brand||'—'),cell(money(product.price_uzs),'product-price'));
-        row.append(cell(product.deleted_at?'O‘chirilgan':product.is_active?'Faol':'Yashirilgan','pill '+(product.deleted_at?'red':product.is_active?'green':'amber')));
+        const statusCell=cell();statusCell.append(node('span',product.deleted_at?'O‘chirilgan':product.is_active?'Faol':'Yashirilgan','pill '+(product.deleted_at?'red':product.is_active?'green':'amber')));row.append(statusCell);
         row.append(cell(product.updated_at?new Date(product.updated_at).toLocaleDateString('uz-UZ'):'—'));
         const actionsCell=cell(undefined,'product-actions'),action=(label,handler,danger=false)=>{const button=node('button',label,'btn small'+(danger?' danger':''));button.type='button';button.onclick=async()=>{button.disabled=true;try{await handler()}catch(error){toast(error.message)}finally{button.disabled=false}};actionsCell.append(button)};
         if(product.deleted_at)action('Tiklash',()=>stateProduct(product,{restore:true}));

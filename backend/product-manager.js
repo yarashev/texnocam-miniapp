@@ -32,7 +32,7 @@ async function listManagedProducts(actor, params) {
   const requestedPageSize = Number.parseInt(params.get('pageSize'), 10) || 10;
   const pageSize = [10, 25, 50, 100].includes(requestedPageSize) ? requestedPageSize : 10;
   const page = Math.min(Math.max(1, Number.parseInt(params.get('page'), 10) || 1), Math.max(1, Math.ceil(total/pageSize)));
-  const sortColumns = { newest: 'p.id DESC', name_asc: 'LOWER(p.name) ASC, p.id DESC', name_desc: 'LOWER(p.name) DESC, p.id DESC', price_asc: 'p.sale_price_uzs ASC, p.id DESC', price_desc: 'p.sale_price_uzs DESC, p.id DESC', brand_asc: 'LOWER(p.brand) ASC, LOWER(p.name) ASC' };
+  const sortColumns = { newest: 'p.id DESC', updated_desc: 'p.updated_at DESC, p.id DESC', name_asc: 'LOWER(p.name) ASC, p.id DESC', name_desc: 'LOWER(p.name) DESC, p.id DESC', price_asc: 'p.sale_price_uzs ASC, p.id DESC', price_desc: 'p.sale_price_uzs DESC, p.id DESC', brand_asc: 'LOWER(p.brand) ASC, LOWER(p.name) ASC' };
   const sort = params.get('sort') || 'newest';
   const orderBy = sortColumns[sort] || sortColumns.newest;
   const products = await db.all(`SELECT ${projection}${actor.role === 'super_admin' ? privateProjection : ''} ${from} ORDER BY ${orderBy} LIMIT ? OFFSET ?`, ...values, pageSize, (page-1)*pageSize);
