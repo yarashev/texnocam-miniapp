@@ -621,7 +621,7 @@ async function handleRequest(req, res) {
               at: event.created_at
             };
             if (event.action === "create") return { type: "created", at: event.created_at };
-            if (event.action.startsWith("payment")) return { type: "payment", action: event.action, at: event.created_at };
+            if (event.action.includes("payment")) return { type: "payment", action: event.action, at: event.created_at };
             return null;
           }).filter(Boolean);
           result.push({ ...order, items, history });
