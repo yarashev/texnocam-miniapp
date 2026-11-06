@@ -180,7 +180,7 @@ async function handleTelegramUpdate(update) {
         customer.id
       );
     }
-    await sendBotMenu(chat.id, "Assalomu alaykum" + (firstName ? ", " + firstName : "") + "! UzCam botiga xush kelibsiz. Buyurtma holati va to‘lov bo‘yicha shaxsiy xabarnomalar yoqildi. Katalogni oching yoki kerakli bo‘limni tanlang.");
+    await sendBotMenu(chat.id, "Assalomu alaykum" + (firstName ? ", " + firstName : "") + "! UzCam botiga xush kelibsiz. " + (command === "start" ? "Buyurtma holati va to‘lov bo‘yicha shaxsiy xabarnomalar yoqildi. " : "") + "Katalogni oching yoki kerakli bo‘limni tanlang.");
     return;
   }
   if (command === "help") {
