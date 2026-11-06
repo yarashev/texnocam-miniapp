@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 
-export const snapshotTables = ['users','categories','products','exchange_rates','orders','order_items','payments','work_claims','settings','audit_log','support_threads','support_message_links','worker_profiles','worker_ratings'];
+export const snapshotTables = ['users','categories','products','exchange_rates','orders','order_items','payments','work_claims','settings','audit_log','support_threads','support_message_links','worker_profiles','worker_ratings','telegram_notification_preferences','customer_notifications'];
 const identifier = value => '"' + value.replaceAll('"','""') + '"';
 
 export async function resetSequences(database) {
-  for (const table of ['users','categories','products','exchange_rates','orders','order_items','payments','work_claims','audit_log']) {
+  for (const table of ['users','categories','products','exchange_rates','orders','order_items','payments','work_claims','audit_log','customer_notifications']) {
     await database.get(`SELECT setval(pg_get_serial_sequence('${table}', 'id'), COALESCE((SELECT MAX(id) FROM ${table}), 1), EXISTS(SELECT 1 FROM ${table}))`);
   }
 }
@@ -18,7 +18,7 @@ export async function importSnapshot(database, snapshot) {
     }
     const summary = {};
     for (const table of snapshotTables) {
-      const rows = snapshot.tables[table] ?? (table === 'worker_ratings' ? [] : undefined);
+      const rows = snapshot.tables[table] ?? (['worker_ratings','telegram_notification_preferences','customer_notifications'].includes(table) ? [] : undefined);
       if (!Array.isArray(rows)) throw new Error('Zaxirada jadval yo‘q: ' + table);
       const allowed = new Set((await database.all('SELECT column_name FROM information_schema.columns WHERE table_schema = ? AND table_name = ?', 'public', table)).map(row=>row.column_name));
       for (const row of rows) {
