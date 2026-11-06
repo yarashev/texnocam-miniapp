@@ -18,7 +18,7 @@
       for(const [id,values] of [['managedProductBrands',result.brands],['managedProductCategories',result.categories]])if($(id))$(id).replaceChildren(...values.map(value=>new Option(value,value)));
       $('managedProductCount').textContent=result.total.toLocaleString('uz-UZ')+' ta mahsulot';$('productPageSummary').textContent='Jami: '+result.total.toLocaleString('uz-UZ')+' ta';
       $('productPageLabel').textContent=page+' / '+pageCount;$('productPagePrev').disabled=page<=1;$('productPageNext').disabled=page>=pageCount;
-      const list=$('managedProducts');list.replaceChildren();
+      const list=$('managedProducts'),cards=$('managedProductCards');list.replaceChildren();cards?.replaceChildren();
       for(const [index,product] of result.products.entries()){
         const row=node('tr'),cell=(value,cls)=>node('td',value,cls);
         row.append(cell(String((page-1)*pageSize+index+1)));
@@ -31,8 +31,23 @@
         if(product.deleted_at)action('Tiklash',()=>stateProduct(product,{restore:true}));
         else {action('Tahrirlash',()=>openProduct(product.id));action(product.is_active?'Yashirish':'Ko‘rsatish',()=>stateProduct(product,{isActive:!product.is_active}));action('O‘chirish',async()=>{if(!confirm('“'+product.name+'” mahsulotini o‘chirasizmi? Uni O‘chirilgan bo‘limidan tiklash mumkin.'))return;await api('/api/admin/products/'+product.id,{method:'DELETE'});toast('Mahsulot o‘chirildi');await loadProducts()},true)}
         row.append(actionsCell);list.append(row);
+        if(cards){
+          const card=node('article',undefined,'product-mobile-card');
+          const image=node('img',undefined,'product-mobile-image');image.alt=product.name;image.loading='lazy';if(product.image)image.src=product.image;else{image.hidden=true;image.classList.add('is-empty')}image.onerror=()=>{image.hidden=true};
+          const info=node('div',undefined,'product-mobile-info');
+          info.append(node('div',product.name,'product-mobile-name'));
+          info.append(node('div','Model: '+product.model,'product-mobile-model'));
+          info.append(node('div',(product.brand||'Brend ko‘rsatilmagan')+' · '+(product.category||'Kategoriya yo‘q'),'product-mobile-meta'));
+          const top=node('div',undefined,'product-mobile-topline');top.append(node('strong',money(product.price_uzs),'product-mobile-price'));
+          top.append(node('span',product.deleted_at?'O‘chirilgan':product.is_active?'Faol':'Yashirilgan','pill '+(product.deleted_at?'red':product.is_active?'green':'amber')));info.append(top);
+          const cardActions=node('div',undefined,'product-mobile-actions');
+          const cardAction=(label,handler,danger=false)=>{const button=node('button',label,'btn small'+(danger?' danger':''));button.type='button';button.onclick=async()=>{button.disabled=true;try{await handler()}catch(error){toast(error.message)}finally{button.disabled=false}};cardActions.append(button)};
+          if(product.deleted_at)cardAction('Tiklash',()=>stateProduct(product,{restore:true}));
+          else{cardAction('Tahrirlash',()=>openProduct(product.id));cardAction(product.is_active?'Yashirish':'Ko‘rsatish',()=>stateProduct(product,{isActive:!product.is_active}));cardAction('O‘chirish',async()=>{if(!confirm('“'+product.name+'” mahsulotini o‘chirasizmi? Uni O‘chirilgan bo‘limidan tiklash mumkin.'))return;await api('/api/admin/products/'+product.id,{method:'DELETE'});toast('Mahsulot o‘chirildi');await loadProducts()},true)}
+          card.append(image,info,cardActions);cards.append(card);
+        }
       }
-      if(!result.products.length){const row=node('tr'),empty=node('td','Bu filtr bo‘yicha mahsulot topilmadi.');empty.colSpan=9;row.append(empty);list.append(row)}
+      if(!result.products.length){const row=node('tr'),empty=node('td','Bu filtr bo‘yicha mahsulot topilmadi.');empty.colSpan=9;row.append(empty);list.append(row);if(cards)cards.append(node('div','Bu filtr bo‘yicha mahsulot topilmadi.','empty-state'))}
     }catch(error){if(error.name!=='AbortError'){$('managedProducts').replaceChildren();const row=node('tr'),empty=node('td',error.message);empty.colSpan=9;row.append(empty);$('managedProducts').append(row);$('managedProductCount').textContent='Yuklash bajarilmadi'}}finally{$('managedProducts').setAttribute('aria-busy','false')}
   }
   async function stateProduct(product,body){await api('/api/admin/products/'+product.id,json('PATCH',body));toast(body.restore?'Mahsulot yashirin holatda tiklandi':'Mahsulot holati saqlandi');await loadProducts()}
