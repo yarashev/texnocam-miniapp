@@ -480,6 +480,31 @@ async function handleRequest(req, res) {
       }, recentOrders });
       return;
     }
+    const orderStatusMatch = pathname.match(/^\/api\/admin\/orders\/(\d+)\/status$/);
+    if (orderStatusMatch && req.method === "PATCH") {
+      const actor = await getAdminSession(req);
+      if (!actor || !["admin", "super_admin"].includes(actor.role)) { sendJson(res, 403, { error: "Admin ruxsati talab qilinadi" }); return; }
+      try {
+        const orderId = Number(orderStatusMatch[1]), body = await readJson(req);
+        const nextStatus = String(body.status || "");
+        const statusLabels = { pending_payment: "To‘lov kutilmoqda", paid: "To‘lov tasdiqlandi", assigned: "Ustaga biriktirildi", in_service: "Xizmat bajarilmoqda", completed: "Buyurtma yakunlandi", cancelled: "Buyurtma bekor qilindi" };
+        if (!Number.isSafeInteger(orderId) || orderId <= 0 || !Object.hasOwn(statusLabels, nextStatus)) { sendJson(res, 400, { error: "Buyurtma holatini to‘g‘ri tanlang" }); return; }
+        const order = await db.transaction(async () => {
+          const current = await db.get("SELECT id, order_number, status, payment_status, customer_id FROM orders WHERE id = ?", orderId);
+          if (!current) throw Object.assign(new Error("Buyurtma topilmadi"), { statusCode: 404 });
+          if (current.status === nextStatus) return { ...current, changed: false };
+          if (nextStatus !== "pending_payment" && nextStatus !== "cancelled" && current.payment_status !== "confirmed") {
+            throw Object.assign(new Error("To‘lov tasdiqlanmaguncha buyurtmani bu bosqichga o‘tkazib bo‘lmaydi"), { statusCode: 409 });
+          }
+          await db.run("UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", nextStatus, orderId);
+          await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'change_status', 'order', ?, ?)", actor.id, current.order_number, JSON.stringify({ from: current.status, to: nextStatus }));
+          const message = "📦 " + current.order_number + " buyurtmangiz holati yangilandi: " + statusLabels[nextStatus] + ".";
+          await enqueueCustomerNotification(db, { userId: current.customer_id, orderId, eventKey: "order:" + orderId + ":status:" + randomUUID(), title: "Buyurtma holati yangilandi", message });
+          return { ...current, status: nextStatus, changed: true };
+        });
+        sendJson(res, 200, { ok: true, orderNumber: order.order_number, status: order.status, changed: order.changed }); return;
+      } catch (error) { sendJson(res, error.statusCode || 400, { error: error.message || "Buyurtma holatini saqlab bo‘lmadi" }); return; }
+    }
     const orderPaymentMatch = pathname.match(/^\/api\/admin\/orders\/(\d+)\/payment$/);
     if (orderPaymentMatch && req.method === "PATCH") {
       const actor = await getAdminSession(req);
@@ -500,6 +525,9 @@ async function handleRequest(req, res) {
             ? "✅ " + current.order_number + " buyurtmangiz to‘lovi tasdiqlandi. UzCam jamoasi buyurtmangizni keyingi bosqichga o‘tkazadi."
             : "⚠️ " + current.order_number + " buyurtmangiz to‘lovi tasdiqlanmadi. Iltimos, to‘lov chekini tekshirib, admin bilan bog‘laning.";
           await enqueueCustomerNotification(db, { userId: current.customer_id, orderId, eventKey: "order:" + orderId + ":payment:" + paymentStatus, title: paymentStatus === "confirmed" ? "To‘lov tasdiqlandi" : "To‘lov rad etildi", message });
+          if (paymentStatus === "confirmed" && current.status !== "paid") {
+            await enqueueCustomerNotification(db, { userId: current.customer_id, orderId, eventKey: "order:" + orderId + ":status:" + randomUUID(), title: "Buyurtma qabul qilindi", message: "✅ " + current.order_number + " buyurtmangiz qabul qilindi va keyingi bosqichga o‘tkazildi." });
+          }
           return { ...current, id: orderId, payment_status: paymentStatus };
         });
         sendJson(res, 200, { ok: true, orderNumber: order.order_number, paymentStatus: order.payment_status }); return;

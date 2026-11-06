@@ -101,11 +101,24 @@ function renderRealOrders(){
   const customer=escapeContentHtml(order.full_name||order.username||'Telegram mijoz'),phone=escapeContentHtml(order.delivery_phone||''),address=escapeContentHtml(order.delivery_address||'');
   const when=escapeContentHtml(String(order.created_at||'').slice(0,16));
   const delivery=order.delivery_method==='bts'?'BTS pochta':'Manzilga';
-  const action=order.payment_status==='pending'||order.payment_status==='proof_submitted'||order.payment_status==='rejected'?'<button class="btn small confirm-real-payment" data-order-id="'+Number(order.id)+'">To‘lovni tasdiqlash</button>':'<span class="muted">—</span>';
-  return '<tr><td class="primary-cell">'+escapeContentHtml(order.order_number)+'<div class="sub-cell">'+when+'</div></td><td>'+customer+'<div class="sub-cell">'+phone+'</div><div class="sub-cell">'+address+'</div></td><td>'+items+'</td><td>'+delivery+'</td><td class="money">'+orderMoney(order.total_uzs)+'</td><td><span class="pill '+pill+'">'+statusLabel+'</span></td><td>'+action+'</td></tr>'
+  const lifecycleOptions=[['pending_payment','To‘lov kutilmoqda'],['paid','To‘lov tasdiqlandi'],['assigned','Ustaga biriktirildi'],['in_service','Xizmat bajarilmoqda'],['completed','Yakunlandi'],['cancelled','Bekor qilindi']];
+  const lifecycleSelect='<select class="order-status-select" data-order-id="'+Number(order.id)+'" aria-label="Buyurtma holati">'+lifecycleOptions.map(([value,label])=>'<option value="'+value+'" '+(order.status===value?'selected':'')+'>'+label+'</option>').join('')+'</select>';
+  const paymentAction=order.payment_status==='pending'||order.payment_status==='proof_submitted'||order.payment_status==='rejected'?'<button class="btn small confirm-real-payment" data-order-id="'+Number(order.id)+'">To‘lovni tasdiqlash</button>':'';
+  const action=lifecycleSelect+'<button class="btn small save-order-status" data-order-id="'+Number(order.id)+'">Holatni saqlash</button>'+paymentAction;
+  return '<tr><td class="primary-cell">'+escapeContentHtml(order.order_number)+'<div class="sub-cell">'+when+'</div></td><td>'+customer+'<div class="sub-cell">'+phone+'</div><div class="sub-cell">'+address+'</div></td><td>'+items+'</td><td>'+delivery+'</td><td class="money">'+orderMoney(order.total_uzs)+'</td><td><span class="pill '+pill+'">'+statusLabel+'</span><div class="sub-cell">'+escapeContentHtml(order.status)+'</div></td><td>'+action+'</td></tr>'
  }).join('')||'<tr><td colspan="7" class="empty-state">Hozircha buyurtma yo‘q.</td></tr>';
  document.querySelector('#realOrdersNotice').textContent='Bazadagi oxirgi 100 ta buyurtma. Ko‘rsatilmoqda: '+visible.length;
- host.querySelectorAll('[data-order-id]').forEach(button=>button.onclick=async()=>{if(!confirm('To‘lov haqiqatan tekshirildimi va tasdiqlansinmi?'))return;button.disabled=true;try{const response=await fetch('/api/admin/orders/'+button.dataset.orderId+'/payment',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'confirm'})}),result=await response.json();if(!response.ok)throw new Error(result.error||'To‘lovni tasdiqlab bo‘lmadi');toast('To‘lov tasdiqlandi: '+result.orderNumber);await loadRealOrders()}catch(error){toast(error.message);button.disabled=false}});
+ host.querySelectorAll('.confirm-real-payment').forEach(button=>button.onclick=async()=>{if(!confirm('To‘lov haqiqatan tekshirildimi va tasdiqlansinmi?'))return;button.disabled=true;try{const response=await fetch('/api/admin/orders/'+button.dataset.orderId+'/payment',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'confirm'})}),result=await response.json();if(!response.ok)throw new Error(result.error||'To‘lovni tasdiqlab bo‘lmadi');toast('To‘lov tasdiqlandi: '+result.orderNumber);await loadRealOrders()}catch(error){toast(error.message);button.disabled=false}});
+  host.querySelectorAll('.save-order-status').forEach(button=>button.onclick=async()=>{
+   const select=host.querySelector('.order-status-select[data-order-id="'+button.dataset.orderId+'"]');
+   if(!select)return;
+   const order=realOrdersCache.find(item=>Number(item.id)===Number(button.dataset.orderId));
+   if(!order||select.value===order.status){toast('Buyurtma holatida o‘zgarish yo‘q');return}
+   if(!confirm('Buyurtma holati "'+select.options[select.selectedIndex].text+'" qilib o‘zgartirilsinmi?')){select.value=order.status;return}
+   button.disabled=true;
+   try{const response=await fetch('/api/admin/orders/'+button.dataset.orderId+'/status',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:select.value})}),result=await response.json();if(!response.ok)throw new Error(result.error||'Buyurtma holatini saqlab bo‘lmadi');toast(result.changed?'Mijozga xabar yuborish navbatiga qo‘shildi':'Holat o‘zgarmadi');await loadRealOrders()}
+   catch(error){toast(error.message);button.disabled=false;select.value=order.status}
+  });
 }
 async function loadRealOrders(){
  const host=document.querySelector('#realOrdersRows');if(!host)return;host.innerHTML='<tr><td colspan="7">Buyurtmalar yuklanmoqda…</td></tr>';
