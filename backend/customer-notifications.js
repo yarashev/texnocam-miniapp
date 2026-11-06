@@ -5,11 +5,12 @@ export async function enqueueCustomerNotification(database, input) {
   await database.run(
     `INSERT INTO customer_notifications
       (user_id, order_id, event_key, title, message, delivery_status, next_attempt_at)
-     VALUES (?, ?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP)
+     VALUES (?, ?, ?, ?, ?, 'pending', ?)
      ON CONFLICT(event_key) DO NOTHING`,
     input.userId, input.orderId ?? null, input.eventKey,
     String(input.title || 'UzCam xabarnomasi').slice(0, 120),
-    String(input.message).slice(0, 3500)
+    String(input.message).slice(0, 3500),
+    new Date().toISOString().slice(0, 19).replace('T', ' ')
   );
 }
 
@@ -22,9 +23,9 @@ export async function dispatchCustomerNotifications(database, sendTelegram, opti
        JOIN telegram_notification_preferences p ON p.user_id = u.id AND p.enabled = 1
       WHERE n.delivery_status = 'pending'
         AND n.attempts < 8
-        AND (n.next_attempt_at IS NULL OR n.next_attempt_at <= CURRENT_TIMESTAMP)
+        AND (n.next_attempt_at IS NULL OR n.next_attempt_at <= ?)
       ORDER BY n.created_at, n.id LIMIT ?`,
-    limit
+    new Date().toISOString().slice(0, 19).replace('T', ' '), limit
   );
   let sent = 0;
   for (const row of rows) {
