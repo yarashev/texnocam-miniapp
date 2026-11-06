@@ -41,3 +41,53 @@ test('dispatcher schedules retry when Telegram send fails', async () => {
   assert.equal(updates[1].params[0], 'pending');
   assert.match(updates[1].params[1], /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
 });
+test('dispatcher does not send the same notification twice when another worker already claimed it', async () => {
+  let claimCount = 0;
+  const database = {
+    all: async () => [{ id: 9, user_id: 3, telegram_id: '1234567', message: 'Buyurtma' }],
+    run: async (sql) => {
+      if (sql.includes("delivery_status = 'sending'")) {
+        claimCount++;
+        return { changes: claimCount === 1 ? 1 : 0 };
+      }
+      return { changes: 1 };
+    }
+  };
+  let sends = 0;
+  await Promise.all([
+    dispatchCustomerNotifications(database, async () => { sends++; }),
+    dispatchCustomerNotifications(database, async () => { sends++; })
+  ]);
+  assert.equal(claimCount, 2);
+  assert.equal(sends, 1);
+});
+
+test('dispatcher stops retrying after the eighth failed attempt', async () => {
+  const updates = [];
+  const database = {
+    all: async () => [{ id: 10, user_id: 4, telegram_id: '1234567', message: 'Buyurtma' }],
+    run: async (sql, ...params) => { updates.push({ sql, params }); return { changes: 1 }; },
+    get: async () => ({ attempts: 8 })
+  };
+  await dispatchCustomerNotifications(database, async () => { throw new Error('Telegram unavailable'); });
+  assert.match(updates[1].sql, /delivery_status = \?/);
+  assert.equal(updates[1].params[0], 'failed');
+  assert.equal(updates[1].params[2], 'Telegram unavailable');
+});
+
+test('queue query only selects active customers who explicitly started the bot', async () => {
+  let query = '';
+  const database = { all: async (sql) => { query = sql; return []; } };
+  await dispatchCustomerNotifications(database, async () => {});
+  assert.match(query, /JOIN telegram_notification_preferences p/);
+  assert.match(query, /p\.enabled = 1/);
+  assert.match(query, /u\.is_active = 1/);
+});
+
+test('enqueue ignores incomplete event payloads without writing to the database', async () => {
+  let writes = 0;
+  const database = { run: async () => { writes++; } };
+  await enqueueCustomerNotification(database, { userId: 1, eventKey: 'missing-message' });
+  await enqueueCustomerNotification(database, { eventKey: 'missing-user', message: 'Hello' });
+  assert.equal(writes, 0);
+});
