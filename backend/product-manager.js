@@ -29,8 +29,13 @@ async function listManagedProducts(actor, params) {
   if (params.get('category')) { where.push('c.name = ?'); values.push(params.get('category')); }
   const from = 'FROM products p LEFT JOIN categories c ON c.id = p.category_id WHERE '+where.join(' AND ');
   const total = Number((await db.get('SELECT COUNT(*) AS total '+from,...values)).total);
-  const pageSize = 30, page = Math.min(Math.max(1, Number.parseInt(params.get('page'), 10) || 1), Math.max(1, Math.ceil(total/pageSize)));
-  const products = await db.all(`SELECT ${projection}${actor.role === 'super_admin' ? privateProjection : ''} ${from} ORDER BY p.id DESC LIMIT ? OFFSET ?`, ...values, pageSize, (page-1)*pageSize);
+  const requestedPageSize = Number.parseInt(params.get('pageSize'), 10) || 10;
+  const pageSize = [10, 25, 50, 100].includes(requestedPageSize) ? requestedPageSize : 10;
+  const page = Math.min(Math.max(1, Number.parseInt(params.get('page'), 10) || 1), Math.max(1, Math.ceil(total/pageSize)));
+  const sortColumns = { newest: 'p.id DESC', updated_desc: 'p.updated_at DESC, p.id DESC', name_asc: 'LOWER(p.name) ASC, p.id DESC', name_desc: 'LOWER(p.name) DESC, p.id DESC', price_asc: 'p.sale_price_uzs ASC, p.id DESC', price_desc: 'p.sale_price_uzs DESC, p.id DESC', brand_asc: 'LOWER(p.brand) ASC, LOWER(p.name) ASC' };
+  const sort = params.get('sort') || 'newest';
+  const orderBy = sortColumns[sort] || sortColumns.newest;
+  const products = await db.all(`SELECT ${projection}${actor.role === 'super_admin' ? privateProjection : ''} ${from} ORDER BY ${orderBy} LIMIT ? OFFSET ?`, ...values, pageSize, (page-1)*pageSize);
   const brands = (await db.all('SELECT DISTINCT brand FROM products ORDER BY brand')).map(row=>row.brand);
   const categories = await listCatalogCategories(db);
   const result = { products, total, page, pageSize, brands, categories, canManageCosts: actor.role === 'super_admin' };
