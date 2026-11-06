@@ -31,9 +31,11 @@ test('Telegram session, staff, workers, home content, uploads and restart use as
     const value=await response.json();return {status:response.status,value,response};
   }
   assert.equal((await request('/api/admin/products')).status,403);
+  assert.equal((await request('/api/admin/dashboard')).status,403);
   assert.equal((await request('/api/admin/categories')).status,403);
   let result=await request('/api/session','POST',{initData:initData(superId)});assert.equal(result.status,200);cookie=result.response.headers.get('set-cookie').split(';')[0];
   assert.equal((await request('/api/session')).value.user.role,'super_admin');
+  result=await request('/api/admin/dashboard');assert.equal(result.status,200);const publicCatalog=await request('/api/products');assert.equal(result.value.summary.activeProducts,publicCatalog.value.products.length);assert.equal(result.value.summary.awaitingPayment,0);assert.deepEqual(result.value.recentOrders,[]);
   result=await request('/api/admin/categories');assert.equal(result.status,200);assert.ok(result.value.categories.some(category=>category.name==='Kameralar'&&category.is_active));
   result=await request('/api/admin/categories','POST',{name:'Sinov bo‘limi'});assert.equal(result.status,201);
   assert.equal((await request('/api/admin/categories','POST',{name:'Sinov bo‘limi'})).value.category.created,false);
