@@ -480,7 +480,7 @@ async function handleRequest(req, res) {
       }, recentOrders });
       return;
     }
-    const orderStatusMatch = pathname.match(/^\/api\/admin\/orders\/(\\d+)\/status$/);
+    const orderStatusMatch = pathname.match(/^\/api\/admin\/orders\/(\d+)\/status$/);
     if (orderStatusMatch && req.method === "PATCH") {
       const actor = await getAdminSession(req);
       if (!actor || !["admin", "super_admin"].includes(actor.role)) { sendJson(res, 403, { error: "Admin ruxsati talab qilinadi" }); return; }
