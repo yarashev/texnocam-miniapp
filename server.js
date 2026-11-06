@@ -169,10 +169,11 @@ async function handleTelegramUpdate(update) {
   if (command === "start" || command === "menu") {
     const firstName = String(message.from && message.from.first_name || "").trim();
     if (command === "start") {
+      const customerName = [firstName, String(message.from && message.from.last_name || "").trim()].filter(Boolean).join(" ");
       const username = String(message.from && message.from.username || "").trim();
       await db.run(
         "INSERT INTO users(telegram_id, username, full_name, role) VALUES (?, ?, ?, 'customer') ON CONFLICT(telegram_id) DO UPDATE SET username = COALESCE(excluded.username, users.username), full_name = CASE WHEN excluded.full_name <> '' THEN excluded.full_name ELSE users.full_name END, updated_at = CURRENT_TIMESTAMP",
-        senderId, username || null, firstName
+        senderId, username || null, customerName
       );
       const customer = await db.get("SELECT id FROM users WHERE telegram_id = ?", senderId);
       await db.run(
