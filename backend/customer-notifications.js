@@ -48,9 +48,9 @@ export async function dispatchCustomerNotifications(database, sendTelegram, opti
       const safeError = String(error?.message || 'Telegram yuborish xatosi').slice(0, 300);
       await database.run(
         `UPDATE customer_notifications
-            SET delivery_status = ?, next_attempt_at = datetime(CURRENT_TIMESTAMP, ?), last_error = ?
+            SET delivery_status = ?, next_attempt_at = ?, last_error = ?
           WHERE id = ?`,
-        terminal ? 'failed' : 'pending', '+' + delay + ' minutes', safeError, row.id
+        terminal ? 'failed' : 'pending', new Date(Date.now() + delay * 60000).toISOString(), safeError, row.id
       );
     }
   }
