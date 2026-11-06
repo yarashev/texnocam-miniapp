@@ -41,7 +41,7 @@
         for (const event of order.history) {
           const text = event.type === 'status'
             ? (labels[event.from] || event.from || 'Yaratildi') + ' → ' + (labels[event.to] || event.to)
-            : event.type === 'created' ? 'Buyurtma yaratildi' : 'To‘lov holati yangilandi';
+            : event.type === 'created' ? 'Buyurtma yaratildi' : event.type === 'payment' ? (event.action === 'confirm_payment' ? 'To‘lov tasdiqlandi' : event.action === 'reject_payment' ? 'To‘lov rad etildi' : 'To‘lov holati yangilandi') : 'Holat yangilandi';
           const li = node('li','',text+' · '+date(event.at));
           list.append(li);
         }
