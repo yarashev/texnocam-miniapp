@@ -2,7 +2,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const form=$('productForm'), dialog=$('productDialog');
-  let page=1, pageCount=1, config={canManageCosts:false}, current=null, selectedFile=null, previewUrl=null, request=null, searchTimer=null;
+  let page=1, pageSize=10, pageCount=1, config={canManageCosts:false}, current=null, selectedFile=null, previewUrl=null, request=null, searchTimer=null;
   $('addProduct').disabled=true;
   const money=value=>new Intl.NumberFormat('uz-UZ').format(Number(value)||0)+' so‘m';
   async function api(url,options={}) { const response=await fetch(url,{cache:'no-store',...options}); const data=await response.json(); if(!response.ok)throw new Error(data.error||'Amalni bajarib bo‘lmadi');return data; }
@@ -11,25 +11,29 @@
   function fillChoices(select,values,label){const previous=select.value;select.replaceChildren(new Option(label,''),...values.map(value=>new Option(value,value)));select.value=previous;}
   async function loadProducts(){
     if(request)request.abort();request=new AbortController();$('managedProducts').setAttribute('aria-busy','true');
-    const params=new URLSearchParams({page:String(page),search:$('productSearch').value,brand:$('productBrandFilter').value,category:$('productCategoryFilter').value,state:$('productStateFilter').value});
+    const params=new URLSearchParams({page:String(page),pageSize:String(pageSize),sort:$('productSort').value,search:$('productSearch').value,brand:$('productBrandFilter').value,category:$('productCategoryFilter').value,state:$('productStateFilter').value});
     try {
       const result=await api('/api/admin/products?'+params,{signal:request.signal});config=result;$('addProduct').disabled=false;page=result.page;pageCount=Math.max(1,Math.ceil(result.total/result.pageSize));
       fillChoices($('productBrandFilter'),result.brands,'Barcha brendlar');fillChoices($('productCategoryFilter'),result.categories,'Barcha kategoriyalar');
-      for(const [id,values] of [['managedProductBrands',result.brands],['managedProductCategories',result.categories]])$(id).replaceChildren(...values.map(value=>new Option(value,value)));
-      $('managedProductCount').textContent=result.total+' ta mahsulot';$('productPageLabel').textContent=page+' / '+pageCount;$('productPagePrev').disabled=page<=1;$('productPageNext').disabled=page>=pageCount;
+      for(const [id,values] of [['managedProductBrands',result.brands],['managedProductCategories',result.categories]])if($(id))$(id).replaceChildren(...values.map(value=>new Option(value,value)));
+      $('managedProductCount').textContent=result.total.toLocaleString('uz-UZ')+' ta mahsulot';$('productPageSummary').textContent='Jami: '+result.total.toLocaleString('uz-UZ')+' ta';
+      $('productPageLabel').textContent=page+' / '+pageCount;$('productPagePrev').disabled=page<=1;$('productPageNext').disabled=page>=pageCount;
       const list=$('managedProducts');list.replaceChildren();
-      for(const product of result.products){
-        const row=node('article',undefined,'mp-row');const image=node('img',undefined,'mp-image');image.alt=product.name;image.loading='lazy';if(product.image)image.src=product.image;else image.hidden=true;image.onerror=()=>{image.hidden=true};
-        const info=node('div',undefined,'mp-info');info.append(node('b',product.name),node('small','Model: '+product.model),node('small',product.brand+' · '+(product.category||'Kategoriya yo‘q')));
-        const price=node('div',undefined,'mp-price');price.append(node('strong',money(product.price_uzs)),node('span',product.deleted_at?'O‘chirilgan':product.is_active?'Faol':'Yashirilgan','pill '+(product.deleted_at?'red':product.is_active?'green':'amber')));
-        const actions=node('div',undefined,'mp-actions');
-        const action=(label,handler,danger=false)=>{const button=node('button',label,'btn small'+(danger?' danger':''));button.type='button';button.onclick=async()=>{button.disabled=true;try{await handler()}catch(error){toast(error.message)}finally{button.disabled=false}};actions.append(button)};
+      for(const [index,product] of result.products.entries()){
+        const row=node('tr'),cell=(value,cls)=>node('td',value,cls);
+        row.append(cell(String((page-1)*pageSize+index+1)));
+        const imageCell=cell(),image=node('img',undefined,'product-thumb');image.alt=product.name;image.loading='lazy';if(product.image)image.src=product.image;else image.hidden=true;image.onerror=()=>{image.hidden=true};imageCell.append(image);row.append(imageCell);
+        const nameCell=cell(undefined,'product-name');nameCell.append(node('span',product.name),node('small','Model: '+product.model,'product-model'));row.append(nameCell);
+        row.append(cell(product.category||'—'),cell(product.brand||'—'),cell(money(product.price_uzs),'product-price'));
+        row.append(cell(product.deleted_at?'O‘chirilgan':product.is_active?'Faol':'Yashirilgan','pill '+(product.deleted_at?'red':product.is_active?'green':'amber')));
+        row.append(cell(product.updated_at?new Date(product.updated_at).toLocaleDateString('uz-UZ'):'—'));
+        const actionsCell=cell(undefined,'product-actions'),action=(label,handler,danger=false)=>{const button=node('button',label,'btn small'+(danger?' danger':''));button.type='button';button.onclick=async()=>{button.disabled=true;try{await handler()}catch(error){toast(error.message)}finally{button.disabled=false}};actionsCell.append(button)};
         if(product.deleted_at)action('Tiklash',()=>stateProduct(product,{restore:true}));
         else {action('Tahrirlash',()=>openProduct(product.id));action(product.is_active?'Yashirish':'Ko‘rsatish',()=>stateProduct(product,{isActive:!product.is_active}));action('O‘chirish',async()=>{if(!confirm('“'+product.name+'” mahsulotini o‘chirasizmi? Uni O‘chirilgan bo‘limidan tiklash mumkin.'))return;await api('/api/admin/products/'+product.id,{method:'DELETE'});toast('Mahsulot o‘chirildi');await loadProducts()},true)}
-        row.append(image,info,price,actions);list.append(row);
+        row.append(actionsCell);list.append(row);
       }
-      if(!result.products.length)list.append(node('div','Bu filtr bo‘yicha mahsulot topilmadi.','mp-empty'));
-    }catch(error){if(error.name!=='AbortError'){$('managedProducts').replaceChildren(node('div',error.message,'mp-empty'));$('managedProductCount').textContent='Yuklash bajarilmadi'}}finally{$('managedProducts').setAttribute('aria-busy','false')}
+      if(!result.products.length){const row=node('tr'),empty=node('td','Bu filtr bo‘yicha mahsulot topilmadi.');empty.colSpan=9;row.append(empty);list.append(row)}
+    }catch(error){if(error.name!=='AbortError'){$('managedProducts').replaceChildren();const row=node('tr'),empty=node('td',error.message);empty.colSpan=9;row.append(empty);$('managedProducts').append(row);$('managedProductCount').textContent='Yuklash bajarilmadi'}}finally{$('managedProducts').setAttribute('aria-busy','false')}
   }
   async function stateProduct(product,body){await api('/api/admin/products/'+product.id,json('PATCH',body));toast(body.restore?'Mahsulot yashirin holatda tiklandi':'Mahsulot holati saqlandi');await loadProducts()}
   function releasePreview(){if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=null;selectedFile=null;$('productImage').value=''}
@@ -66,6 +70,10 @@
     }catch(error){$('productFormStatus').textContent=error.message}finally{save.disabled=false}
   };
   $('productSearch').oninput=()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>{page=1;loadProducts()},300)};
-  for(const id of ['productBrandFilter','productCategoryFilter','productStateFilter'])$(id).onchange=()=>{page=1;loadProducts()};$('refreshManagedProducts').onclick=()=>loadProducts();$('productPagePrev').onclick=()=>{page--;loadProducts()};$('productPageNext').onclick=()=>{page++;loadProducts()};
+  for(const id of ['productBrandFilter','productCategoryFilter','productStateFilter','productSort'])$(id).onchange=()=>{page=1;loadProducts()};
+  $('productPageSize').onchange=()=>{pageSize=Number($('productPageSize').value)||10;page=1;loadProducts()};
+  $('applyProductFilters').onclick=()=>{page=1;loadProducts()};
+  $('refreshManagedProducts').onclick=()=>{page=1;$('productSearch').value='';$('productBrandFilter').value='';$('productCategoryFilter').value='';$('productStateFilter').value='all';$('productSort').value='newest';$('productPageSize').value='10';pageSize=10;loadProducts()};
+  $('productPagePrev').onclick=()=>{page--;loadProducts()};$('productPageNext').onclick=()=>{page++;loadProducts()};
   loadProducts();
 })();
