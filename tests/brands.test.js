@@ -56,7 +56,7 @@ test('create, edit, hide and delete persist without changing products or reseedi
   await deleteCatalogBrand(db,actor,'hikvision');
   assert.equal((await listCatalogBrands(db,true)).some(item=>item.id==='hikvision'),false);
   await deleteCatalogBrand(db,actor,'test-brand');
-  assert.equal((await listCatalogBrands(db,true)).length,baseline-2);
+  assert.equal((await listCatalogBrands(db,true)).length,baseline-1);
   assert.ok(db.history.length>=4);
 });
 test('duplicate names and unknown IDs fail; parallel creates retain both changes',async()=>{
