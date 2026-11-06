@@ -16,42 +16,54 @@
     panel.replaceChildren();
     if (!orders.length) { panel.append(node('p','customer-orders-empty','Hozircha buyurtmalaringiz yo‘q.')); return; }
     for (const order of orders) {
-      const card = node('article','customer-order-card');
-      const head = node('div','customer-order-head');
-      head.append(node('strong','customer-order-number',order.order_number));
-      head.append(node('span','customer-order-status status-'+order.status,labels[order.status] || order.status));
+      const card = node('details','customer-order-card');
+      const head = node('summary','customer-order-summary');
+      const identity = node('span','customer-order-identity');
+      identity.append(node('strong','customer-order-number',order.order_number));
+      identity.append(node('small','customer-order-date','Sana: '+date(order.created_at)));
+      const overview = node('span','customer-order-overview');
+      overview.append(node('span','customer-order-status status-'+order.status,labels[order.status] || order.status));
+      overview.append(node('b','customer-order-preview-total',money(order.total_uzs)));
+      head.append(identity,overview);
       card.append(head);
-      card.append(node('p','customer-order-date','Sana: '+date(order.created_at)));
+      const content = node('div','customer-order-content');
+      content.append(node('div','customer-order-section-title','Buyurtma tarkibi'));
       const lines = node('div','customer-order-items');
       for (const item of order.items || []) {
         const line = node('div','customer-order-item');
-        line.append(node('span','', (item.name || item.model) + ' × ' + item.quantity));
-        line.append(node('b','',money(item.line_total_uzs)));
+        const description = node('div','customer-order-item-description');
+        description.append(node('strong','customer-order-item-name',(item.name || item.model || 'Mahsulot') + (item.model ? ' · ' + item.model : '')));
+        description.append(node('span','customer-order-unit-price',money(item.unit_price_uzs)+' × '+Number(item.quantity || 0)+' dona'));
+        line.append(description,node('b','customer-order-line-total',money(item.line_total_uzs)));
         lines.append(line);
       }
-      card.append(lines);
-      const details = node('div','customer-order-total');
-      details.append(node('span','','To‘lov: '+(paymentLabels[order.payment_status] || order.payment_status)));
-      details.append(node('strong','',money(order.total_uzs)));
-      card.append(details);
+      content.append(lines);
+      const total = node('div','customer-order-total');
+      const totalsLabel = node('span','','Jami to‘lov');
+      total.append(totalsLabel,node('strong','',money(order.total_uzs)));
+      content.append(total);
+      const payment = node('div','customer-order-meta');
+      payment.append(node('span','','To‘lov holati'),node('b','',paymentLabels[order.payment_status] || order.payment_status || '—'));
+      content.append(payment);
+      if (order.delivery_method) content.append(node('p','customer-order-delivery','Yetkazib berish: '+(order.delivery_method === 'bts' ? 'BTS' : 'Manzilga')));
       if (order.history?.length) {
         const history = node('details','customer-order-history');
-        history.append(node('summary','','Holatlar tarixi'));
+        history.append(node('summary','','Buyurtma holatlari tarixi'));
         const list = node('ol','');
         for (const event of order.history) {
           const text = event.type === 'status'
             ? (labels[event.from] || event.from || 'Yaratildi') + ' → ' + (labels[event.to] || event.to)
             : event.type === 'created' ? 'Buyurtma yaratildi' : event.type === 'payment' ? (event.action === 'confirm_payment' ? 'To‘lov tasdiqlandi' : event.action === 'reject_payment' ? 'To‘lov rad etildi' : 'To‘lov holati yangilandi') : 'Holat yangilandi';
-          const li = node('li','',text+' · '+date(event.at));
-          list.append(li);
+          list.append(node('li','',text+' · '+date(event.at)));
         }
         if (!order.history.some(event => event.type === 'status' && event.to === order.status)) {
           list.append(node('li','','Joriy holat: '+(labels[order.status] || order.status)+' · '+date(order.updated_at)));
         }
-        history.append(list); card.append(history);
+        history.append(list); content.append(history);
       } else {
-        card.append(node('p','customer-order-current','Joriy holat: '+(labels[order.status] || order.status)));
+        content.append(node('p','customer-order-current','Joriy holat: '+(labels[order.status] || order.status)));
       }
+      card.append(content);
       panel.append(card);
     }
   }
@@ -70,13 +82,26 @@
   const style = document.createElement('style');
   style.textContent = `
     .customer-orders-panel{margin-top:12px;display:grid;gap:10px}.customer-orders-panel[hidden]{display:none}
-    .customer-order-card{background:#f7f9fc;border:1px solid #e4eaf3;border-radius:14px;padding:13px;text-align:left}
-    .customer-order-head,.customer-order-item,.customer-order-total{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .customer-order-number{font-size:14px}.customer-order-status{font-size:11px;font-weight:700;background:#e8efff;color:#2459bd;padding:6px 9px;border-radius:20px}
+    .customer-order-card{background:#fff;border:1px solid #e4eaf3;border-radius:14px;text-align:left;overflow:hidden}
+    .customer-order-summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px;cursor:pointer}
+    .customer-order-summary::-webkit-details-marker{display:none}
+    .customer-order-identity,.customer-order-overview{display:grid;gap:5px;min-width:0}
+    .customer-order-number{font-size:13px}.customer-order-date{font-size:11px;color:#697586;margin:0}
+    .customer-order-overview{text-align:right;justify-items:end}.customer-order-status{font-size:10px;font-weight:700;background:#e8efff;color:#2459bd;padding:5px 8px;border-radius:20px}
     .customer-order-status.status-completed{background:#e5f7ec;color:#168044}.customer-order-status.status-cancelled{background:#ffebeb;color:#b42318}
-    .customer-order-date,.customer-order-current{font-size:12px;color:#697586;margin:8px 0}
-    .customer-order-items{display:grid;gap:7px;padding:9px 0;border-top:1px solid #e4eaf3;border-bottom:1px solid #e4eaf3;font-size:12px}
-    .customer-order-total{padding-top:9px;font-size:12px}.customer-order-history{margin-top:10px;font-size:12px;color:#475467}
+    .customer-order-preview-total{font-size:13px;color:#14213d}
+    .customer-order-content{padding:0 13px 13px;border-top:1px solid #e4eaf3}
+    .customer-order-section-title{font-size:12px;font-weight:800;margin:12px 0 8px}
+    .customer-order-items{display:grid;gap:9px;padding:4px 0 10px}
+    .customer-order-item{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .customer-order-item-description{display:grid;gap:4px;min-width:0}
+    .customer-order-item-name{font-size:12px;line-height:1.4}
+    .customer-order-unit-price{font-size:11px;color:#697586}
+    .customer-order-line-total{font-size:12px;white-space:nowrap}
+    .customer-order-total,.customer-order-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #e4eaf3;font-size:12px}
+    .customer-order-total strong{font-size:15px;color:#14213d}
+    .customer-order-delivery,.customer-order-current{font-size:11px;color:#697586;margin:8px 0}
+    .customer-order-history{margin-top:10px;font-size:12px;color:#475467}
     .customer-order-history summary{cursor:pointer;font-weight:700}.customer-order-history ol{padding-left:20px;display:grid;gap:7px}
     .customer-orders-empty,.customer-orders-loading,.customer-orders-error{font-size:13px;color:#697586;padding:10px}
   `;
