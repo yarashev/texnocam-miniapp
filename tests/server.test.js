@@ -31,6 +31,7 @@ test('Telegram session, staff, workers, home content, uploads and restart use as
     const value=await response.json();return {status:response.status,value,response};
   }
   assert.equal((await request('/api/admin/products')).status,403);
+  assert.equal((await request('/api/admin/dashboard')).status,403);
   assert.equal((await request('/api/admin/categories')).status,403);
   let result=await request('/api/session','POST',{initData:initData(superId)});assert.equal(result.status,200);cookie=result.response.headers.get('set-cookie').split(';')[0];
   assert.equal((await request('/api/session')).value.user.role,'super_admin');
