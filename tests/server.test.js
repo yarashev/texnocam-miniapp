@@ -105,7 +105,7 @@ test('Telegram session, staff, workers, home content, uploads and restart use as
   const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jL1sAAAAASUVORK5CYII=','base64');
   result=await request('/api/admin/product-images','POST',{base64:png.toString('base64')});assert.equal(result.status,201);const image=result.value.image;
   const snapshot=exportSqlite(path.join(directory,'texnocam.sqlite'),path.join(directory,'uploads'));
-  assert.equal(snapshot.tables.users.length,4);assert.equal(snapshot.tables.customer_notifications.length,1);assert.equal(snapshot.images.length,1);assert.equal(snapshot.tables.worker_profiles[0].experience_years,5);assert.equal(snapshot.tables.worker_profiles[0].service_region,'Toshkent viloyati');assert.equal(snapshot.tables.worker_ratings.length,2);
+  assert.equal(snapshot.tables.users.length,5);assert.equal(snapshot.tables.customer_notifications.length,1);assert.equal(snapshot.images.length,1);assert.equal(snapshot.tables.worker_profiles[0].experience_years,5);assert.equal(snapshot.tables.worker_profiles[0].service_region,'Toshkent viloyati');assert.equal(snapshot.tables.worker_ratings.length,2);
   await running.stop();running=await startServer(directory);
   assert.equal((await request('/api/home-content')).value.content.hero.title,'Saved Hero');
   assert.equal((await request('/api/home-content')).value.content.contactPhone,'+998508554187');
