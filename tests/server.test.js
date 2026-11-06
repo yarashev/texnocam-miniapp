@@ -84,6 +84,8 @@ test('Telegram session, staff, workers, home content, uploads and restart use as
   assert.equal(ownOrders.status,200);assert.equal(ownOrders.value.orders.length,1);
   assert.equal(ownOrders.value.orders[0].order_number,'UC-TEST-CUSTOMER-1');
   assert.equal(ownOrders.value.orders[0].items[0].name,'EZVIZ H1C');
+  assert.equal(ownOrders.value.orders[0].items[0].unit_price_uzs,125000);
+  assert.equal(ownOrders.value.orders[0].items[0].line_total_uzs,250000);
   assert.deepEqual(ownOrders.value.orders[0].history.map(event=>event.type),['created','status','payment']);
   assert.equal(ownOrders.value.orders[0].history[1].to,'in_service');
   assert.equal(ownOrders.value.orders[0].history[2].action,'confirm_payment');
