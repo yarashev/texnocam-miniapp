@@ -7,7 +7,9 @@ test('enqueue creates an idempotent customer notification record', async () => {
   const database = { run: async (sql, ...params) => { captured = { sql, params }; return { changes: 1 }; } };
   await enqueueCustomerNotification(database, { userId: 7, orderId: 12, eventKey: 'order:12:created', title: 'Buyurtma', message: 'Qabul qilindi' });
   assert.match(captured.sql, /ON CONFLICT\(event_key\) DO NOTHING/);
-  assert.deepEqual(captured.params, [7, 12, 'order:12:created', 'Buyurtma', 'Qabul qilindi']);
+  assert.deepEqual(captured.params.slice(0, 5), [7, 12, 'order:12:created', 'Buyurtma', 'Qabul qilindi']);
+  assert.equal(typeof captured.params[5], 'string');
+  assert.equal(captured.params[5].length, 19);
 });
 
 test('dispatcher sends opted-in notifications and records successful delivery', async () => {
