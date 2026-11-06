@@ -591,6 +591,47 @@ async function handleRequest(req, res) {
         sendJson(res, 200, { notifications, botStarted: Boolean(preference?.enabled), botStartedAt: preference?.bot_started_at || null, unreadCount: notifications.filter(item => !item.read_at).length }); return;
       } catch (error) { sendJson(res, 400, { error: error.message || "Xabarnomalarni yuklab bo‘lmadi" }); return; }
     }
+
+    if (pathname === "/api/customer/orders" && req.method === "POST") {
+      try {
+        const body = await readJson(req, 9000);
+        const telegramUser = verifyTelegramInitData(String(body.initData || ""));
+        if (!telegramUser?.id) { sendJson(res, 401, { error: "Telegram profilingizni tasdiqlash talab qilinadi" }); return; }
+        const customer = await db.get("SELECT id FROM users WHERE telegram_id = ? AND is_active = 1", String(telegramUser.id));
+        if (!customer) { sendJson(res, 404, { error: "Mijoz profili topilmadi" }); return; }
+        const orders = await db.all(
+          "SELECT id, order_number, status, payment_status, delivery_method, total_uzs, created_at, updated_at FROM orders WHERE customer_id = ? ORDER BY created_at DESC, id DESC LIMIT 100",
+          customer.id
+        );
+        const result = [];
+        for (const order of orders) {
+          const items = await db.all(
+            "SELECT model_snapshot AS model, name_snapshot AS name, quantity, unit_price_uzs, line_total_uzs FROM order_items WHERE order_id = ? ORDER BY id",
+            order.id
+          );
+          const events = await db.all(
+            "SELECT action, details_json, created_at FROM audit_log WHERE entity_type = 'order' AND entity_id = ? ORDER BY created_at ASC, id ASC",
+            order.order_number
+          );
+          const history = events.map(event => {
+            let details = {};
+            try { details = JSON.parse(event.details_json || "{}"); } catch {}
+            if (event.action === "change_status") return {
+              type: "status", from: details.from || "", to: details.to || "",
+              at: event.created_at
+            };
+            if (event.action === "create") return { type: "created", at: event.created_at };
+            if (event.action.includes("payment")) return { type: "payment", action: event.action, at: event.created_at };
+            return null;
+          }).filter(Boolean);
+          result.push({ ...order, items, history });
+        }
+        sendJson(res, 200, { orders: result }); return;
+      } catch (error) {
+        sendJson(res, 400, { error: error.message || "Buyurtmalarni yuklab bo‘lmadi" }); return;
+      }
+    }
+
     if (pathname === "/api/orders" && req.method === "POST") {
       try {
         const body = await readJson(req, 16000), telegramUser = verifyTelegramInitData(body.initData);
