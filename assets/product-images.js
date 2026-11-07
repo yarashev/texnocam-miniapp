@@ -43,28 +43,7 @@
     "model": "CS-C6N G1 (8MP)",
     "previousImage": "assets/ezviz/08.webp",
     "image": "assets/official-products/cs-c6n-g1-8mp.png"
-  },
-  { "brand": "Tapo", "model": "Tapo C120 (4MP WIFI )", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C120_EU_1.0_overview_01_normal_20250306073148g.png" },
-  { "brand": "Tapo", "model": "Tapo C225 (4MP WIFI 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C225_US_2.0_overview%400.5x_normal_20240117231339t.png" },
-  { "brand": "Tapo", "model": "Tapo C245D (3MP WIFI 2-CAM 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C245D_UN_1.0_Overview_normal_20251126053636j.png" },
-  { "brand": "Tapo", "model": "Tapo C246D (3MP WIFI 2-CAM 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C246D_UN_1.0_product_images_01_normal_20250519022854b.png" },
-  { "brand": "Tapo", "model": "Tapo C250 (8MP Wifi 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C250_US_1.0_overview_normal_20250908030256v.png" },
-  { "brand": "Tapo", "model": "Tapo C200C (2MP WIFI 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C200_EU_5.0_overview_1_pack_normal_20241226064227u.png" },
-  { "brand": "Tapo", "model": "Tapo C210P2 (3MP WIFI 360 2PCS)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C210%282-pack%29_normal_20240624092213x.png" },
-  { "brand": "Tapo", "model": "Tapo C201 (2MP WIFI 360 Black)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C201_US_1.0_overview_1.%E3%80%82_normal_20241226062547t.png" }
-  { "brand": "Tapo", "model": "Tapo C610 KIT (3MP WIFI 360 SOLAR)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C610_KIT_UN_1.0_Product_Images_01_normal_20250625082811j.png" },
-  { "brand": "Tapo", "model": "Tapo C520WS (4MP WIFI 360 LAN)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C520WS_EU_2.0_overview_01_normal_20250307092722e.png" },
-  { "brand": "Tapo", "model": "Tapo C510W (3MP WIFI 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C510W_EU_2.0_overview_01_normal_20250307092700u.png" },
-  { "brand": "Tapo", "model": "Tapo C325WB  (4MP WIFI POE)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C325WB_EU_2.0_overview_01_normal_20241221061227k.png" },
-  { "brand": "Tapo", "model": "Tapo C320WS  (4MP WIFI LAN)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C320WS_Tapo_C320WSP2_EU_2_normal_20231019030522r.png" },
-  { "brand": "Tapo", "model": "Tapo C310 (3MP WIFI LAN)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C310_EU_1_normal_20230712010611v.png" },
-  { "brand": "Tapo", "model": "Tapo C216 (3MP WIFI 360 Valli )", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C216_EU_1.0_overview_normal_20250401093841y.png" },
-  { "brand": "Tapo", "model": "Tapo C206 (2MP WIFI 360 Valli )", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C206_EU_1.0_overview_normal_20250321074953d.png" },
-  { "brand": "Tapo", "model": "Tapo C236 (5MP WIFI 360 Valli )", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C236_EU_1.0_overview_normal_20250618013724r.png" },
-  { "brand": "Tapo", "model": "Tapo DL110 (Дверной замок Smart Wi-Fi)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_DL110_US_2.6_overview_compressed_normal_20250909065516o.png" },
-  { "brand": "Tapo", "model": "Tapo D210 ( 3MP DOMOFON)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_D210_EU_2.0_Overview_01_normal_20250922080132b.png" },
-  { "brand": "Tapo", "model": "Tapo D230S1 ( 5MP DOMOFON)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/D230_normal_20241101063325n.png" },
-  { "brand": "Tapo", "model": "Tapo A201 (SOLAR PANEL 5.2V  2.5W)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_A201_UN_2.20_Overview_01_normal_20250717061053i.png" },
+  }
 ];
   // Dahua catalog was imported from the 2024 price list without image_path values.
   // Exact-model results take precedence; a model-family fallback keeps every imported product visual.
@@ -95,6 +74,19 @@
   const entries = [...bundled, ...(window.UzCamReviewedPhotos || []).map(([brand, model, previousImage, image]) => ({ brand, model, previousImage, image }))];
   const byModel = new Map(), fallbacks = new Map();
   const key = (brand, model) => normalize(brand) + ':' + normalize(model);
+  const directPhotoHosts = new Set(["bestways.com","viethansecurity.com","newworld.co.za","lcdn.altex.ro","assets.hikvision.com","static.mercusys.com","alti-group.ru","www.cyberpuerta.mx"]);
+  const directProductPhotos = new Map([
+    [key("EZVIZ", "CS-H8c G1 (8MP)"), "https://bestways.com/cdn/shop/files/2MP_HD_Video_P_45.png?v=1763914587"],
+    [key("EZVIZ", "CS-HB8C/SP (4MP)"), "https://viethansecurity.com/media/product/12054_camera_pin_nang_luong_mat_troi_ezviz_cs_hb8c_sp_2k_4mp.jpg"],
+    [key("EZVIZ", "CS-HB8C/SP (6MP)"), "https://newworld.co.za/cdn/shop/files/M2bieHd6L3AhbmSPpDA4NsAPmeU.jpg?v=1774087764"],
+    [key("EZVIZ", "CS-DL50FVS (WBP,GR)"), "https://lcdn.altex.ro/media/catalog/product/d/l/dl50fvs_13_78b87212.jpg"],
+    [key("Turli brendlar", "DS-UPS3000-R(O-STD)/EU/Uni(E)"), "https://assets.hikvision.com/prd/normal/all/image/m000177858/UCBL400_SQ162-2-%E6%95%88%E6%9E%9C%E5%9B%BE003-%E5%8F%B3%E5%89%8D%E4%BE%A7.png"],
+    [key("Mercusys", "Mercusys Halo H60X(2-pack AX1500 WIFI 6)"), "https://static.mercusys.com/product-image/01_large20250417012824.jpg"],
+    [key("Turli brendlar", "DS-K3B801BX-L/MPg(O-STD)"), "https://alti-group.ru/upload/iblock/aa8/xbxpzvxkmxr50de82wlt8oio9j8a0ezx.png"],
+    [key("Turli brendlar", "DS-K3B801BX-M/MPg(O-STD)"), "https://alti-group.ru/upload/iblock/aa8/xbxpzvxkmxr50de82wlt8oio9j8a0ezx.png"],
+    [key("Turli brendlar", "DS-K3B801BX-R/MPg(O-STD)"), "https://alti-group.ru/upload/iblock/aa8/xbxpzvxkmxr50de82wlt8oio9j8a0ezx.png"],
+    [key("ZKTeco", "ZKTeco CMP200 Remote Control Трехкнопочный беспроводной пульт"), "https://www.cyberpuerta.mx/img/product/XL/CP-ZKTECO-CMP200REMOTECONTROL-ef54ad.jpg"]
+  ]);
   for (const entry of entries) {
     const modelKey = key(entry.brand, entry.model);
     if (!byModel.has(modelKey)) byModel.set(modelKey, []);
@@ -107,6 +99,9 @@
   function resolve(brand, model, original = '') {
     const entry = byModel.get(key(brand, model))?.find(photo => original === photo.previousImage || original === photo.image);
     if (entry) return entry.image;
+    const direct = directProductPhotos.get(key(brand, model));
+    const directHost = typeof direct === 'string' ? direct.match(/^https:\/\/([^/]+)/i)?.[1]?.toLowerCase() : '';
+    if (!original && direct && directHost && directPhotoHosts.has(directHost)) return direct;
     if (normalize(brand) === 'dahua' && !original) return dahuaFallback(model);
     return original;
   }

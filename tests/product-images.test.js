@@ -74,6 +74,69 @@ test('official photos match exact model variants and preserve custom admin image
   assert.equal(resolve('EZVIZ', 'CS-H6C pro (5MP)', 'assets/ezviz/03.webp'), 'assets/ezviz/03.webp');
 });
 
+test('direct product photos match exact unresolved models and preserve custom images', () => {
+  const photos = [
+  [
+    "EZVIZ",
+    "CS-H8c G1 (8MP)",
+    "https://bestways.com/cdn/shop/files/2MP_HD_Video_P_45.png?v=1763914587"
+  ],
+  [
+    "EZVIZ",
+    "CS-HB8C/SP (4MP)",
+    "https://viethansecurity.com/media/product/12054_camera_pin_nang_luong_mat_troi_ezviz_cs_hb8c_sp_2k_4mp.jpg"
+  ],
+  [
+    "EZVIZ",
+    "CS-HB8C/SP (6MP)",
+    "https://newworld.co.za/cdn/shop/files/M2bieHd6L3AhbmSPpDA4NsAPmeU.jpg?v=1774087764"
+  ],
+  [
+    "EZVIZ",
+    "CS-DL50FVS (WBP,GR)",
+    "https://lcdn.altex.ro/media/catalog/product/d/l/dl50fvs_13_78b87212.jpg"
+  ],
+  [
+    "Turli brendlar",
+    "DS-UPS3000-R(O-STD)/EU/Uni(E)",
+    "https://assets.hikvision.com/prd/normal/all/image/m000177858/UCBL400_SQ162-2-%E6%95%88%E6%9E%9C%E5%9B%BE003-%E5%8F%B3%E5%89%8D%E4%BE%A7.png"
+  ],
+  [
+    "Mercusys",
+    "Mercusys Halo H60X(2-pack AX1500 WIFI 6)",
+    "https://static.mercusys.com/product-image/01_large20250417012824.jpg"
+  ],
+  [
+    "Turli brendlar",
+    "DS-K3B801BX-L/MPg(O-STD)",
+    "https://alti-group.ru/upload/iblock/aa8/xbxpzvxkmxr50de82wlt8oio9j8a0ezx.png"
+  ],
+  [
+    "Turli brendlar",
+    "DS-K3B801BX-M/MPg(O-STD)",
+    "https://alti-group.ru/upload/iblock/aa8/xbxpzvxkmxr50de82wlt8oio9j8a0ezx.png"
+  ],
+  [
+    "Turli brendlar",
+    "DS-K3B801BX-R/MPg(O-STD)",
+    "https://alti-group.ru/upload/iblock/aa8/xbxpzvxkmxr50de82wlt8oio9j8a0ezx.png"
+  ],
+  [
+    "ZKTeco",
+    "ZKTeco CMP200 Remote Control Трехкнопочный беспроводной пульт",
+    "https://www.cyberpuerta.mx/img/product/XL/CP-ZKTECO-CMP200REMOTECONTROL-ef54ad.jpg"
+  ]
+];
+  const allowedHosts = new Set(photos.map(([, , url]) => new URL(url).hostname));
+  for (const [brand, model, url] of photos) {
+    assert.equal(resolve(brand, model, ''), url);
+    assert.equal(resolve(brand, model, '/uploads/admin-choice.png'), '/uploads/admin-choice.png');
+    assert.equal(resolve(brand, model + ' (different model)', ''), '');
+    assert.equal(new URL(url).protocol, 'https:');
+    assert.ok(allowedHosts.has(new URL(url).hostname));
+  }
+});
+
 test('bundled official PNGs exist at their documented native dimensions', () => {
   for (const photo of sources.products) {
     const bytes = fs.readFileSync(new URL('../' + photo.image, import.meta.url));
