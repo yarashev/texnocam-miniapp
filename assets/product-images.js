@@ -53,7 +53,7 @@
   { "brand": "Tapo", "model": "Tapo C210P2 (3MP WIFI 360 2PCS)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C210%282-pack%29_normal_20240624092213x.png" },
   { "brand": "Tapo", "model": "Tapo C201 (2MP WIFI 360 Black)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C201_US_1.0_overview_1.%E3%80%82_normal_20241226062547t.png" }
   { "brand": "Tapo", "model": "Tapo C610 KIT (3MP WIFI 360 SOLAR)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C610_KIT_UN_1.0_Product_Images_01_normal_20250625082811j.png" },
-  { "brand": "Tapo", "model": "Tapo C520WS  (4MP WIFI 360 LAN)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C520WS_EU_2.0_overview_01_normal_20250307092722e.png" },
+  { "brand": "Tapo", "model": "Tapo C520WS (4MP WIFI 360 LAN)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C520WS_EU_2.0_overview_01_normal_20250307092722e.png" },
   { "brand": "Tapo", "model": "Tapo C510W (3MP WIFI 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C510W_EU_2.0_overview_01_normal_20250307092700u.png" },
   { "brand": "Tapo", "model": "Tapo C325WB  (4MP WIFI POE)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C325WB_EU_2.0_overview_01_normal_20241221061227k.png" },
   { "brand": "Tapo", "model": "Tapo C320WS  (4MP WIFI LAN)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C320WS_Tapo_C320WSP2_EU_2_normal_20231019030522r.png" },
