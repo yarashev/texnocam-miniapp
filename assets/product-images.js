@@ -75,6 +75,11 @@
   { "brand": "Tapo", "model": "Tapo C675D KIT (8MP WIFI 2-CAM Солнечный)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-line/Tapo-C675D-KIT_2000x2000-new_01_normal_20260416164001r.jpg" },
   { "brand": "TP-Link", "model": "Tp-Link ER605 (VPN‑Gateway)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-line/ER605_V2_VPN_Load_Balance_Router_01_normal_20211125084350a.jpg" },
   { "brand": "Mercusys", "model": "Mercusys Halo H27BE(3-pack BE3600 WIFI 7)", "previousImage": "", "image": "https://static.mercusys.com/product-image/Halo_H27BE_3-pack_EU_1.0_01_normal20250103015914.jpg" },
+  { "brand": "Mercusys", "model": "Mercusys MR80X (AX3000 WIFI 6)", "previousImage": "", "image": "https://static.mercusys.com/product-image/MR80X_EU_2.0_01_normal20220222075957.jpg" },
+  { "brand": "Mercusys", "model": "Mercusys ME30 (AC1200 WIFI 5)", "previousImage": "", "image": "https://static.mercusys.com/product-image/1_normal20201216011933.jpg" },
+  { "brand": "Mercusys", "model": "Mercusys MR60X (AX1500 WIFI 6)", "previousImage": "", "image": "https://static.mercusys.com/product-image/MR60X_EU_2.0_01_normal20230206012258.jpg" },
+  { "brand": "Mercusys", "model": "Mercusys ME50G (AC1900 WIFI 5)", "previousImage": "", "image": "https://static.mercusys.com/product-image/01_normal20221121011528.jpg" },
+  { "brand": "Mercusys", "model": "Mercusys Halo H60X(2-pack AX1500 WIFI 6)", "previousImage": "", "image": "https://static.mercusys.com/product-image/Halo_H60X_Overview_normal20250417011743.png" },
 ];
   // Dahua catalog was imported from the 2024 price list without image_path values.
   // Exact-model results take precedence; a model-family fallback keeps every imported product visual.
