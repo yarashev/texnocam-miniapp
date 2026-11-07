@@ -99,9 +99,9 @@
   function resolve(brand, model, original = '') {
     const entry = byModel.get(key(brand, model))?.find(photo => original === photo.previousImage || original === photo.image);
     if (entry) return entry.image;
-    const direct = !original && directProductPhotos.get(key(brand, model));
-    const directHost = direct?.match(/^https:\/\/([^/]+)/i)?.[1]?.toLowerCase();
-    if (direct && directHost && directPhotoHosts.has(directHost)) return direct;
+    const direct = directProductPhotos.get(key(brand, model));
+    const directHost = typeof direct === 'string' ? direct.match(/^https:\/\/([^/]+)/i)?.[1]?.toLowerCase() : '';
+    if (!original && direct && directHost && directPhotoHosts.has(directHost)) return direct;
     if (normalize(brand) === 'dahua' && !original) return dahuaFallback(model);
     return original;
   }
