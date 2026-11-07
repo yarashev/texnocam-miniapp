@@ -183,3 +183,22 @@ html{scrollbar-width:none;-ms-overflow-style:none}html::-webkit-scrollbar,body::
 #brandPickerButton, #brandPicker { display: none !important; }
 
 .customer-notifications-panel{margin-top:10px;display:grid;gap:8px}.customer-notifications-panel[hidden]{display:none}.customer-notification{background:#f7f9fd;border:1px solid #e5ebf5;border-radius:13px;padding:11px}.customer-notification.unread{border-color:#9dbaff;background:#f1f5ff}.notification-title{display:block;font-size:12px;color:#14213d}.notification-message{white-space:pre-line;font-size:12px;line-height:1.5;color:#52627b;margin:6px 0}.notification-meta{font-size:10px;color:#718096}.notification-empty,.notification-optin,.notification-error,.notification-loading{font-size:12px;line-height:1.5;padding:10px;border-radius:10px;background:#f3f6fb;color:#52627b;margin:0}.notification-error{color:#a52e3a;background:#fff1f2}.notification-read-button{border:0;background:#eaf0ff;color:#246bfd;padding:10px;border-radius:10px;font-weight:750;font-size:11px}
+
+/* Admin-managed YouTube recommendation carousel */
+.home-video-grid{display:block;position:relative;min-height:0}
+.home-video-card{display:none;width:100%;padding:0;text-align:left;font:inherit;cursor:pointer;animation:homeVideoIn .28s ease both}
+.home-video-card.is-active{display:block}
+.home-video-thumb{height:clamp(150px,48vw,220px);border-radius:13px}
+.home-video-thumb img{display:block}
+.home-video-category{display:inline-block!important;width:max-content;margin:9px 10px 0;padding:4px 8px;background:#eaf0ff;color:#2856aa;border-radius:7px;font-weight:800}
+.home-video-card b{padding:6px 10px 2px;font-size:13px}
+.home-video-description{padding:0 10px 12px;color:var(--muted);font-size:11px}
+@keyframes homeVideoIn{from{opacity:.55;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.home-video-dialog{border:0;border-radius:18px;padding:0;width:min(900px,calc(100% - 24px));max-width:900px;background:#101827;color:#fff;box-shadow:0 24px 90px #07142b70}
+.home-video-dialog::backdrop{background:#07142bd9;backdrop-filter:blur(4px)}
+.home-video-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px}
+.home-video-dialog-head strong{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.home-video-dialog-head button{flex:none;border:0;border-radius:10px;background:#ffffff20;color:#fff;width:36px;height:36px;font-size:24px}
+.home-video-frame{aspect-ratio:16/9;background:#000}
+.home-video-frame iframe{display:block;width:100%;height:100%;border:0}
+@media(prefers-reduced-motion:reduce){.home-video-card{animation:none}}
