@@ -44,6 +44,14 @@
     "previousImage": "assets/ezviz/08.webp",
     "image": "assets/official-products/cs-c6n-g1-8mp.png"
   }
+  { "brand": "Tapo", "model": "Tapo C120 (4MP WIFI )", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C120_EU_1.0_overview_01_normal_20250306073148g.png" },
+  { "brand": "Tapo", "model": "Tapo C225 (4MP WIFI 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C225_US_2.0_overview%400.5x_normal_20240117231339t.png" },
+  { "brand": "Tapo", "model": "Tapo C245D (3MP WIFI 2-CAM 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C245D_UN_1.0_Overview_normal_20251126053636j.png" },
+  { "brand": "Tapo", "model": "Tapo C246D (3MP WIFI 2-CAM 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C246D_UN_1.0_product_images_01_normal_20250519022854b.png" },
+  { "brand": "Tapo", "model": "Tapo C250 (8MP Wifi 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C250_US_1.0_overview_normal_20250908030256v.png" },
+  { "brand": "Tapo", "model": "Tapo C200C (2MP WIFI 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C200_EU_5.0_overview_1_pack_normal_20241226064227u.png" },
+  { "brand": "Tapo", "model": "Tapo C210P2 (3MP WIFI 360 2PCS)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C210%282-pack%29_normal_20240624092213x.png" },
+  { "brand": "Tapo", "model": "Tapo C201 (2MP WIFI 360 Black)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C201_US_1.0_overview_1.%E3%80%82_normal_20241226062547t.png" }
 ];
   // Dahua catalog was imported from the 2024 price list without image_path values.
   // Exact-model results take precedence; a model-family fallback keeps every imported product visual.
