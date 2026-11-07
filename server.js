@@ -91,7 +91,8 @@ async function normalizeHomeContent(input) {
     if (url.protocol !== "https:" || !["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtu.be"].includes(url.hostname)) throw new Error("Faqat YouTube havolasini kiriting");
     const videoId = url.hostname.includes("youtu.be") ? url.pathname.split("/").filter(Boolean)[0] : (url.searchParams.get("v") || url.pathname.match(/^\/(?:shorts|embed)\/([^/]+)/)?.[1]);
     if (!videoId || !/^[A-Za-z0-9_-]{6,20}$/.test(videoId)) throw new Error("YouTube video manzili noto‘g‘ri");
-    return { title: cleanText(item.title, 100), url: url.href, description: cleanText(item.description, 220), active: item.active !== false };
+    const category = ["CCTV", "Domofon", "ColorVu", "Boshqa"].includes(item.category) ? item.category : "Boshqa";
+    return { title: cleanText(item.title, 100), url: url.href, description: cleanText(item.description, 220), category, active: item.active !== false };
   }).filter(item => item.title && item.url);
   const news = (Array.isArray(input.news) ? input.news : []).slice(0, 8).map(item => ({ title: cleanText(item.title, 100), body: cleanText(item.body, 500), active: item.active !== false })).filter(item => item.title && item.body);
   return { contactPhone: input.contactPhone === undefined ? DEFAULT_HOME_CONTENT.contactPhone : normalizeContactPhone(input.contactPhone), hero: { eyebrow: cleanText(hero.eyebrow, 70), title: cleanText(hero.title, 120), description: cleanText(hero.description, 240), productId, buttonText: cleanText(hero.buttonText, 40) || "Kameralarni ko‘rish" }, videos, news };
