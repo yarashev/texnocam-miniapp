@@ -93,8 +93,9 @@ test('Telegram session, staff, workers, home content, uploads and restart use as
   assert.equal(otherOrders.status,200);assert.equal(otherOrders.value.orders.length,1);
   assert.equal(otherOrders.value.orders[0].order_number,'UC-TEST-CUSTOMER-2');
   assert.equal(otherOrders.value.orders.some(order=>order.order_number==='UC-TEST-CUSTOMER-1'),false);
-  const content={contactPhone:'+998 50 855 41 87',hero:{title:'Saved Hero',productId:1,buttonText:'Ochish'},news:[{title:'Saved',body:'News',active:true}],videos:[{title:'Video',url:'https://youtu.be/abcdefghijk',active:true}]};
+  const content={contactPhone:'+998 50 855 41 87',hero:{title:'Saved Hero',productId:1,buttonText:'Ochish'},news:[{title:'Saved',body:'News',active:true}],videos:[{title:'Video',url:'https://youtu.be/abcdefghijk',category:'ColorVu',active:true}]};
   assert.equal((await request('/api/home-content','PUT',content)).status,200);
+  assert.equal((await request('/api/home-content')).value.content.videos[0].category,'ColorVu');
   assert.equal((await request('/api/home-content')).value.content.contactPhone,'+998508554187');
   assert.equal((await request('/api/home-content','PUT',{...content,contactPhone:'javascript:alert(1)'})).status,400);
   assert.equal((await request('/api/home-content','PUT',{...content,contactPhone:'+998901234567'})).status,200);
