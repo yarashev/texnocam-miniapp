@@ -43,7 +43,7 @@
     "model": "CS-C6N G1 (8MP)",
     "previousImage": "assets/ezviz/08.webp",
     "image": "assets/official-products/cs-c6n-g1-8mp.png"
-  }
+  },
   { "brand": "Tapo", "model": "Tapo C120 (4MP WIFI )", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C120_EU_1.0_overview_01_normal_20250306073148g.png" },
   { "brand": "Tapo", "model": "Tapo C225 (4MP WIFI 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C225_US_2.0_overview%400.5x_normal_20240117231339t.png" },
   { "brand": "Tapo", "model": "Tapo C245D (3MP WIFI 2-CAM 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C245D_UN_1.0_Overview_normal_20251126053636j.png" },
