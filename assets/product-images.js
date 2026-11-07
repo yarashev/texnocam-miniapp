@@ -52,6 +52,19 @@
   { "brand": "Tapo", "model": "Tapo C200C (2MP WIFI 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C200_EU_5.0_overview_1_pack_normal_20241226064227u.png" },
   { "brand": "Tapo", "model": "Tapo C210P2 (3MP WIFI 360 2PCS)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C210%282-pack%29_normal_20240624092213x.png" },
   { "brand": "Tapo", "model": "Tapo C201 (2MP WIFI 360 Black)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C201_US_1.0_overview_1.%E3%80%82_normal_20241226062547t.png" }
+  { "brand": "Tapo", "model": "Tapo C610 KIT (3MP WIFI 360 SOLAR)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C610_KIT_UN_1.0_Product_Images_01_normal_20250625082811j.png" },
+  { "brand": "Tapo", "model": "Tapo C520WS  (4MP WIFI 360 LAN)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C520WS_EU_2.0_overview_01_normal_20250307092722e.png" },
+  { "brand": "Tapo", "model": "Tapo C510W (3MP WIFI 360)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C510W_EU_2.0_overview_01_normal_20250307092700u.png" },
+  { "brand": "Tapo", "model": "Tapo C325WB  (4MP WIFI POE)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C325WB_EU_2.0_overview_01_normal_20241221061227k.png" },
+  { "brand": "Tapo", "model": "Tapo C320WS  (4MP WIFI LAN)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C320WS_Tapo_C320WSP2_EU_2_normal_20231019030522r.png" },
+  { "brand": "Tapo", "model": "Tapo C310 (3MP WIFI LAN)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C310_EU_1_normal_20230712010611v.png" },
+  { "brand": "Tapo", "model": "Tapo C216 (3MP WIFI 360 Valli )", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C216_EU_1.0_overview_normal_20250401093841y.png" },
+  { "brand": "Tapo", "model": "Tapo C206 (2MP WIFI 360 Valli )", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C206_EU_1.0_overview_normal_20250321074953d.png" },
+  { "brand": "Tapo", "model": "Tapo C236 (5MP WIFI 360 Valli )", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_C236_EU_1.0_overview_normal_20250618013724r.png" },
+  { "brand": "Tapo", "model": "Tapo DL110 (Дверной замок Smart Wi-Fi)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_DL110_US_2.6_overview_compressed_normal_20250909065516o.png" },
+  { "brand": "Tapo", "model": "Tapo D210 ( 3MP DOMOFON)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_D210_EU_2.0_Overview_01_normal_20250922080132b.png" },
+  { "brand": "Tapo", "model": "Tapo D230S1 ( 5MP DOMOFON)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/D230_normal_20241101063325n.png" },
+  { "brand": "Tapo", "model": "Tapo A201 (SOLAR PANEL 5.2V  2.5W)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_A201_UN_2.20_Overview_01_normal_20250717061053i.png" },
 ];
   // Dahua catalog was imported from the 2024 price list without image_path values.
   // Exact-model results take precedence; a model-family fallback keeps every imported product visual.
