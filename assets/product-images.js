@@ -69,6 +69,12 @@
   { "brand": "Tapo", "model": "Tapo C615G KIT (3MP 4G 360 SOLAR)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-line/Tapo_C615G_KIT_EU_1.0_overview_01-3_normal_20250716092755m.jpg" },
   { "brand": "Tapo", "model": "Tapo C675D KIT (8MP WIFI 2-CAM Солнечный)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-line/Tapo-C675D-KIT_2000x2000-new_01_normal_20260416164001r.jpg" },
   { "brand": "Tapo", "model": "Tapo A201 (SOLAR PANEL 5.2V  2.5W)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-header/Tapo_A201_UN_2.20_Overview_01_normal_20250717061053i.png" },
+  { "brand": "Tapo", "model": "Tapo C425 (4MP WIFI BATTERY)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-line/01_normal_20231027074200e.jpg" },
+  { "brand": "Tapo", "model": "Tapo C410 KIT (3MP WIFI SOLAR)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-line/1-pack_normal_20240328085758m.png" },
+  { "brand": "Tapo", "model": "Tapo C615G KIT (3MP 4G 360 SOLAR)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-line/Tapo_C615G_KIT_EU_1.0_overview_01-3_normal_20250716092755m.jpg" },
+  { "brand": "Tapo", "model": "Tapo C675D KIT (8MP WIFI 2-CAM Солнечный)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-line/Tapo-C675D-KIT_2000x2000-new_01_normal_20260416164001r.jpg" },
+  { "brand": "TP-Link", "model": "Tp-Link ER605 (VPN‑Gateway)", "previousImage": "", "image": "https://static.tp-link.com/upload/image-line/ER605_V2_VPN_Load_Balance_Router_01_normal_20211125084350a.jpg" },
+  { "brand": "Mercusys", "model": "Mercusys Halo H27BE(3-pack BE3600 WIFI 7)", "previousImage": "", "image": "https://static.mercusys.com/product-image/Halo_H27BE_3-pack_EU_1.0_01_normal20250103015914.jpg" },
 ];
   // Dahua catalog was imported from the 2024 price list without image_path values.
   // Exact-model results take precedence; a model-family fallback keeps every imported product visual.
