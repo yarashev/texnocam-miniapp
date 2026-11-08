@@ -84,8 +84,13 @@ function normalizeContactPhone(value) {
 async function normalizeHomeContent(input) {
   if (!input || typeof input !== "object") throw new Error("Kontent formati noto‘g‘ri");
   const hero = input.hero || {};
-  const productId = Number(hero.productId);
-  if (!Number.isSafeInteger(productId) || !await db.get("SELECT 1 FROM products WHERE id = ? AND is_active = 1 AND deleted_at IS NULL", productId)) throw new Error("Promo uchun faol mahsulot tanlang");
+  const requestedProductId = Number(hero.productId);
+  const requestedProduct = Number.isSafeInteger(requestedProductId)
+    ? await db.get("SELECT id FROM products WHERE id = ? AND is_active = 1 AND deleted_at IS NULL", requestedProductId)
+    : null;
+  const fallbackProduct = requestedProduct || await db.get("SELECT id FROM products WHERE is_active = 1 AND deleted_at IS NULL ORDER BY id LIMIT 1");
+  // An outdated/inactive promo product must not discard otherwise valid videos/news.
+  const productId = fallbackProduct?.id ?? DEFAULT_HOME_CONTENT.hero.productId;
   const videos = (Array.isArray(input.videos) ? input.videos : []).slice(0, 6).map(item => {
     let url; try { url = new URL(String(item.url || "")); } catch { throw new Error("YouTube havolasini tekshiring"); }
     if (url.protocol !== "https:" || !["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtu.be"].includes(url.hostname)) throw new Error("Faqat YouTube havolasini kiriting");
@@ -732,6 +737,10 @@ async function handleRequest(req, res) {
     if (pathname === "/api/products") {
        try {
          const products = await listPublicProducts();
+         if (!products.length) {
+           const catalogState = await db.get("SELECT COUNT(*) AS total, SUM(CASE WHEN is_active = 1 AND deleted_at IS NULL THEN 1 ELSE 0 END) AS active FROM products");
+           console.error("Public catalog returned zero products:", JSON.stringify(catalogState));
+         }
          let categories;
          try { categories = await listPublicCategories(); }
          catch (error) {
