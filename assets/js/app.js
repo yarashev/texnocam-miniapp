@@ -110,7 +110,7 @@ async function loadServerCatalog(){
     if(!response.ok)throw new Error('Katalogni yuklab bo‘lmadi');
     const payload=await response.json();
     if(!Array.isArray(payload.products))throw new Error('Katalog formati noto‘g‘ri');
-    items=payload.products.map(p=>({id:p.id,model:p.model||'',cat:UzCamCategoryConfig.canonical(p.category)||'Elektronika',name:p.name||p.model,spec:p.description||p.category||'',price:p.price_uzs,icon:productIcon(p),badge:'',image:window.UzCamProductImages.resolve(p.brand,p.model||p.name,p.image||''),brand:p.brand||'Boshqa',source:p.brand||'',views:Number(p.views)||0,cartAdds:Number(p.cart_adds)||0,soldQty:Number(p.sold_qty)||0}));
+    items=payload.products.map(p=>({id:p.id,model:p.model||'',cat:window.UzCamCategoryConfig?.canonical?.(p.category)||p.category||'Elektronika',name:p.name||p.model,spec:p.description||p.category||'',price:p.price_uzs,icon:productIcon(p),badge:'',image:window.UzCamProductImages?.resolve?.(p.brand,p.model||p.name,p.image||'')||p.image||'',brand:p.brand||'Boshqa',source:p.brand||'',views:Number(p.views)||0,cartAdds:Number(p.cart_adds)||0,soldQty:Number(p.sold_qty)||0}));
     if(Array.isArray(payload.categories))categories=['Barchasi',...new Set(payload.categories.map(name=>UzCamCategoryConfig.canonical(name)))];
     if(!categories.includes(activeCategory))activeCategory='Barchasi';
     cart=Object.fromEntries(Object.entries(cart).filter(([id])=>items.some(p=>p.id===Number(id))));
