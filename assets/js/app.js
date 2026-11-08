@@ -69,11 +69,16 @@ function updateCameraCarousel(){
 }
 function updateEzvizPromoPrice(){
   const previousId=promoSlides[promoIndex]?.product?.id;
-  const primary=items.find(p=>Number(p.id)===Number(homeContent?.hero?.productId))||items.find(p=>p.brand==='EZVIZ'&&p.cat==='Kameralar');
+  const configuredPrimary=items.find(p=>Number(p.id)===Number(homeContent?.hero?.productId));
+  const isCamera=p=>p.cat==='Kameralar'&&Number(p.price)>0;
+  const byImageThenPrice=(a,b)=>Number(Boolean(b.image))-Number(Boolean(a.image))||Number(a.price)-Number(b.price);
+  const primary=configuredPrimary||items.filter(p=>isCamera(p)&&String(p.brand||'').toLowerCase()==='ezviz').sort(byImageThenPrice)[0]||items.filter(isCamera).sort(byImageThenPrice)[0]||items.filter(p=>Number(p.price)>0).sort(byImageThenPrice)[0];
   const slides=[];
-  if(primary)slides.push({product:primary,eyebrow:homeContent.hero.eyebrow,title:homeContent.hero.title,description:homeContent.hero.description,buttonText:homeContent.hero.buttonText});
-  const cameraWithImage=p=>p.cat==='Kameralar'&&p.image&&Number(p.price)>0;
-  const candidates=[items.find(p=>cameraWithImage(p)&&p.brand==='EZVIZ'&&p.id!==primary?.id&&/h6c/i.test(p.name)),...['Hikvision','Dahua','NeoCam'].map(brand=>items.filter(p=>cameraWithImage(p)&&p.brand.toLowerCase()===brand.toLowerCase()).sort((a,b)=>a.price-b.price)[0])];
+  if(primary){
+    const custom=Boolean(configuredPrimary);
+    slides.push({product:primary,eyebrow:custom?homeContent.hero.eyebrow:(primary.brand+' · videokuzatuv'),title:custom?homeContent.hero.title:(primary.cat==='Kameralar'?(primary.brand+' kameralari'):'UzCam tavsiya qilmoqda'),description:custom?homeContent.hero.description:(primary.name||primary.model),buttonText:custom?homeContent.hero.buttonText:'Katalogdan ko‘rish'});
+  }
+  const candidates=['EZVIZ','Hikvision','Dahua','NeoCam'].map(brand=>items.filter(p=>isCamera(p)&&String(p.brand||'').toLowerCase()===brand.toLowerCase()&&p.id!==primary?.id).sort(byImageThenPrice)[0]);
   for(const p of candidates){if(!p||slides.some(slide=>slide.product.id===p.id))continue;slides.push({product:p,eyebrow:p.brand+' · videokuzatuv',title:p.brand==='EZVIZ'?'Uy uchun EZVIZ kameralari':p.brand==='Hikvision'?'Do‘kon uchun Hikvision':p.brand+' kameralarini ko‘ring',description:p.name,buttonText:'Katalogdan ko‘rish'})}
   promoSlides=slides;promoIndex=Math.max(0,slides.findIndex(slide=>slide.product.id===previousId));
   const track=document.querySelector('#promoTrack'),dots=document.querySelector('#promoDots');track.replaceChildren();dots.replaceChildren();
@@ -87,7 +92,7 @@ promoTrack.addEventListener('keydown',event=>{if(event.target!==promoTrack)retur
 document.querySelector('#promoPrev').onclick=()=>goToPromo(promoIndex-1,true);document.querySelector('#promoNext').onclick=()=>goToPromo(promoIndex+1,true);document.querySelector('#promoPause').onclick=()=>{promoPaused=!promoPaused;syncPromoDots();startPromoTimer()};
 promoCarousel.addEventListener('mouseenter',()=>{promoHovered=true;stopPromoTimer()});promoCarousel.addEventListener('mouseleave',()=>{promoHovered=false;startPromoTimer()});promoCarousel.addEventListener('focusin',()=>{promoFocused=true;stopPromoTimer()});promoCarousel.addEventListener('focusout',()=>{promoFocused=promoCarousel.contains(document.activeElement);if(!promoFocused)startPromoTimer()});
 promoTrack.addEventListener('pointerdown',()=>{promoPointerDown=true;stopPromoTimer()},{passive:true});window.addEventListener('pointerup',()=>{if(promoPointerDown){promoPointerDown=false;startPromoTimer()}});window.addEventListener('pointercancel',()=>{promoPointerDown=false;startPromoTimer()});document.addEventListener('visibilitychange',startPromoTimer);promoReducedMotion.addEventListener('change',startPromoTimer);window.addEventListener('resize',()=>{promoTrack.scrollTo({left:promoIndex*promoTrack.clientWidth,behavior:'instant'})});
-function renderHomeContent(content){if(!content||!content.hero)return;homeContent=content;window.UzCamCatalogControls?.setPhone(content.contactPhone);updateEzvizPromoPrice();const videos=(content.videos||[]).filter(v=>v.active);const videoSection=document.querySelector('#homeVideosSection'),videoHost=document.querySelector('#homeVideos');videoHost.replaceChildren();videos.forEach(video=>{let parsed;try{parsed=new URL(video.url)}catch{return}const id=parsed.hostname.includes('youtu.be')?parsed.pathname.split('/').filter(Boolean)[0]:parsed.searchParams.get('v')||parsed.pathname.match(/^\/(?:shorts|embed)\/([^/]+)/)?.[1];if(!id||!/^[A-Za-z0-9_-]{6,20}$/.test(id))return;const card=document.createElement('a');card.className='home-video-card';card.href='https://www.youtube.com/watch?v='+encodeURIComponent(id);card.target='_blank';card.rel='noopener noreferrer';const thumb=document.createElement('div');thumb.className='home-video-thumb';const img=document.createElement('img');img.loading='lazy';img.src='https://img.youtube.com/vi/'+id+'/hqdefault.jpg';img.alt='';thumb.append(img);const play=document.createElement('span');play.textContent='▶';thumb.append(play);const title=document.createElement('b');title.textContent=video.title||'Video tavsiya';const description=document.createElement('small');description.textContent=video.description||'YouTube’da ko‘rish';card.append(thumb,title,description);videoHost.append(card)});videoSection.hidden=videoHost.children.length===0;const news=(content.news||[]).filter(n=>n.active);const newsSection=document.querySelector('#homeNewsSection'),newsHost=document.querySelector('#homeNews');newsHost.replaceChildren();news.forEach(item=>{const card=document.createElement('article');card.className='home-news-card';const title=document.createElement('b');title.textContent=item.title;const body=document.createElement('p');body.textContent=item.body;card.append(title,body);newsHost.append(card)});newsSection.hidden=news.length===0}async function loadHomeContent(){try{const response=await fetch('/api/home-content',{cache:'no-store'});if(response.ok){const result=await response.json();renderHomeContent(result.content)}}catch{}}
+function renderHomeContent(content){if(!content||typeof content!=='object')return;homeContent={...homeContent,...content,hero:{...homeContent.hero,...(content.hero||{})}};window.UzCamCatalogControls?.setPhone(content.contactPhone);updateEzvizPromoPrice();const videos=(content.videos||[]).filter(v=>v.active);const videoSection=document.querySelector('#homeVideosSection'),videoHost=document.querySelector('#homeVideos');videoHost.replaceChildren();videos.forEach(video=>{let parsed;try{parsed=new URL(video.url)}catch{return}const id=parsed.hostname.includes('youtu.be')?parsed.pathname.split('/').filter(Boolean)[0]:parsed.searchParams.get('v')||parsed.pathname.match(/^\/(?:shorts|embed)\/([^/]+)/)?.[1];if(!id||!/^[A-Za-z0-9_-]{6,20}$/.test(id))return;const card=document.createElement('a');card.className='home-video-card';card.href='https://www.youtube.com/watch?v='+encodeURIComponent(id);card.target='_blank';card.rel='noopener noreferrer';const thumb=document.createElement('div');thumb.className='home-video-thumb';const img=document.createElement('img');img.loading='lazy';img.src='https://img.youtube.com/vi/'+id+'/hqdefault.jpg';img.alt='';thumb.append(img);const play=document.createElement('span');play.textContent='▶';thumb.append(play);const title=document.createElement('b');title.textContent=video.title||'Video tavsiya';const description=document.createElement('small');description.textContent=video.description||'YouTube’da ko‘rish';card.append(thumb,title,description);videoHost.append(card)});videoSection.hidden=videoHost.children.length===0;const news=(content.news||[]).filter(n=>n.active);const newsSection=document.querySelector('#homeNewsSection'),newsHost=document.querySelector('#homeNews');newsHost.replaceChildren();news.forEach(item=>{const card=document.createElement('article');card.className='home-news-card';const title=document.createElement('b');title.textContent=item.title;const body=document.createElement('p');body.textContent=item.body;card.append(title,body);newsHost.append(card)});newsSection.hidden=news.length===0}async function loadHomeContent(){try{const response=await fetch('/api/home-content',{cache:'no-store'});if(response.ok){const result=await response.json();renderHomeContent(result.content)}}catch{}}
 updateEzvizPromoPrice();updateCameraCarousel();loadHomeContent();
 loadWorkers();
 const workerSection=document.querySelector('#workers'),appShell=document.querySelector('.app'),workerTab=document.querySelector('#bottomWorkers');
@@ -110,11 +115,20 @@ async function loadServerCatalog(){
     if(!response.ok)throw new Error('Katalogni yuklab bo‘lmadi');
     const payload=await response.json();
     if(!Array.isArray(payload.products))throw new Error('Katalog formati noto‘g‘ri');
-    items=payload.products.map(p=>({id:p.id,model:p.model||'',cat:window.UzCamCategoryConfig?.canonical?.(p.category)||p.category||'Elektronika',name:p.name||p.model,spec:p.description||p.category||'',price:p.price_uzs,icon:productIcon(p),badge:'',image:window.UzCamProductImages?.resolve?.(p.brand,p.model||p.name,p.image||'')||p.image||'',brand:p.brand||'Boshqa',source:p.brand||'',views:Number(p.views)||0,cartAdds:Number(p.cart_adds)||0,soldQty:Number(p.sold_qty)||0}));
-    if(Array.isArray(payload.categories))categories=['Barchasi',...new Set(payload.categories.map(name=>UzCamCategoryConfig.canonical(name)))];
+    if(payload.products.length===0)throw new Error('Server katalogi bo‘sh qaytdi');
+    items=payload.products.map(p=>({id:p.id,model:p.model||'',cat:window.UzCamCategoryConfig?.canonical?.(p.category)||p.category||'Elektronika',name:p.name||p.model,spec:p.description||p.category||'',price:Number(p.price_uzs)||0,icon:productIcon(p),badge:'',image:window.UzCamProductImages?.resolve?.(p.brand,p.model||p.name,p.image||'')||p.image||'',brand:p.brand||'Boshqa',source:p.brand||'',views:Number(p.views)||0,cartAdds:Number(p.cart_adds)||0,soldQty:Number(p.sold_qty)||0}));
+    if(Array.isArray(payload.categories))categories=['Barchasi',...new Set(payload.categories.map(name=>window.UzCamCategoryConfig?.canonical?.(name)||name))];
     if(!categories.includes(activeCategory))activeCategory='Barchasi';
     cart=Object.fromEntries(Object.entries(cart).filter(([id])=>items.some(p=>p.id===Number(id))));
+    if(!location.hash.startsWith('#catalog-section-'))window.UzCamBrandCatalog?.clear?.();
     renderCats();renderBrands();renderProducts();updateCart();updateEzvizPromoPrice();updateCameraCarousel();
+    const productHost=document.querySelector('#products');
+    if(items.length&&!productHost.querySelector('.product')){
+      activeCategory='Barchasi';activeBrand='Barcha brendlar';priceTier='all';visibleLimit=40;
+      document.querySelector('#brandFilter').value=activeBrand;document.querySelector('#priceFilter').value=priceTier;document.querySelector('#search').value='';
+      window.UzCamBrandCatalog?.clear?.();document.querySelector('.app')?.classList.remove('catalog-category-mode','catalog-products-mode');
+      renderCats();renderBrands();renderProducts();
+    }
   } catch (error) {
      if(location.protocol!=='file:'){
        console.error('Catalog load failed:',error);
@@ -125,5 +139,5 @@ async function loadServerCatalog(){
      }
    }
 }
-loadServerCatalog();
+if(document.readyState==='complete')loadServerCatalog();else window.addEventListener('load',()=>loadServerCatalog(),{once:true});
 if(window.Telegram?.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand();document.documentElement.style.setProperty('--blue','#059669')}
