@@ -68,21 +68,31 @@ export async function initializePostgres(database, options = {}) {
   const catalog=options.catalog ?? JSON.parse(fs.readFileSync(new URL('./catalog.json',import.meta.url),'utf8'));
   await database.transaction(async () => {
     await database.get('SELECT pg_advisory_xact_lock(8256301)');
-    if (await database.get("SELECT 1 FROM settings WHERE key='catalog_initialized'")) return;
-    if (!(await database.get('SELECT 1 FROM products LIMIT 1'))) {
-      for (const category of new Set(catalog.products.map(item=>item.category))) await database.run('INSERT INTO categories(name) VALUES (?) ON CONFLICT (name) DO NOTHING',category);
-      const categories=new Map((await database.all('SELECT id,name FROM categories')).map(row=>[row.name,row.id]));
-      for(let start=0;start<catalog.products.length;start+=100) {
-        const chunk=catalog.products.slice(start,start+100), params=[];
-        for(const p of chunk) params.push(p.id,p.model,p.name,p.brand,categories.get(p.category),p.description||'',p.image||'',p.source_price??null,p.source_currency??null,p.rate_used??null,p.sale_price_uzs);
-        await database.run('INSERT INTO products(id,model,name,brand,category_id,description,image_path,source_price,source_currency,rate_used,sale_price_uzs) VALUES '+chunk.map(()=>'(?,?,?,?,?,?,?,?,?,?,?)').join(',')+' ON CONFLICT DO NOTHING',...params);
-      }
-      if(catalog.exchange_rate) {
-        const rate=catalog.exchange_rate;
-        await database.run('INSERT INTO exchange_rates(currency,rate_to_uzs,effective_date,source) VALUES (?,?,?,?) ON CONFLICT DO NOTHING',rate.currency,rate.rate_to_uzs,rate.effective_date,rate.source);
-      }
+    const initialized = await database.get("SELECT 1 FROM settings WHERE key='catalog_initialized'");
+    const existingProduct = await database.get('SELECT 1 FROM products LIMIT 1');
+
+    // A previous deployment may have written the marker before products were imported.
+    // Seed only a physically empty table; never overwrite an existing catalog or
+    // reactivate products intentionally hidden by an administrator.
+    if (existingProduct) {
+      if (!initialized) await database.run("INSERT INTO settings(key,value) VALUES ('catalog_initialized','true') ON CONFLICT (key) DO NOTHING");
+      return;
+    }
+
+    for (const category of new Set(catalog.products.map(item=>item.category))) {
+      await database.run('INSERT INTO categories(name) VALUES (?) ON CONFLICT (name) DO NOTHING',category);
+    }
+    const categories=new Map((await database.all('SELECT id,name FROM categories')).map(row=>[row.name,row.id]));
+    for(let start=0;start<catalog.products.length;start+=100) {
+      const chunk=catalog.products.slice(start,start+100), params=[];
+      for(const p of chunk) params.push(p.id,p.model,p.name,p.brand,categories.get(p.category),p.description||'',p.image||'',p.source_price??null,p.source_currency??null,p.rate_used??null,p.sale_price_uzs);
+      await database.run('INSERT INTO products(id,model,name,brand,category_id,description,image_path,source_price,source_currency,rate_used,sale_price_uzs) VALUES '+chunk.map(()=>' (?,?,?,?,?,?,?,?,?,?,?)'.trim()).join(',')+' ON CONFLICT DO NOTHING',...params);
+    }
+    if(catalog.exchange_rate) {
+      const rate=catalog.exchange_rate;
+      await database.run('INSERT INTO exchange_rates(currency,rate_to_uzs,effective_date,source) VALUES (?,?,?,?) ON CONFLICT DO NOTHING',rate.currency,rate.rate_to_uzs,rate.effective_date,rate.source);
     }
     await resetSequences(database);
-    await database.run("INSERT INTO settings(key,value) VALUES ('catalog_initialized','true') ON CONFLICT (key) DO NOTHING");
+    await database.run("INSERT INTO settings(key,value) VALUES ('catalog_initialized','true') ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value");
   });
 }
