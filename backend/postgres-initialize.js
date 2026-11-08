@@ -68,17 +68,11 @@ export async function initializePostgres(database, options = {}) {
   const catalog=options.catalog ?? JSON.parse(fs.readFileSync(new URL('./catalog.json',import.meta.url),'utf8'));
   await database.transaction(async () => {
     await database.get('SELECT pg_advisory_xact_lock(8256301)');
-    const initialized = await database.get("SELECT 1 FROM settings WHERE key='catalog_initialized'");
-    const existingProduct = await database.get('SELECT 1 FROM products LIMIT 1');
-
-    // A previous deployment may have written the marker before products were imported.
-    // Seed only a physically empty table; never overwrite an existing catalog or
-    // reactivate products intentionally hidden by an administrator.
-    if (existingProduct) {
-      if (!initialized) await database.run("INSERT INTO settings(key,value) VALUES ('catalog_initialized','true') ON CONFLICT (key) DO NOTHING");
-      return;
-    }
-
+    // Reconcile the GitHub catalog additively on every startup. The old
+    // "any product exists" guard could leave a partially imported database
+    // permanently missing most of the source catalog.
+    // ON CONFLICT DO NOTHING preserves existing product rows, prices, images,
+    // admin visibility choices, and any customer/order references.
     for (const category of new Set(catalog.products.map(item=>item.category))) {
       await database.run('INSERT INTO categories(name) VALUES (?) ON CONFLICT (name) DO NOTHING',category);
     }

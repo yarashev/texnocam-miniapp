@@ -733,7 +733,12 @@ async function handleRequest(req, res) {
       } catch { res.writeHead(502, { 'Cache-Control': 'no-store' }).end('Image source unavailable'); }
       return;
     }
-    if (pathname === "/api/health") { await db.get("SELECT 1 AS ready"); sendJson(res,200,{status:"ok",database:"connected",databaseEngine:db.kind,imageStorage:imageStorageMode(),backendStage:"catalog-management"}); return; }
+    if (pathname === "/api/health") {
+       await db.get("SELECT 1 AS ready");
+       const catalogStatus = await db.get("SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE is_active = 1 AND deleted_at IS NULL) AS active, COUNT(*) FILTER (WHERE deleted_at IS NOT NULL) AS deleted FROM products");
+       sendJson(res,200,{status:"ok",database:"connected",databaseEngine:db.kind,imageStorage:imageStorageMode(),backendStage:"catalog-management",catalog:{total:Number(catalogStatus.total)||0,active:Number(catalogStatus.active)||0,deleted:Number(catalogStatus.deleted)||0}});
+       return;
+     }
     if (pathname === "/api/products") {
        try {
          const products = await listPublicProducts();
