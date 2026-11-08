@@ -729,7 +729,22 @@ async function handleRequest(req, res) {
       return;
     }
     if (pathname === "/api/health") { await db.get("SELECT 1 AS ready"); sendJson(res,200,{status:"ok",database:"connected",databaseEngine:db.kind,imageStorage:imageStorageMode(),backendStage:"catalog-management"}); return; }
-    if (pathname === "/api/products") { try { sendJson(res, 200, { products: await listPublicProducts(), categories: await listPublicCategories() }); } catch { sendJson(res, 500, { error: "Catalog unavailable" }); } return; }
+    if (pathname === "/api/products") {
+       try {
+         const products = await listPublicProducts();
+         let categories;
+         try { categories = await listPublicCategories(); }
+         catch (error) {
+           console.error("Public catalog categories unavailable; deriving from products:", error.message);
+           categories = [...new Set(products.map(product => product.category).filter(Boolean))].sort();
+         }
+         sendJson(res, 200, { products, categories });
+       } catch (error) {
+         console.error("Public catalog request failed:", error.message);
+         sendJson(res, 500, { error: "Catalog unavailable" });
+       }
+       return;
+     }
     sendJson(res, 404, { error: "API route not found" }); return;
   }
 

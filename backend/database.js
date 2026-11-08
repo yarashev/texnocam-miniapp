@@ -44,13 +44,39 @@ await normalizeProductCategories(db);
 export const listPublicCategories=()=>listCatalogCategories(db);
 
 export async function listPublicProducts() {
-  return db.all(`SELECT p.id, p.model, p.name, p.brand, c.name AS category,
+  // Keep the storefront catalog independent from optional analytics tables.
+  // A missing analytics migration must never make every product disappear.
+  const products = await db.all(`SELECT p.id, p.model, p.name, p.brand, c.name AS category,
     p.description, p.image_path AS image, p.sale_price_uzs AS price_uzs,
-    COALESCE(v.views, 0) AS views, COALESCE(a.cart_adds, 0) AS cart_adds,
-    COALESCE(s.sold_qty, 0) AS sold_qty
+    0 AS views, 0 AS cart_adds, 0 AS sold_qty
     FROM products p LEFT JOIN categories c ON c.id = p.category_id
-    LEFT JOIN (SELECT entity_id, COUNT(*) AS views FROM audit_log WHERE entity_type = 'analytics' AND action = 'product_view' GROUP BY entity_id) v ON v.entity_id = CAST(p.id AS TEXT)
-    LEFT JOIN (SELECT entity_id, COUNT(*) AS cart_adds FROM audit_log WHERE entity_type = 'analytics' AND action = 'add_to_cart' GROUP BY entity_id) a ON a.entity_id = CAST(p.id AS TEXT)
-    LEFT JOIN (SELECT oi.product_id, SUM(oi.quantity) AS sold_qty FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE o.payment_status = 'confirmed' GROUP BY oi.product_id) s ON s.product_id = p.id
     WHERE p.is_active = 1 AND p.deleted_at IS NULL ORDER BY p.brand, p.model`);
+
+  const byId = new Map(products.map(product => [String(product.id), product]));
+  try {
+    const events = await db.all(`SELECT entity_id, action, COUNT(*) AS total
+      FROM audit_log
+      WHERE entity_type = 'analytics' AND action IN ('product_view', 'add_to_cart')
+      GROUP BY entity_id, action`);
+    for (const event of events) {
+      const product = byId.get(String(event.entity_id));
+      if (!product) continue;
+      if (event.action === 'product_view') product.views = Number(event.total) || 0;
+      if (event.action === 'add_to_cart') product.cart_adds = Number(event.total) || 0;
+    }
+  } catch (error) {
+    console.error('Catalog analytics unavailable; products remain available:', error.message);
+  }
+  try {
+    const sales = await db.all(`SELECT oi.product_id, SUM(oi.quantity) AS sold_qty
+      FROM order_items oi JOIN orders o ON o.id = oi.order_id
+      WHERE o.payment_status = 'confirmed' GROUP BY oi.product_id`);
+    for (const sale of sales) {
+      const product = byId.get(String(sale.product_id));
+      if (product) product.sold_qty = Number(sale.sold_qty) || 0;
+    }
+  } catch (error) {
+    console.error('Catalog sales metrics unavailable; products remain available:', error.message);
+  }
+  return products;
 }
