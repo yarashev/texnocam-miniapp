@@ -139,5 +139,5 @@ async function loadServerCatalog(){
      }
    }
 }
-if(document.readyState==='complete')loadServerCatalog();else window.addEventListener('load',()=>loadServerCatalog(),{once:true});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadServerCatalog,{once:true});else loadServerCatalog();
 if(window.Telegram?.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand();document.documentElement.style.setProperty('--blue','#059669')}
