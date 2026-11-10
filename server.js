@@ -391,11 +391,13 @@ async function handleRequest(req, res) {
         const profile = normalizeWorkerProfile(body);
         const fullName = cleanText(body.fullName, 100);
         if (!fullName) { sendJson(res, 400, { error: "Ustaning ism-familiyasini kiriting" }); return; }
-        if (profile.isPublic && (!profile.phone || !profile.telegramUsername || !profile.photoUrl || !profile.servicePrices || !profile.serviceRegion || !(profile.serviceCity || profile.serviceDistrict))) { sendJson(res, 400, { error: "Ommaga chiqarish uchun telefon, hudud, shahar yoki tuman, Telegram username, rasm va xizmat narxlarini to‘ldiring" }); return; }
+        const requestedPublic = profile.isPublic;
+        const profileComplete = Boolean(profile.phone && profile.telegramUsername && profile.photoUrl && profile.servicePrices && profile.serviceRegion && (profile.serviceCity || profile.serviceDistrict));
+        if (requestedPublic && !profileComplete) profile.isPublic = false;
         await db.run("UPDATE users SET full_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", fullName, user.id);
         await saveWorkerProfile(user.id, profile);
-        await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'worker_profile', ?, ?)", actor.id, telegramId, JSON.stringify({ isPublic: profile.isPublic }));
-        sendJson(res, 200, { ok: true }); return;
+        await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'worker_profile', ?, ?)", actor.id, telegramId, JSON.stringify({ isPublic: profile.isPublic, autoHidden: requestedPublic && !profileComplete }));
+        sendJson(res, 200, { ok: true, isPublic: profile.isPublic, autoHidden: requestedPublic && !profileComplete }); return;
       } catch (error) { sendJson(res, 400, { error: error.message || "Usta profilini saqlab bo‘lmadi" }); return; }
     }
     if (pathname === "/api/staff") {
@@ -414,7 +416,9 @@ async function handleRequest(req, res) {
           if (!/^\d{5,20}$/.test(telegramId)) { sendJson(res, 400, { error: "Telegram ID faqat raqamlardan iborat bo‘lsin" }); return; }
           if (!["admin", "worker"].includes(role)) { sendJson(res, 400, { error: "Rolni Admin yoki Ishchi qilib tanlang" }); return; }
           const workerProfile = role === "worker" ? normalizeWorkerProfile(body) : null;
-          if (workerProfile && workerProfile.isPublic && (!fullName || !workerProfile.phone || !workerProfile.serviceRegion || !(workerProfile.serviceCity || workerProfile.serviceDistrict) || !workerProfile.telegramUsername || !workerProfile.photoUrl || !workerProfile.servicePrices)) { sendJson(res, 400, { error: "Ommaga chiqarish uchun ism-familiya, telefon, hudud, shahar yoki tuman, Telegram username, rasm va xizmat narxlarini to‘ldiring; aks holda profilni yashirin saqlang" }); return; }
+          const requestedPublic = Boolean(workerProfile?.isPublic);
+          const profileComplete = Boolean(fullName && workerProfile?.phone && workerProfile?.serviceRegion && (workerProfile?.serviceCity || workerProfile?.serviceDistrict) && workerProfile?.telegramUsername && workerProfile?.photoUrl && workerProfile?.servicePrices);
+          if (workerProfile && requestedPublic && !profileComplete) workerProfile.isPublic = false;
           if (telegramId === String(process.env.SUPER_ADMIN_TELEGRAM_ID || "")) { sendJson(res, 409, { error: "Super Admin akkauntini bu yerdan o‘zgartirib bo‘lmaydi" }); return; }
           const existingStaff = await db.get("SELECT role FROM users WHERE telegram_id = ?", telegramId);
           if (existingStaff && existingStaff.role === "super_admin") { sendJson(res, 409, { error: "Boshqa Super Admin akkauntini bu yerdan o‘zgartirib bo‘lmaydi" }); return; }
@@ -422,7 +426,7 @@ async function handleRequest(req, res) {
           const user = await db.get("SELECT id, telegram_id, username, full_name, role, is_active, created_at FROM users WHERE telegram_id = ?", telegramId);
           if (role === "worker") await saveWorkerProfile(user.id, workerProfile);
           await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'create_or_promote', 'staff', ?, ?)", actor.id, telegramId, JSON.stringify({ role }));
-          sendJson(res, 201, { staff: user }); return;
+          sendJson(res, 201, { staff: user, isPublic: workerProfile?.isPublic ?? false, autoHidden: requestedPublic && !profileComplete }); return;
         } catch (error) { sendJson(res, 400, { error: error.message || "Xodimni qo‘shib bo‘lmadi" }); return; }
       }
       res.writeHead(405).end(); return;
