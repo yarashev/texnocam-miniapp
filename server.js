@@ -412,10 +412,10 @@ async function handleRequest(req, res) {
         const requestedPublic = profile.isPublic;
         const profileComplete = Boolean(profile.phone && profile.telegramUsername && profile.photoUrl && profile.servicePrices && profile.serviceRegion && (profile.serviceCity || profile.serviceDistrict));
         if (requestedPublic && !profileComplete) profile.isPublic = false;
-        await db.run("UPDATE users SET full_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", fullName, user.id);
+        await db.run("UPDATE users SET telegram_id = ?, full_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", nextTelegramId, fullName, user.id);
         await saveWorkerProfile(user.id, profile);
         await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'worker_profile', ?, ?)", actor.id, telegramId, JSON.stringify({ isPublic: profile.isPublic, autoHidden: requestedPublic && !profileComplete }));
-        sendJson(res, 200, { ok: true, isPublic: profile.isPublic, autoHidden: requestedPublic && !profileComplete }); return;
+        const savedWorker = await db.get("SELECT telegram_id, full_name FROM users WHERE id = ?", user.id); sendJson(res, 200, { ok: true, worker: savedWorker, isPublic: profile.isPublic, autoHidden: requestedPublic && !profileComplete }); return;
       } catch (error) { sendJson(res, 400, { error: error.message || "Usta profilini saqlab bo‘lmadi" }); return; }
     }
     if (pathname === "/api/staff") {
