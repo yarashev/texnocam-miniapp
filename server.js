@@ -57,13 +57,12 @@ function cleanText(value, max) { return String(value || "").trim().slice(0, max)
 function normalizeWorkerProfile(input) {
   const experienceYears = Number(input.experienceYears || 0);
   if (!Number.isInteger(experienceYears) || experienceYears < 0 || experienceYears > 60) throw new Error("Ish stajini 0–60 yil oralig‘ida kiriting");
-  const phone = cleanText(input.phone, 24);
-  if (phone && !/^\+?[0-9 ()-]{7,24}$/.test(phone)) throw new Error("Telefon raqamini tekshiring");
+  const phone = String(input.phone||"").split(",").map(value=>cleanText(value,24)).filter(Boolean).slice(0,3); if (phone.some(value=>!/^\+?[0-9 ()-]{7,24}$/.test(value))) throw new Error("Telefon raqamini tekshiring"); const phoneValue=phone.join(",");
   const telegramUsername = cleanText(input.telegramUsername, 32).replace(/^@/, "");
   if (telegramUsername && !/^[A-Za-z0-9_]{5,32}$/.test(telegramUsername)) throw new Error("Telegram username noto‘g‘ri");
   const photoUrl = cleanText(input.photoUrl, 500);
   if (photoUrl) { const localUpload=/^\/uploads\/[a-f0-9-]+\.(png|jpg|webp)$/.test(photoUrl); if (!localUpload) { let photo; try { photo = new URL(photoUrl); } catch { throw new Error("Profil rasmi yuklanmadi. Kamera yoki galereyadan qayta tanlang"); } if (photo.protocol !== "https:") throw new Error("Profil rasmi yuklanmadi. Kamera yoki galereyadan qayta tanlang"); } }
-  return { experienceYears, phone, serviceRegion: cleanText(input.serviceRegion, 80), serviceCity: cleanText(input.serviceCity, 80), serviceDistrict: cleanText(input.serviceDistrict, 80), telegramUsername, photoUrl, servicePrices: cleanText(input.servicePrices, 1200), description: cleanText(input.description, 500), isPublic: input.isPublic !== false && input.isPublic !== 0 };
+  return { experienceYears, phone: phoneValue, serviceRegion: cleanText(input.serviceRegion, 80), serviceCity: cleanText(input.serviceCity, 80), serviceDistrict: cleanText(input.serviceDistrict, 80), telegramUsername, photoUrl, servicePrices: cleanText(input.servicePrices, 1200), description: cleanText(input.description, 500), isPublic: input.isPublic !== false && input.isPublic !== 0 };
 }
 async function saveWorkerProfile(userId, profile) {
   await db.transaction(async () => {
