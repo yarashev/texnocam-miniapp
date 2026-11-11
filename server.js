@@ -62,7 +62,7 @@ function normalizeWorkerProfile(input) {
   const telegramUsername = cleanText(input.telegramUsername, 32).replace(/^@/, "");
   if (telegramUsername && !/^[A-Za-z0-9_]{5,32}$/.test(telegramUsername)) throw new Error("Telegram username noto‘g‘ri");
   const photoUrl = cleanText(input.photoUrl, 500);
-  if (photoUrl) { let photo; try { photo = new URL(photoUrl); } catch { throw new Error("Rasm uchun HTTPS havolani kiriting"); } if (photo.protocol !== "https:") throw new Error("Rasm uchun HTTPS havolani kiriting"); }
+  if (photoUrl) { const localUpload=/^\/uploads\/[a-f0-9-]+\.(png|jpg|webp)$/.test(photoUrl); if (!localUpload) { let photo; try { photo = new URL(photoUrl); } catch { throw new Error("Profil rasmi yuklanmadi. Kamera yoki galereyadan qayta tanlang"); } if (photo.protocol !== "https:") throw new Error("Profil rasmi yuklanmadi. Kamera yoki galereyadan qayta tanlang"); } }
   return { experienceYears, phone, serviceRegion: cleanText(input.serviceRegion, 80), serviceCity: cleanText(input.serviceCity, 80), serviceDistrict: cleanText(input.serviceDistrict, 80), telegramUsername, photoUrl, servicePrices: cleanText(input.servicePrices, 1200), description: cleanText(input.description, 500), isPublic: input.isPublic !== false && input.isPublic !== 0 };
 }
 async function saveWorkerProfile(userId, profile) {
