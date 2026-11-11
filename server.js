@@ -406,7 +406,8 @@ async function handleRequest(req, res) {
         if (!user) { sendJson(res, 404, { error: "Ishchi topilmadi" }); return; }
         const body = await readJson(req);
         const profile = normalizeWorkerProfile(body);
-        const fullName = cleanText(body.fullName, 100);
+        const fullName = cleanText(body.fullName, 100), nextTelegramId = String(body.telegramId || telegramId).trim();
+        if (!/^\d{5,20}$/.test(nextTelegramId)) { sendJson(res, 400, { error: "Telegram ID faqat raqamlardan iborat bo‘lsin" }); return; }
         if (!fullName) { sendJson(res, 400, { error: "Ustaning ism-familiyasini kiriting" }); return; }
         const requestedPublic = profile.isPublic;
         const profileComplete = Boolean(profile.phone && profile.telegramUsername && profile.photoUrl && profile.servicePrices && profile.serviceRegion && (profile.serviceCity || profile.serviceDistrict));
