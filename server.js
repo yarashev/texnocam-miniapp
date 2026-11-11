@@ -418,6 +418,28 @@ async function handleRequest(req, res) {
         const savedWorker = await db.get("SELECT telegram_id, full_name FROM users WHERE id = ?", user.id); sendJson(res, 200, { ok: true, worker: savedWorker, isPublic: profile.isPublic, autoHidden: requestedPublic && !profileComplete }); return;
       } catch (error) { const duplicate=String(error?.message||"").includes("users_telegram_id_key"); sendJson(res, 400, { error: duplicate ? "Bu Telegram ID boshqa foydalanuvchiga biriktirilgan. Boshqa ID kiriting yoki o‘sha profilni tahrirlang." : (error.message || "Usta profilini saqlab bo‘lmadi") }); return; }
     }
+    const deleteWorkerMatch = pathname.match(/^\/api\/workers\/(\d{5,20})$/);
+    if (deleteWorkerMatch && req.method === "DELETE") {
+      const actor = await getAdminSession(req);
+      if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin ustani o‘chiradi" }); return; }
+      try {
+        const telegramId=deleteWorkerMatch[1];
+        await db.transaction(async()=>{
+          const worker=await db.get("SELECT u.id,wp.photo_url FROM users u LEFT JOIN worker_profiles wp ON wp.user_id=u.id WHERE u.telegram_id=? AND u.role='worker'",telegramId);
+          if(!worker)throw Object.assign(new Error("Usta topilmadi"),{statusCode:404});
+          await db.run("DELETE FROM work_claims WHERE worker_id=?",worker.id);
+          await db.run("DELETE FROM worker_ratings WHERE worker_id=?",worker.id);
+          await db.run("DELETE FROM customer_notifications WHERE user_id=?",worker.id);
+          await db.run("DELETE FROM telegram_notification_preferences WHERE user_id=?",worker.id);
+          await db.run("DELETE FROM audit_log WHERE actor_id=? OR (entity_type='worker_profile' AND entity_id=?)",worker.id,telegramId);
+          await db.run("DELETE FROM worker_profiles WHERE user_id=?",worker.id);
+          const image=String(worker.photo_url||"").match(/\/uploads\/([a-f0-9-]+\.(?:png|jpg|webp))/);
+          if(image)await db.run("DELETE FROM product_image_files WHERE name=?",image[1]);
+          await db.run("DELETE FROM users WHERE id=?",worker.id);
+        });
+        sendJson(res,200,{ok:true});return;
+      }catch(error){sendJson(res,error.statusCode||400,{error:error.message||"Ustani o‘chirib bo‘lmadi"});return;}
+    }
     if (pathname === "/api/staff") {
       const actor = await getAdminSession(req);
       if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin xodimlarni boshqaradi" }); return; }
