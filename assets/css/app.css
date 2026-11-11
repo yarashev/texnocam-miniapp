@@ -188,3 +188,6 @@ html{scrollbar-width:none;-ms-overflow-style:none}html::-webkit-scrollbar,body::
 
 /* Keep catalog search available only when the customer enters the catalog. */
 html:not(.catalog-search-open) .search-row,html:not(.catalog-search-open) .catalog-filter-status,html:not(.catalog-search-open) .search-hint{display:none!important}
+
+/* Give the home promotion breathing room below the header. */
+html:not(.catalog-search-open) .promo-carousel{margin-top:14px}
