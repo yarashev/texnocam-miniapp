@@ -147,7 +147,24 @@ function shortTelegramText(text, limit = 3900) {
   const value = String(text || "");
   return value.length > limit ? value.slice(0, limit - 24) + "\n…davomi katalogda" : value;
 }
+async function sendWorkerOffers(orderId) {
+  const order=await db.get("SELECT o.id,o.order_number,o.delivery_phone,o.delivery_address,u.full_name,u.username FROM orders o JOIN users u ON u.id=o.customer_id WHERE o.id=?",orderId);
+  if(!order)return;
+  const items=await db.all("SELECT p.name,oi.quantity FROM order_items oi JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?",orderId);
+  const workers=await db.all("SELECT u.id,u.telegram_id FROM users u JOIN telegram_notification_preferences n ON n.user_id=u.id AND n.enabled=1 WHERE u.role='worker' AND u.is_active=1");
+  const customerLink=order.username?'https://t.me/'+String(order.username).replace(/^@/,''):'Telegram username kiritilmagan';
+  const text="🔧 Yangi xizmat buyurtmasi\n\nBuyurtma: "+order.order_number+"\nMijoz: "+(order.full_name||'Mijoz')+"\nTelefon: "+order.delivery_phone+"\nTelegram: "+customerLink+"\nManzil: "+order.delivery_address+"\nMahsulotlar: "+items.map(i=>i.name+" × "+i.quantity).join(', ')+"\n\nBirinchi qabul qilgan ustaga biriktiriladi.";
+  for(const worker of workers){try{const sent=await telegramApi('sendMessage',{chat_id:worker.telegram_id,text,reply_markup:{inline_keyboard:[[ {text:'✅ Qabul qilish',callback_data:'claim:'+orderId} ]]}});await db.run("INSERT INTO audit_log(actor_id,action,entity_type,entity_id,details_json) VALUES (?, 'offer_sent', 'worker_offer', ?, ?)",worker.id,String(orderId),JSON.stringify({chatId:worker.telegram_id,messageId:sent.message_id}));}catch(error){console.error('Worker offer failed:',error.message)}}
+}
+async function finalizeWorkerClaims() {
+ const claims=await db.all("SELECT wc.order_id,wc.worker_id,o.order_number,o.customer_id,u.full_name,u.phone,u.username FROM work_claims wc JOIN orders o ON o.id=wc.order_id JOIN users u ON u.id=wc.worker_id WHERE wc.claimed_at <= ? AND NOT EXISTS (SELECT 1 FROM audit_log a WHERE a.entity_type='work_claim' AND a.entity_id=CAST(wc.order_id AS TEXT) AND a.action='finalized')",new Date(Date.now()-10*60*1000).toISOString().slice(0,19).replace('T',' '));
+ for(const claim of claims){await db.run("INSERT INTO audit_log(actor_id,action,entity_type,entity_id,details_json) VALUES (?, 'finalized', 'work_claim', ?, '{}')",claim.worker_id,String(claim.order_id));await enqueueCustomerNotification(db,{userId:claim.customer_id,orderId:claim.order_id,eventKey:'order:'+claim.order_id+':worker-final',title:'Usta biriktirildi',message:'👷 Ustangiz biriktirildi.\nUsta: '+claim.full_name+'\nTelefon: '+(claim.phone||'—')+(claim.username?'\nTelegram: @'+claim.username:'')+'\nTez orada usta siz bilan bog‘lanadi.'});const offers=await db.all("SELECT actor_id,details_json FROM audit_log WHERE entity_type='worker_offer' AND entity_id=? AND action='offer_sent'",String(claim.order_id));for(const offer of offers){if(offer.actor_id===claim.worker_id)continue;try{const meta=JSON.parse(offer.details_json);await telegramApi('editMessageReplyMarkup',{chat_id:meta.chatId,message_id:meta.messageId,reply_markup:{inline_keyboard:[]}});await telegramApi('sendMessage',{chat_id:meta.chatId,text:'ℹ️ '+claim.order_number+' buyurtmaga boshqa usta biriktirildi.'});}catch{}}}
+}
+async function handleWorkerCallback(callback) {
+ const senderId=String(callback.from?.id||''),data=String(callback.data||''),match=data.match(/^(claim|cancel):(\d+)$/);if(!match)return;const worker=await db.get("SELECT id,telegram_id,role,is_active FROM users WHERE telegram_id=?",senderId);if(!worker||worker.role!=='worker'||!worker.is_active){await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Sizda usta ruxsati yo‘q',show_alert:true});return}const orderId=Number(match[2]);if(match[1]==='claim'){const claimed=await db.transaction(async()=>{const order=await db.get("SELECT id,order_number,payment_status FROM orders WHERE id=?",orderId);if(!order||order.payment_status!=='confirmed')return null;const result=await db.run("INSERT INTO work_claims(order_id,worker_id,claimed_at) VALUES (?,?,CURRENT_TIMESTAMP) ON CONFLICT(order_id) DO NOTHING",orderId,worker.id);return result.changes?order:null});if(!claimed){await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Bu buyurtmani boshqa usta oldi',show_alert:true});return}await telegramApi('editMessageText',{chat_id:callback.message.chat.id,message_id:callback.message.message_id,text:'✅ '+claimed.order_number+' sizga vaqtincha biriktirildi. 10 daqiqa ichida bekor qilishingiz mumkin.',reply_markup:{inline_keyboard:[[ {text:'Bekor qilish (10 daqiqa)',callback_data:'cancel:'+orderId} ]]}});await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Buyurtma sizga biriktirildi'});return}const claim=await db.get("SELECT worker_id,claimed_at FROM work_claims WHERE order_id=?",orderId);if(!claim||claim.worker_id!==worker.id||Date.now()-new Date(String(claim.claimed_at).replace(' ','T')+'Z').getTime()>10*60*1000){await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Bekor qilish muddati tugagan',show_alert:true});return}await db.run("DELETE FROM work_claims WHERE order_id=? AND worker_id=?",orderId,worker.id);await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Buyurtma qayta tarqatildi'});await telegramApi('editMessageText',{chat_id:callback.message.chat.id,message_id:callback.message.message_id,text:'↩️ Buyurtma bekor qilindi va boshqa ustalarga qayta yuborildi.'});await sendWorkerOffers(orderId);
+}
 async function handleTelegramUpdate(update) {
+  if(update.callback_query){await handleWorkerCallback(update.callback_query);return;}
   const message = update.message;
   const chat = message && message.chat;
   if (!message || !chat || chat.type !== "private") return;
@@ -259,7 +276,7 @@ async function configureTelegramWebhook() {
   const publicUrl = process.env.RENDER_EXTERNAL_URL;
   if (!token || !publicUrl) return;
   try {
-    await telegramApi("setWebhook", { url: `${publicUrl.replace(/\/$/, "")}/telegram/webhook`, secret_token: telegramWebhookSecret(), allowed_updates: ["message"] });
+    await telegramApi("setWebhook", { url: `${publicUrl.replace(/\/$/, "")}/telegram/webhook`, secret_token: telegramWebhookSecret(), allowed_updates: ["message","callback_query"] });
     await telegramApi("setMyCommands", { commands: [{ command: "start", description: "UzCam bosh menyusi" }, { command: "catalog", description: "Mahsulotlar katalogi" }, { command: "camera", description: "EZVIZ kameralar" }, { command: "videos", description: "Video tavsiyalar" }, { command: "news", description: "Yangiliklar" }, { command: "workers", description: "Ustalar katalogi" }, { command: "support", description: "Admin bilan aloqa" }, { command: "stop", description: "Suhbatni yakunlash" }, { command: "help", description: "Yordam" }] });
     console.info("Telegram webhook configured");
   } catch (error) { console.error("Telegram webhook setup failed:", error.message); }
@@ -540,7 +557,7 @@ async function handleRequest(req, res) {
           }
           return { ...current, id: orderId, payment_status: paymentStatus };
         });
-        sendJson(res, 200, { ok: true, orderNumber: order.order_number, paymentStatus: order.payment_status }); return;
+        if(order.payment_status==='confirmed') void sendWorkerOffers(order.id); sendJson(res, 200, { ok: true, orderNumber: order.order_number, paymentStatus: order.payment_status }); return;
       } catch (error) { sendJson(res, error.statusCode || 400, { error: error.message || "To‘lov holatini saqlab bo‘lmadi" }); return; }
     }
     if (pathname === "/api/settings/pricing" && req.method === "GET") {
@@ -802,4 +819,6 @@ const notificationTimer = setInterval(() => {
   void dispatchCustomerNotifications(db, telegramApi).catch(error => console.error("Customer notification queue failed:", error.message));
 }, 15000);
 notificationTimer.unref();
+const workerClaimTimer=setInterval(()=>{void finalizeWorkerClaims().catch(error=>console.error('Worker claim finalizer failed:',error.message));},15000);
+workerClaimTimer.unref();
 for(const signal of ["SIGINT","SIGTERM"]) process.once(signal,()=>{server.close(()=>{void db.close().finally(()=>process.exit(0));});setTimeout(()=>process.exit(1),10000).unref();});
