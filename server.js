@@ -541,7 +541,7 @@ async function handleRequest(req, res) {
         const paymentStatus = body.action === "confirm" ? "confirmed" : body.action === "reject" ? "rejected" : "";
         if (!Number.isSafeInteger(orderId) || orderId <= 0 || !paymentStatus) { sendJson(res, 400, { error: "To‘lov amalini tanlang" }); return; }
         const order = await db.transaction(async () => {
-          const current = await db.get("SELECT id, order_number, payment_status, customer_id FROM orders WHERE id = ?", orderId);
+          const current = await db.get("SELECT id, order_number, payment_status, customer_id, customer_note FROM orders WHERE id = ?", orderId);
           if (!current) throw Object.assign(new Error("Buyurtma topilmadi"), { statusCode: 404 });
           if (current.payment_status === "confirmed") throw Object.assign(new Error("Bu buyurtma to‘lovi allaqachon tasdiqlangan"), { statusCode: 409 });
           if (!["pending", "proof_submitted", "rejected"].includes(current.payment_status)) throw Object.assign(new Error("Bu buyurtma holatini o‘zgartirib bo‘lmaydi"), { statusCode: 409 });
@@ -557,7 +557,7 @@ async function handleRequest(req, res) {
           }
           return { ...current, id: orderId, payment_status: paymentStatus };
         });
-        if(order.payment_status==='confirmed') void sendWorkerOffers(order.id); sendJson(res, 200, { ok: true, orderNumber: order.order_number, paymentStatus: order.payment_status }); return;
+        if(order.payment_status==='confirmed' && String(order.customer_note||'').includes('service_preference=assign_worker')) void sendWorkerOffers(order.id); sendJson(res, 200, { ok: true, orderNumber: order.order_number, paymentStatus: order.payment_status }); return;
       } catch (error) { sendJson(res, error.statusCode || 400, { error: error.message || "To‘lov holatini saqlab bo‘lmadi" }); return; }
     }
     if (pathname === "/api/settings/pricing" && req.method === "GET") {
@@ -666,7 +666,7 @@ async function handleRequest(req, res) {
         const incoming = body.order;
         if (!incoming || !Array.isArray(incoming.items) || incoming.items.length < 1 || incoming.items.length > 50) { sendJson(res, 400, { error: "Savatchadagi mahsulotlarni tekshiring" }); return; }
         const deliveryMethod = incoming.deliveryMethod === "bts" ? "bts" : ["courier","address"].includes(incoming.deliveryMethod) ? "address" : "";
-        const phone = cleanText(incoming.phone, 24), address = cleanText(incoming.address, 500), recipientName = cleanText(incoming.recipientName, 100);
+        const phone = cleanText(incoming.phone, 24), address = cleanText(incoming.address, 500), recipientName = cleanText(incoming.recipientName, 100), servicePreference = incoming.servicePreference === "assign_worker" ? "assign_worker" : "own_master";
         if (!deliveryMethod || !/^\+?[0-9 ()-]{7,24}$/.test(phone) || phone.replace(/\D/g, "").length < 7 || !address || (deliveryMethod === "bts" && !recipientName)) { sendJson(res, 400, { error: "Telefon, manzil va yetkazish ma’lumotlarini to‘ldiring" }); return; }
         const orderNumber = "UC-" + new Date().toISOString().slice(0,10).replaceAll("-","") + "-" + randomUUID().slice(0,8).toUpperCase();
         const superAdminId = String(process.env.SUPER_ADMIN_TELEGRAM_ID || "");
@@ -688,7 +688,7 @@ async function handleRequest(req, res) {
             subtotal += lineTotal; orderItems.push({ product, quantity, lineTotal });
           }
           if (!Number.isSafeInteger(subtotal) || subtotal <= 0 || subtotal > 1e12) throw Object.assign(new Error("Buyurtma summasi ruxsat etilgan chegaradan tashqarida"), { statusCode: 400 });
-          await db.run("INSERT INTO orders(order_number, customer_id, status, payment_status, delivery_method, recipient_name, delivery_phone, delivery_address, delivery_fee_uzs, subtotal_uzs, total_uzs, customer_note) VALUES (?, ?, 'pending_payment', 'pending', ?, ?, ?, ?, 0, ?, ?, ?)", orderNumber, customer.id, deliveryMethod, recipientName, phone, address, subtotal, subtotal, "");
+          await db.run("INSERT INTO orders(order_number, customer_id, status, payment_status, delivery_method, recipient_name, delivery_phone, delivery_address, delivery_fee_uzs, subtotal_uzs, total_uzs, customer_note) VALUES (?, ?, 'pending_payment', 'pending', ?, ?, ?, ?, 0, ?, ?, ?)", orderNumber, customer.id, deliveryMethod, recipientName, phone, address, subtotal, subtotal, "service_preference="+servicePreference);
           const order = await db.get("SELECT id FROM orders WHERE order_number = ?", orderNumber);
           for (const line of orderItems) await db.run("INSERT INTO order_items(order_id, product_id, model_snapshot, name_snapshot, quantity, unit_price_uzs, line_total_uzs) VALUES (?, ?, ?, ?, ?, ?, ?)", order.id, line.product.id, line.product.model, line.product.name, line.quantity, Number(line.product.price_uzs), line.lineTotal);
           await db.run("INSERT INTO payments(order_id, amount_uzs, method, status) VALUES (?, ?, 'qr', 'pending')", order.id, subtotal);
