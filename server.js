@@ -416,7 +416,7 @@ async function handleRequest(req, res) {
         await saveWorkerProfile(user.id, profile);
         await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'worker_profile', ?, ?)", actor.id, telegramId, JSON.stringify({ isPublic: profile.isPublic, autoHidden: requestedPublic && !profileComplete }));
         const savedWorker = await db.get("SELECT telegram_id, full_name FROM users WHERE id = ?", user.id); sendJson(res, 200, { ok: true, worker: savedWorker, isPublic: profile.isPublic, autoHidden: requestedPublic && !profileComplete }); return;
-      } catch (error) { sendJson(res, 400, { error: error.message || "Usta profilini saqlab bo‘lmadi" }); return; }
+      } catch (error) { const duplicate=String(error?.message||"").includes("users_telegram_id_key"); sendJson(res, 400, { error: duplicate ? "Bu Telegram ID boshqa foydalanuvchiga biriktirilgan. Boshqa ID kiriting yoki o‘sha profilni tahrirlang." : (error.message || "Usta profilini saqlab bo‘lmadi") }); return; }
     }
     if (pathname === "/api/staff") {
       const actor = await getAdminSession(req);
