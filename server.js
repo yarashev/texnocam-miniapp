@@ -409,8 +409,7 @@ async function handleRequest(req, res) {
         if (!/^\d{5,20}$/.test(nextTelegramId)) { sendJson(res, 400, { error: "Telegram ID faqat raqamlardan iborat bo‘lsin" }); return; }
         if (!fullName) { sendJson(res, 400, { error: "Ustaning ism-familiyasini kiriting" }); return; }
         const requestedPublic = profile.isPublic;
-        const profileComplete = Boolean(profile.phone && profile.telegramUsername && profile.photoUrl && profile.servicePrices && profile.serviceRegion && (profile.serviceCity || profile.serviceDistrict));
-        if (requestedPublic && !profileComplete) profile.isPublic = false;
+        const profileComplete = true;
         await db.run("UPDATE users SET telegram_id = ?, full_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", nextTelegramId, fullName, user.id);
         await saveWorkerProfile(user.id, profile);
         await db.run("INSERT INTO audit_log(actor_id, action, entity_type, entity_id, details_json) VALUES (?, 'update', 'worker_profile', ?, ?)", actor.id, telegramId, JSON.stringify({ isPublic: profile.isPublic, autoHidden: requestedPublic && !profileComplete }));
@@ -456,8 +455,7 @@ async function handleRequest(req, res) {
           if (!["admin", "worker"].includes(role)) { sendJson(res, 400, { error: "Rolni Admin yoki Ishchi qilib tanlang" }); return; }
           const workerProfile = role === "worker" ? normalizeWorkerProfile(body) : null;
           const requestedPublic = Boolean(workerProfile?.isPublic);
-          const profileComplete = Boolean(fullName && workerProfile?.phone && workerProfile?.serviceRegion && (workerProfile?.serviceCity || workerProfile?.serviceDistrict) && workerProfile?.telegramUsername && workerProfile?.photoUrl && workerProfile?.servicePrices);
-          if (workerProfile && requestedPublic && !profileComplete) workerProfile.isPublic = false;
+          const profileComplete = true;
           if (telegramId === String(process.env.SUPER_ADMIN_TELEGRAM_ID || "")) { sendJson(res, 409, { error: "Super Admin akkauntini bu yerdan o‘zgartirib bo‘lmaydi" }); return; }
           const existingStaff = await db.get("SELECT role FROM users WHERE telegram_id = ?", telegramId);
           if (existingStaff && existingStaff.role === "super_admin") { sendJson(res, 409, { error: "Boshqa Super Admin akkauntini bu yerdan o‘zgartirib bo‘lmaydi" }); return; }
