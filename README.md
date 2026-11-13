@@ -9,7 +9,7 @@ Use Node.js 24.15 or newer (the project uses the built-in `node:sqlite` module):
 - `npm install` (or `npm ci` with the lockfile)
 - `npm run dev`
 - Open `/api/health` to see whether the database initialized.
-- `backend/catalog.json` holds the public sale catalog and seeds the selected database on first startup. `/api/products` returns the database-backed catalog.
+- `backend/catalog.json` holds the public sale catalog and seeds the selected database on first startup. `/api/products` returns the database-backed catalog with model-matched characteristics from `backend/product-specifications.json`; product details show those specifications separately from the existing description.
 
 The SQLite file is created in `.data/` and is excluded from Git. The checked-in catalog contains sale prices only; supplier costs must stay in a private store. Never commit bot tokens or `.env` files.
 

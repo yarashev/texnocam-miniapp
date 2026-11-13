@@ -66,6 +66,14 @@
       if (filterCount) filterCount.textContent = shown.length ? Math.min(state.visibleLimit, shown.length) + ' / ' + shown.length : '';
       const visible = shown.slice(0, state.visibleLimit);
       host.innerHTML = visible.length ? visible.map(product => '<article class="product" data-product-id="' + Number(product.id) + '"><div class="photo">' + (product.badge ? '<span class="badge">' + safeText(product.badge) + '</span>' : '') + (product.image ? '<img src="' + safeText(product.image) + '" alt="' + safeText(product.name) + '" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="placeholder" hidden>' + safeText(product.icon || '⚙️') + '</span>' : '<span class="placeholder">' + safeText(product.icon || '📦') + '</span>') + '</div><div class="name">' + safeText(product.name) + '</div><div class="meta">' + safeText(product.brand) + ' · ' + safeText(product.spec || product.cat) + '</div><div class="buyrow"><span class="price">' + new Intl.NumberFormat('uz-UZ').format(product.price) + ' so‘m</span><button class="add" data-add="' + Number(product.id) + '" aria-label="Savatchaga qo‘shish">+</button></div></article>').join('') : '<div class="empty">' + (query ? 'Mahsulot topilmadi 🔎' : 'Bu bo‘limda mahsulotlar hali kiritilmagan.') + '</div>';
+      host.querySelectorAll('[data-product-id]').forEach(card => {
+        const product = state.items.find(item => String(item.id) === card.dataset.productId);
+        const meta = card.querySelector('.meta');
+        if (!product || !meta) return;
+        const source = [product.brand, product.spec || product.cat].filter(Boolean).join(' · ');
+        meta.dataset.i18nSpec = source;
+        meta.textContent = window.UzCamI18n?.translateSpecification(source) || source;
+      });
       if (loadMore) loadMore.innerHTML = shown.length > state.visibleLimit ? '<button class="load-more" id="loadMore">Ko‘proq mahsulot</button>' : '';
       document.querySelector('#loadMore')?.addEventListener('click', () => { state.visibleLimit += 40; state.renderProducts(false); });
       host.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', event => { event.stopPropagation(); track('add', Number(button.dataset.add)); state.add(Number(button.dataset.add)); }));

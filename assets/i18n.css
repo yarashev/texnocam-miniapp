@@ -1,0 +1,9 @@
+.language-switch{display:inline-flex;align-items:center;gap:3px;flex:none;margin-left:auto;padding:3px;border:1px solid #dfe7f1;border-radius:11px;background:#f8fafc}
+.language-switch button{min-width:33px;height:29px;padding:0 7px;border:0;border-radius:8px;background:transparent;color:#536176;font-family:inherit;font-size:10px;font-weight:700;line-height:1;cursor:pointer}
+.language-switch button[aria-pressed=true]{background:#0878ff;color:#fff}
+.language-switch button:focus-visible{outline:2px solid #0878ff;outline-offset:2px}
+.top{display:flex;align-items:center;justify-content:space-between}
+.top>.brand{flex:1 1 auto}
+.top>.language-switch{align-self:center}
+.topbar>.language-switch{margin-left:12px}
+@media(max-width:390px){.top>.brand{flex:1 1 auto;min-width:0}.topbar>.language-switch{margin-left:6px}}
