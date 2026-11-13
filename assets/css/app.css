@@ -200,3 +200,5 @@ html:not(.catalog-search-open) .promo-carousel{margin-top:14px}
 .package-card{align-items:flex-start}.package-copy{flex:1}.package-copy strong{font-size:13px;color:#047857;margin:4px 0}.package-add{min-height:40px;border:0;border-radius:10px;padding:9px 11px;background:#059669;color:#fff;font-size:11px;font-weight:750;text-align:center}.quick-category{min-height:60px;line-height:1.3}
 .package-add:focus-visible,.quick-category:focus-visible{outline:3px solid #246bfd;outline-offset:2px}
 .home-worker-preview[hidden],.home-packages[hidden]{display:none!important}
+
+html.catalog-loading #products>*{display:none!important}html.catalog-loading #products:before{content:'Katalog yuklanmoqda…';grid-column:1/-1;padding:24px;background:#fff;border-radius:14px;color:#6b7280;text-align:center}html.catalog-loading #countLabel{font-size:0!important}html.catalog-loading #countLabel:after{content:'Yuklanmoqda…';font-size:11px}html.catalog-loading .package-list{visibility:hidden}
