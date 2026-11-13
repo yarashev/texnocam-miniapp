@@ -26,8 +26,8 @@ export async function serviceAction(db, actor, orderId, action, value) {
     const isWorker=actor.role==='worker'&&Number(actor.id)===Number(order.worker_id);
     const isCustomer=Number(actor.id)===Number(order.customer_id);
     if(['travelling','working','finish'].includes(action)&&!isWorker)fail('Bu ish sizga biriktirilmagan',403);
-    if(['star','confirm','problem','dispatch'].includes(action)&&!isCustomer)fail('Faqat buyurtma egasi tasdiqlaydi',403);
-    if(!['travelling','working','finish','star','confirm','problem','dispatch'].includes(action))fail('Amal noto‘g‘ri',400);
+    if(['star','confirm','problem','dispatch','review'].includes(action)&&!isCustomer)fail('Faqat buyurtma egasi tasdiqlaydi',403);
+    if(!['travelling','working','finish','star','confirm','problem','dispatch','review'].includes(action))fail('Amal noto‘g‘ri',400);
     const claimedAt=order.claimed_at instanceof Date ? order.claimed_at.getTime() : Date.parse(String(order.claimed_at).replace(' ','T').replace(/Z?$/,'Z'));
     if(!Number.isFinite(claimedAt)||Date.now()-claimedAt<600000)fail('Biriktirish uchun 10 daqiqalik muddat tugashini kuting');
     await db.run("INSERT INTO service_jobs(order_id,worker_id,state) VALUES (?,?,'accepted') ON CONFLICT(order_id) DO NOTHING",orderId,order.worker_id);
@@ -37,11 +37,11 @@ export async function serviceAction(db, actor, orderId, action, value) {
     if(action==='travelling'){if(job.state!=='accepted')fail('Yo‘lga chiqish holati allaqachon o‘zgargan');next='travelling';}
     if(action==='working'){if(!['accepted','travelling'].includes(job.state))fail('Ishni boshlash holati noto‘g‘ri');next='working';}
     if(action==='finish'){if(job.state!=='working')fail('Avval ishni boshlang');next='awaiting_customer';}
-    if(['star','confirm','problem','dispatch'].includes(action)&&job.state!=='awaiting_customer')fail('Buyurtma mijoz tasdig‘ini kutmayapti');
+    if(['star','confirm','problem','dispatch','review'].includes(action)&&job.state!=='awaiting_customer')fail('Buyurtma mijoz tasdig‘ini kutmayapti');
     if(action==='star'){rating=Number(value);if(!Number.isInteger(rating)||rating<1||rating>5)fail('1–5 yulduz tanlang',400);}
     if(action==='confirm'){if(!Number.isInteger(rating)||rating<1||rating>5)fail('Avval 1–5 yulduzdan birini tanlang',400);next='completed';}
     if(action==='dispatch')next='disputed';
-    if(action==='problem')return {...job,order_number:order.order_number,showDispatcher:true};
+    if(action==='problem'||action==='review')return {...job,order_number:order.order_number,showDispatcher:action==='problem'};
     const changed=await db.run('UPDATE service_jobs SET state=?,selected_rating=?,rating=?,updated_at=CURRENT_TIMESTAMP WHERE order_id=? AND state=? AND COALESCE(selected_rating,0)=COALESCE(CAST(? AS INTEGER),0)',next,rating,next==='completed'?rating:null,orderId,job.state,job.selected_rating);
     if(!changed.changes)fail('Holat o‘zgardi. Qayta oching');
     if(next==='completed'){
