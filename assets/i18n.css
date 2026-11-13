@@ -7,3 +7,4 @@
 .top>.language-switch{align-self:center}
 .topbar>.language-switch{margin-left:12px}
 @media(max-width:390px){.top>.brand{flex:1 1 auto;min-width:0}.topbar>.language-switch{margin-left:6px}}
+html[lang=ru] .catalog-grid .add::after{content:"В корзину"}
