@@ -77,7 +77,7 @@ function updateCameraCarousel(){
 function updateEzvizPromoPrice(){
   const previousId=promoSlides[promoIndex]?.product?.id;
   const configuredPrimary=items.find(p=>Number(p.id)===Number(homeContent?.hero?.productId));
-  const isCamera=p=>p.cat==='Kameralar'&&Number(p.price)>0&&!/bracket|кронштейн|лента|огражден|mount|adapter|креплен|кабель|кабел|кожух|junction|короб|DS-PDB|DS-12[6789]/i.test(p.name+' '+p.model);
+  const isCamera=p=>p.cat==='Kameralar'&&Number(p.price)>0&&/DS-2C[DE]|IPC-|HAC-|CS-(?:H[1-9]|C[1-9]|EB|BC)|Tapo C\d|NEO-(?:NSD|WSW)/i.test(p.name+' '+p.model)&&!/bracket|кронштейн|лента|огражден|mount|adapter|креплен|кабель|кабел|кожух|junction|короб/i.test(p.name+' '+p.model);
   const byImageThenPrice=(a,b)=>Number(Boolean(b.image))-Number(Boolean(a.image))||Number(a.price)-Number(b.price);
   const primary=(configuredPrimary&&isCamera(configuredPrimary)?configuredPrimary:null)||items.filter(p=>isCamera(p)&&String(p.brand||'').toLowerCase()==='ezviz').sort(byImageThenPrice)[0]||items.filter(isCamera).sort(byImageThenPrice)[0]||items.filter(p=>Number(p.price)>0).sort(byImageThenPrice)[0];
   const slides=[];
@@ -122,9 +122,9 @@ async function loadServerCatalog(){
     const payload=await response.json();
     if(!Array.isArray(payload.products))throw new Error('Katalog formati noto‘g‘ri: products massivi topilmadi');
     if(payload.products.length===0)throw new Error('Server katalogi bo‘sh qaytdi');
-    catalogLoadState='ready';
+    catalogLoadState='ready';document.documentElement.classList.remove('catalog-loading');
     items=payload.products.filter(p=>p&&typeof p==='object').map(p=>{let image=p.image||'';try{image=window.UzCamProductImages?.resolve?.(p.brand,p.model||p.name,image)||image}catch(error){console.warn('Product image mapping skipped:',p.id,error)}return{id:p.id,model:p.model||'',cat:window.UzCamCategoryConfig?.canonical?.(p.category)||p.category||'Elektronika',name:p.name||p.model||'Nomsiz mahsulot',spec:p.description||p.category||'',price:Number(p.price_uzs)||0,icon:productIcon(p),badge:'',image,brand:p.brand||'Boshqa',source:p.brand||'',views:Number(p.views)||0,cartAdds:Number(p.cart_adds)||0,soldQty:Number(p.sold_qty)||0}});
-    for(const product of items){if(product.cat==='Kameralar'&&/bracket|кронштейн|лента|огражден|junction|DS-PDB|DS-12[6789]/i.test(product.name+' '+product.model))product.cat='Quvvat, UPS va aksessuarlar'}
+    for(const product of items){if(product.cat==='Kameralar'&&/bracket|кронштейн|лента|огражден|junction|DS-P(?:DB|DP|K-|T-)|CS-PB|DS-12[6789]/i.test(product.name+' '+product.model))product.cat='Quvvat, UPS va aksessuarlar'}
     if(Array.isArray(payload.categories))categories=['Barchasi',...new Set(payload.categories.map(name=>window.UzCamCategoryConfig?.canonical?.(name)||name))];
     if(!categories.includes(activeCategory))activeCategory='Barchasi';
     cart=Object.fromEntries(Object.entries(cart).filter(([id])=>items.some(p=>p.id===Number(id))));
@@ -139,7 +139,7 @@ async function loadServerCatalog(){
     }
   } catch (error) {
      if(location.protocol!=='file:'){
-       catalogLoadState='error';console.error('Catalog load failed:',error);
+       catalogLoadState='error';document.documentElement.classList.remove('catalog-loading');console.error('Catalog load failed:',error);
        renderCats();renderBrands();renderProducts();updateCart();updateEzvizPromoPrice();
        const host=document.querySelector('#products');
        host.innerHTML='<div class="empty" role="status">Katalogni yuklab bo‘lmadi. Internet aloqasini tekshirib, qayta urinib ko‘ring. <button type="button" id="retryCatalogLoad">Qayta yuklash</button></div>';
