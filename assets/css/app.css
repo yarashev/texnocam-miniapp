@@ -191,3 +191,12 @@ html:not(.catalog-search-open) .search-row,html:not(.catalog-search-open) .catal
 
 /* Give the home promotion breathing room below the header. */
 html:not(.catalog-search-open) .promo-carousel{margin-top:14px}
+
+/* Home components: one scoped layout for actions, kits and technician preview. */
+.app:not(.catalog-category-mode):not(.catalog-products-mode):not(.worker-tab-active)>.quick-categories{display:grid!important;order:4;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:0 0 14px}
+.app:not(.catalog-category-mode):not(.catalog-products-mode):not(.worker-tab-active)>.promo-carousel{order:3}
+.app:not(.catalog-category-mode):not(.catalog-products-mode):not(.worker-tab-active)>.home-packages{order:5}
+.app.catalog-category-mode>.home-packages,.app.catalog-products-mode>.home-packages,.app.worker-tab-active>.home-packages{display:none!important}
+.package-card{align-items:flex-start}.package-copy{flex:1}.package-copy strong{font-size:13px;color:#047857;margin:4px 0}.package-add{min-height:40px;border:0;border-radius:10px;padding:9px 11px;background:#059669;color:#fff;font-size:11px;font-weight:750;text-align:center}.quick-category{min-height:60px;line-height:1.3}
+.package-add:focus-visible,.quick-category:focus-visible{outline:3px solid #246bfd;outline-offset:2px}
+.home-worker-preview[hidden],.home-packages[hidden]{display:none!important}
