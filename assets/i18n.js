@@ -22,6 +22,30 @@
     ['UzCam kamera belgisi', 'Логотип камеры UzCam'],
     ['UzCam bilan bog‘lanish: +998 50 855 41 87', 'Связаться с UzCam: +998 50 855 41 87'],
     ['Tezkor kategoriyalar', 'Быстрые категории'],
+    ['Kamera tanlash', 'Выбрать камеру'],
+    ['Usta chaqirish', 'Вызвать мастера'],
+    ['Tayyor to‘plamlar', 'Готовые комплекты'],
+    ['Qulay tanlov', 'Удобный выбор'],
+    ['Tayyor yechimlar', 'Готовые решения'],
+    ['Uy uchun kamera', 'Камера для дома'],
+    ['Uy xavfsizligi uchun tayyor tanlov', 'Готовое решение для безопасности дома'],
+    ['Do‘kon uchun yechim', 'Решение для магазина'],
+    ['Kamera va yozuv tizimini tanlang', 'Выберите камеру и систему записи'],
+    ['UzCam afzalliklari', 'Преимущества UzCam'],
+    ['Original mahsulot', 'Оригинальная продукция'],
+    ['Tekshirilgan brendlar', 'Проверенные бренды'],
+    ['Kafolat', 'Гарантия'],
+    ['Ishonchli xarid', 'Надёжная покупка'],
+    ['Tez yetkazish', 'Быстрая доставка'],
+    ['Qulay buyurtma', 'Удобное оформление заказа'],
+    ['Tavsiya etilgan ustalar', 'Рекомендуемые мастера'],
+    ['Barchasi →', 'Все →'],
+    ['Katalog →', 'Каталог →'],
+    ['Uy uchun 2 ta Wi-Fi kamera', '2 Wi-Fi-камеры для дома'],
+    ['Do‘kon uchun 4 ta Wi-Fi kamera', '4 Wi-Fi-камеры для магазина'],
+    ['O‘rnatish, xotira kartasi va yetkazish alohida', 'Установка, карта памяти и доставка оплачиваются отдельно'],
+    ['To‘plamni savatga qo‘shish', 'Добавить комплект в корзину'],
+    ['Reyting', 'Рейтинг'],
     ['Kamera', 'Камера'],
     ['Kameralar', 'Камеры'],
     ['kameralari', 'камеры'],
@@ -481,7 +505,7 @@
     ['BTS bo‘limi nomi/manzili, mo‘ljal yoki izoh', 'Название/адрес отделения BTS, ориентир или комментарий'],
     ['BTS pochta manzili va qo‘shimcha ma’lumotlar', 'Адрес почты BTS и дополнительная информация'],
     ['Yetkazish manzili va qo‘shimcha ma’lumotlar', 'Адрес доставки и дополнительная информация'],
-    ['Hozircha ommaga ochiq ustalar yo‘q. Tez orada qo‘shiladi.', 'Пока нет мастеров в открытом каталоге. Они скоро появятся.'],
+    ['Hozircha ommaga ochiq ustalar yo‘q. Tez orada qo‘shiladi.', 'Пока нет мастеров в открытом каталоге. Скоро они появятся.'],
     ['Ustalar ro‘yxatini yuklab bo‘lmadi.', 'Не удалось загрузить список мастеров.'],
     ['Ustalar yuklanmoqda…', 'Загружаем мастеров…'],
     ['Qayta yuklash', 'Загрузить снова'],
@@ -994,6 +1018,22 @@
       const noun = lastTwo >= 11 && lastTwo <= 14 ? 'разделов' : last === 1 ? 'раздел' : last >= 2 && last <= 4 ? 'раздела' : 'разделов';
       return `${leading}${sectionCount[1].trim()} ${noun}${trailing}`;
     }
+
+    const experience = trimmed.match(/^([\d\s.,]+)\s*yil tajriba$/i);
+    if (experience) {
+      const years = Number(experience[1].replace(/\s/g, '').replace(',', '.'));
+      const integer = Math.abs(Math.trunc(years));
+      const lastTwo = integer % 100;
+      const last = integer % 10;
+      const noun = !Number.isInteger(years) ? 'года опыта'
+        : lastTwo >= 11 && lastTwo <= 14 ? 'лет опыта'
+          : last === 1 ? 'год опыта'
+            : last >= 2 && last <= 4 ? 'года опыта' : 'лет опыта';
+      return `${leading}${experience[1].trim()} ${noun}${trailing}`;
+    }
+
+    const avatar = trimmed.match(/^(.+?)\s+avatari$/i);
+    if (avatar) return `${leading}Аватар ${avatar[1]}${trailing}`;
 
     const quantity = trimmed.match(/^([\d\s]+)\s+dona$/i);
     if (quantity) return `${leading}${quantity[1].trim()} шт.${trailing}`;
