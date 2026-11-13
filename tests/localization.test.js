@@ -58,6 +58,18 @@ test('language selection persists and provides Russian UI strings and counts', (
   assert.equal(api.translate('3 ta bo‘lim'), '3 раздела');
   assert.equal(api.translate('2 dona'), '2 шт.');
   assert.equal(api.translate('Tapo · Arzonidan'), 'Tapo · Сначала дешевле');
+  assert.equal(api.translate('Usta chaqirish'), 'Вызвать мастера');
+  assert.equal(api.translate('Tayyor yechimlar'), 'Готовые решения');
+  assert.equal(api.translate('Uy uchun 2 ta Wi-Fi kamera'), '2 Wi-Fi-камеры для дома');
+  assert.equal(api.translate('Do‘kon uchun 4 ta Wi-Fi kamera'), '4 Wi-Fi-камеры для магазина');
+  assert.equal(api.translate('O‘rnatish, xotira kartasi va yetkazish alohida'), 'Установка, карта памяти и доставка оплачиваются отдельно');
+  assert.equal(api.translate('To‘plamni savatga qo‘shish'), 'Добавить комплект в корзину');
+  assert.equal(api.translate('Hozircha ommaga ochiq ustalar yo‘q. Tez orada qo‘shiladi.'), 'Пока нет мастеров в открытом каталоге. Скоро они появятся.');
+  assert.equal(api.translate('1 yil tajriba'), '1 год опыта');
+  assert.equal(api.translate('3 yil tajriba'), '3 года опыта');
+  assert.equal(api.translate('5 yil tajriba'), '5 лет опыта');
+  assert.equal(api.translate('2.5 yil tajriba'), '2.5 года опыта');
+  assert.equal(api.translate('Aziz avatari'), 'Аватар Aziz');
 
   const restored = loadLocalization('ru');
   assert.equal(restored.api.language, 'ru');
