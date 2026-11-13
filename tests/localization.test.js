@@ -64,6 +64,15 @@ test('language selection persists and provides Russian UI strings and counts', (
   assert.equal(api.translate('Do‘kon uchun 4 ta Wi-Fi kamera'), '4 Wi-Fi-камеры для магазина');
   assert.equal(api.translate('O‘rnatish, xotira kartasi va yetkazish alohida'), 'Установка, карта памяти и доставка оплачиваются отдельно');
   assert.equal(api.translate('To‘plamni savatga qo‘shish'), 'Добавить комплект в корзину');
+  assert.equal(api.translate('Savatga qo‘shish'), 'В корзину');
+  assert.equal(api.translate('Qo‘shildi ✓'), 'Добавлено ✓');
+  assert.equal(api.translate('Rol:'), 'Роль:');
+  assert.equal(api.translate('Super admin'), 'Суперадминистратор');
+  assert.equal(api.translate('Usta kabinetini ochish'), 'Открыть кабинет мастера');
+  assert.equal(api.translate('Telefon:'), 'Телефон:');
+  assert.equal(api.translate('Boshqaruv paneli rolingiz bo‘yicha ochiladi.'), 'Панель управления доступна в соответствии с вашей ролью.');
+  assert.equal(api.translate('Bu Telegram akkauntiga admin yoki ishchi ruxsati berilmagan.'), 'Этой учётной записи Telegram не предоставлены права администратора или сотрудника.');
+  assert.equal(api.translate('Backend sozlamalarini tekshiring.'), 'Проверьте настройки сервера.');
   assert.equal(api.translate('Hozircha ommaga ochiq ustalar yo‘q. Tez orada qo‘shiladi.'), 'Пока нет мастеров в открытом каталоге. Скоро они появятся.');
   assert.equal(api.translate('1 yil tajriba'), '1 год опыта');
   assert.equal(api.translate('3 yil tajriba'), '3 года опыта');
