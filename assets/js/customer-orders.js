@@ -63,6 +63,7 @@
       } else {
         content.append(node('p','customer-order-current','Joriy holat: '+(labels[order.status] || order.status)));
       }
+      if(order.service){const names={accepted:'Usta qabul qildi',travelling:'Usta yo‘lga chiqdi',working:'Ish bajarilmoqda',awaiting_customer:'Tasdiqlashingiz kutilmoqda',disputed:'Dispetcher ko‘rib chiqmoqda',completed:'Ish tasdiqlangan'};content.append(node('p','customer-order-current','Usta ishi: '+(names[order.service.state]||order.service.state)));if(order.service.state==='awaiting_customer'){const link=node('a','','Tasdiqlash va baholash');link.href='assets/worker-cabinet.html';content.append(link)}if(order.service.rating)content.append(node('p','','Baho: '+order.service.rating+' ⭐'));}
       card.append(content);
       panel.append(card);
     }
