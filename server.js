@@ -161,15 +161,15 @@ async function finalizeWorkerClaims() {
 }
 
 async function handleServiceCallback(callback){
- const match=String(callback.data||'').match(/^svc:(travelling|working|finish|star|confirm|problem|dispatch):(\d+)(?::([1-5]))?$/);
+ const match=String(callback.data||'').match(/^svc:(travelling|working|finish|star|confirm|problem|dispatch|review):(\d+)(?::([1-5]))?$/);
  if(!match)return;
  try{
   const actor=await db.get("SELECT id,role FROM users WHERE telegram_id=? AND is_active=1",String(callback.from.id));
   if(!actor)throw new Error('Profil topilmadi');
   const result=await serviceAction(db,actor,Number(match[2]),match[1],match[3]);
   await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:result.showDispatcher?'Dispetcherga xabar berish tugmasini bosing':'Saqlandi'});
-  if(result.showDispatcher)await telegramApi('editMessageReplyMarkup',{chat_id:callback.message.chat.id,message_id:callback.message.message_id,reply_markup:{inline_keyboard:[[{text:'Dispetcherga xabar berish',callback_data:'svc:dispatch:'+match[2]}],[{text:'Orqaga',callback_data:'svc:star:'+match[2]+':'+(result.selected_rating||5)}]]}});
-  else if(match[1]==='star')await telegramApi('editMessageReplyMarkup',{chat_id:callback.message.chat.id,message_id:callback.message.message_id,reply_markup:reviewMarkup(Number(match[2]),result.selected_rating)});
+  if(result.showDispatcher)await telegramApi('editMessageReplyMarkup',{chat_id:callback.message.chat.id,message_id:callback.message.message_id,reply_markup:{inline_keyboard:[[{text:'Dispetcherga xabar berish',callback_data:'svc:dispatch:'+match[2]}],[{text:'Orqaga',callback_data:'svc:review:'+match[2]}]]}});
+  else if(match[1]==='star'||match[1]==='review')await telegramApi('editMessageReplyMarkup',{chat_id:callback.message.chat.id,message_id:callback.message.message_id,reply_markup:reviewMarkup(Number(match[2]),result.selected_rating)});
   else await telegramApi('editMessageText',{chat_id:callback.message.chat.id,message_id:callback.message.message_id,text:result.order_number+' — '+({completed:'✅ Tasdiqlandi. Baho: '+result.rating+' ⭐',disputed:'⚠️ Dispetcherga xabar yuborildi. Ish ochiq qoladi.',travelling:'Yo‘lga chiqdingiz',working:'Ish boshlandi',awaiting_customer:'Mijoz tasdig‘i kutilmoqda'}[result.state]||result.state),reply_markup:{inline_keyboard:[]}});
  }catch(error){await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:String(error.message||'Xatolik').slice(0,180),show_alert:true});}
 }
