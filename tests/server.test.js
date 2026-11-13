@@ -8,6 +8,7 @@ import { spawn,spawnSync } from 'node:child_process';
 import { once } from 'node:events';
 import { createHmac } from 'node:crypto';
 import { exportSqlite } from '../backend/sqlite-snapshot.js';
+import { getProductSpecification } from '../backend/product-specifications.js';
 const root=path.resolve('.'),token='LOCAL-TEST-NOT-PRODUCTION',superId='91000001';
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function initData(id) {
@@ -15,13 +16,64 @@ function initData(id) {
   const text=[...params].sort(([a],[b])=>a.localeCompare(b)).map(([key,value])=>key+'='+value).join('\n');
   const secret=createHmac('sha256','WebAppData').update(token).digest();params.set('hash',createHmac('sha256',secret).update(text).digest('hex'));return params.toString();
 }
-async function startServer(directory) {
+async function startServer(directory, telegramLogPath) {
   const port=32000+Math.floor(Math.random()*9000),base='http://127.0.0.1:'+port;
-  const child=spawn(process.execPath,['server.js'],{cwd:root,env:{...process.env,DATABASE_URL:'',SUPABASE_URL:'',SUPABASE_SERVICE_ROLE_KEY:'',UZCAM_IMPORT_FILE:'',PORT:String(port),UZCAM_DATA_DIR:directory,TELEGRAM_BOT_TOKEN:token,SUPER_ADMIN_TELEGRAM_ID:superId,RENDER_EXTERNAL_URL:''},stdio:['ignore','pipe','pipe']});
+  const args=telegramLogPath?['--import','./tests/mock-telegram-api.js','server.js']:['server.js'];
+  const child=spawn(process.execPath,args,{cwd:root,env:{...process.env,DATABASE_URL:'',SUPABASE_URL:'',SUPABASE_SERVICE_ROLE_KEY:'',UZCAM_IMPORT_FILE:'',PORT:String(port),UZCAM_DATA_DIR:directory,TELEGRAM_BOT_TOKEN:token,SUPER_ADMIN_TELEGRAM_ID:superId,RENDER_EXTERNAL_URL:'',...(telegramLogPath?{UZCAM_TEST_TELEGRAM_LOG:telegramLogPath}:{})},stdio:['ignore','pipe','pipe']});
   let log='';child.stdout.on('data',chunk=>log+=chunk);child.stderr.on('data',chunk=>log+=chunk);
   for(let i=0;i<100;i++){try{if((await fetch(base+'/api/health')).ok) return {child,base,stop:async()=>{child.kill();await once(child,'exit');}};}catch{}if(child.exitCode!==null)break;await delay(50);}
   child.kill();throw new Error('Local server failed: '+log);
 }
+
+test('worker offers hide customer contact until a worker successfully claims',async t=>{
+  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'uzcam-worker-privacy-'));
+  const telegramLogPath=path.join(directory,'telegram.jsonl');
+  let running=await startServer(directory,telegramLogPath);t.after(async()=>{if(running)await running.stop();});
+  const db=new DatabaseSync(path.join(directory,'texnocam.sqlite'));t.after(()=>db.close());
+  const customerId=Number(db.prepare("INSERT INTO users(telegram_id,username,full_name,role) VALUES(?,?,?,'customer')").run('91000113','privacy_customer','Private Customer').lastInsertRowid);
+  const workerOneId=Number(db.prepare("INSERT INTO users(telegram_id,full_name,role) VALUES(?,?,'worker')").run('91000111','Worker One').lastInsertRowid);
+  db.prepare("INSERT INTO users(telegram_id,full_name,role) VALUES(?,?,'worker')").run('91000112','Worker Two');
+  db.prepare("INSERT INTO telegram_notification_preferences(user_id,enabled) VALUES (?,1)").run(workerOneId);
+  const workerTwo=db.prepare("SELECT id FROM users WHERE telegram_id=?").get('91000112');
+  db.prepare("INSERT INTO telegram_notification_preferences(user_id,enabled) VALUES (?,1)").run(workerTwo.id);
+  const product=db.prepare("SELECT id FROM products ORDER BY id LIMIT 1").get();
+  const orderId=Number(db.prepare("INSERT INTO orders(order_number,customer_id,delivery_method,delivery_phone,delivery_address,subtotal_uzs,total_uzs,customer_note) VALUES(?,?,'address',?,?,1000,1000,'service_preference=assign_worker')").run('UC-PRIVACY-TEST',customerId,'+998901112233','Private address 17').lastInsertRowid);
+  db.prepare("INSERT INTO order_items(order_id,product_id,model_snapshot,name_snapshot,quantity,unit_price_uzs,line_total_uzs) VALUES(?,?,?,?,1,1000,1000)").run(orderId,product.id,'TEST-CAMERA','Privacy test camera');
+  db.prepare("INSERT INTO payments(order_id,amount_uzs,method) VALUES (?,1000,'qr')").run(orderId);
+
+  const session=await fetch(running.base+'/api/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:initData(superId)})});
+  assert.equal(session.status,200);
+  const cookie=session.headers.get('set-cookie').split(';')[0];
+  const confirmation=await fetch(running.base+'/api/admin/orders/'+orderId+'/payment',{method:'PATCH',headers:{Cookie:cookie,'Content-Type':'application/json'},body:JSON.stringify({action:'confirm'})});
+  assert.equal(confirmation.status,200);
+  async function readTelegramCalls() {
+    if(!fs.existsSync(telegramLogPath))return [];
+    return fs.readFileSync(telegramLogPath,'utf8').trim().split('\n').filter(Boolean).map(line=>JSON.parse(line));
+  }
+  async function waitForTelegramCalls(count) {
+    for(let i=0;i<100;i++){const calls=await readTelegramCalls();if(calls.length>=count)return calls;await delay(25);}
+    assert.fail('Timed out waiting for Telegram mock calls');
+  }
+  const offers=(await waitForTelegramCalls(2)).filter(call=>call.method==='sendMessage'&&call.payload.text.includes('Yangi xizmat buyurtmasi'));
+  assert.equal(offers.length,2);
+  const privateData=['Private Customer','+998901112233','@privacy_customer','Private address 17'];
+  for(const offer of offers)for(const value of privateData)assert.doesNotMatch(JSON.stringify(offer.payload),new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+
+  const webhookSecret=createHmac('sha256',token).update('uzcam-telegram-webhook').digest('hex');
+  async function submitClaim(workerTelegramId,callbackId) {
+    return fetch(running.base+'/telegram/webhook',{method:'POST',headers:{'Content-Type':'application/json','x-telegram-bot-api-secret-token':webhookSecret},body:JSON.stringify({callback_query:{id:callbackId,from:{id:Number(workerTelegramId)},data:'claim:'+orderId,message:{message_id:1234,chat:{id:Number(workerTelegramId)}}}})});
+  }
+  assert.equal((await submitClaim('91000111','privacy-claim-one')).status,200);
+  let calls=await waitForTelegramCalls(7);
+  const detailMessages=calls.filter(call=>call.method==='sendMessage'&&call.payload.text.includes('buyurtma tafsilotlari'));
+  assert.equal(detailMessages.length,1);
+  assert.equal(String(detailMessages[0].payload.chat_id),'91000111');
+  for(const value of privateData)assert.ok(detailMessages[0].payload.text.includes(value));
+  assert.equal((await submitClaim('91000112','privacy-claim-two')).status,200);
+  calls=await waitForTelegramCalls(8);
+  const workerTwoCalls=calls.filter(call=>String(call.payload.chat_id)==='91000112');
+  for(const call of workerTwoCalls)for(const value of privateData)assert.doesNotMatch(JSON.stringify(call.payload),new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+});
 
 test('Telegram session, staff, workers, home content, uploads and restart use async database',async t=>{
   const directory=fs.mkdtempSync(path.join(os.tmpdir(),'uzcam-http-'));
@@ -36,7 +88,7 @@ test('Telegram session, staff, workers, home content, uploads and restart use as
   assert.equal((await request('/api/admin/categories')).status,403);
   let result=await request('/api/session','POST',{initData:initData(superId)});assert.equal(result.status,200);cookie=result.response.headers.get('set-cookie').split(';')[0];
   assert.equal((await request('/api/session')).value.user.role,'super_admin');
-  result=await request('/api/admin/dashboard');assert.equal(result.status,200);const publicCatalog=await request('/api/products');assert.equal(result.value.summary.activeProducts,publicCatalog.value.products.length);assert.equal(result.value.summary.awaitingPayment,0);assert.deepEqual(result.value.recentOrders,[]);
+  result=await request('/api/admin/dashboard');assert.equal(result.status,200);const publicCatalog=await request('/api/products');assert.equal(result.value.summary.activeProducts,publicCatalog.value.products.length);assert.equal(result.value.summary.awaitingPayment,0);assert.deepEqual(result.value.recentOrders,[]);const catalogProductWithSpecs=publicCatalog.value.products.find(product=>product.specification);assert.ok(catalogProductWithSpecs);assert.equal(catalogProductWithSpecs.specification,getProductSpecification(catalogProductWithSpecs.model,catalogProductWithSpecs.name));
   result=await request('/api/admin/categories');assert.equal(result.status,200);assert.ok(result.value.categories.some(category=>category.name==='Kameralar'&&category.is_active));
   result=await request('/api/admin/categories','POST',{name:'Sinov bo‘limi'});assert.equal(result.status,201);
   assert.equal((await request('/api/admin/categories','POST',{name:'Sinov bo‘limi'})).value.category.created,false);

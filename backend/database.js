@@ -4,6 +4,7 @@ import { createPostgresDatabase, createSqliteDatabase } from './database-adapter
 import { initializePostgres } from './postgres-initialize.js';
 import { importDahuaCatalog } from './dahua-import.js';
 import { normalizeProductCategories } from './product-classification.js';
+import { getProductSpecification } from './product-specifications.js';
 
 export async function connectDatabase(env = process.env) {
   if (!env.DATABASE_URL) {
@@ -51,6 +52,9 @@ export async function listPublicProducts() {
     0 AS views, 0 AS cart_adds, 0 AS sold_qty
     FROM products p LEFT JOIN categories c ON c.id = p.category_id
     WHERE p.is_active = 1 AND p.deleted_at IS NULL ORDER BY p.brand, p.model`);
+  for (const product of products) {
+    product.specification = getProductSpecification(product.model, product.name);
+  }
 
   const byId = new Map(products.map(product => [String(product.id), product]));
   try {

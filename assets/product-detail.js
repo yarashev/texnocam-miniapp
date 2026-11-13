@@ -187,7 +187,32 @@
       .forEach(([label, value]) => {
         details.append(make('dt', '', label || ''), make('dd', '', value || 'Ko‘rsatilmagan'));
       });
-    info.append(details, make('p', 'detail-description', product.spec || 'Qo‘shimcha ma’lumot hali kiritilmagan.'));
+    info.append(details);
+    const specification = String(product.specification || '').trim();
+    const description = String(product.description || '').trim();
+    if (specification) {
+      info.append(make('h3', 'detail-spec-heading', 'Texnik xususiyatlar'));
+      const specificationText = make(
+        'p',
+        'detail-description',
+        window.UzCamI18n?.translateSpecification(specification) || specification
+      );
+      specificationText.dataset.i18nSpec = specification;
+      info.append(specificationText);
+    }
+    if (description && description !== specification) {
+      info.append(make('h3', 'detail-spec-heading', 'Tavsif'));
+      const descriptionText = make(
+        'p',
+        'detail-description',
+        window.UzCamI18n?.translateSpecification(description) || description
+      );
+      descriptionText.dataset.i18nSpec = description;
+      info.append(descriptionText);
+    }
+    if (!specification && !description) {
+      info.append(make('p', 'detail-description', 'Qo‘shimcha ma’lumot hali kiritilmagan.'));
+    }
     content.append(photo, title, price, info);
 
     const relatedHost = make('section', 'detail-related');
