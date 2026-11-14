@@ -4,7 +4,7 @@
   const normalize=value=>String(value??'').normalize('NFKC').toLowerCase().replace(/[^a-z0-9а-яёўқғҳ]+/g,'');
   const logoById=Object.freeze({
     hikvision:'assets/hikvision-logo.png',hilook:'assets/hilook-logo.png',dahua:'assets/dahua-logo.png',
-    tplink:'assets/tplink-logo.png',tapo:'assets/tapo-logo.png',mercusys:'assets/mercusys-logo.png',
+    neocam:'assets/neocam-logo.svg',tplink:'assets/tplink-logo.png',tapo:'assets/tapo-logo.png',mercusys:'assets/mercusys-logo.png',
     witek:'assets/witek-logo.png',kanihad:'assets/kanihad-logo.png',zkteco:'assets/zkteco-logo.png',
     'ubiquiti-mikrotik':'assets/ubiquiti-mikrotik-logo.png','hard-drives':'assets/hard-drives-section.png',
     optics:'assets/optics-section.png',cable:'assets/cable-section.png'
@@ -13,6 +13,7 @@
     ['hikvision','Hikvision','camera',['Hikvision']],
     ['hilook','HiLook','camera',['HiLook']],
     ['dahua','Dahua','camera',['Dahua']],
+    ['neocam','NeoCam','camera',['NeoCam']],
     ['tplink','TP-Link','router',['TP-Link','TpLink']],
     ['tapo','Tapo','home',['Tapo']],
     ['mercusys','Mercusys','router',['Mercusys']],
