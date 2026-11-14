@@ -1,6 +1,6 @@
 import { initializeAvailability, getAvailability, setAvailability } from './backend/worker-availability.js';
 import { initializeServiceWorkflow, serviceAction, listServiceJobs, reviewMarkup } from './backend/service-workflow.js';
-import { listCatalogBrands, saveCatalogBrand, deleteCatalogBrand } from './backend/brand-management.js';
+import { listCatalogBrands, saveCatalogBrand, deleteCatalogBrand, ensureNeoCamSection } from './backend/brand-management.js';
 import { createReviewedImageLoader } from './backend/reviewed-images.js';
 import { initializeImageStorage, saveProductImage, loadProductImage, imageStorageMode } from "./backend/image-storage.js";
 import http from "node:http";
@@ -885,7 +885,7 @@ const server = http.createServer((req,res) => {
 });
 
 const port = Number(process.env.PORT || 3000);
-try { await db.get("SELECT 1 AS ready"); await initializeImageStorage(); await initializeServiceWorkflow(db); await initializeAvailability(db); await db.run("UPDATE customer_notifications SET delivery_status = 'pending' WHERE delivery_status = 'sending'"); }
+try { await db.get("SELECT 1 AS ready"); await initializeImageStorage(); await initializeServiceWorkflow(db); await initializeAvailability(db); await ensureNeoCamSection(db); await db.run("UPDATE customer_notifications SET delivery_status = 'pending' WHERE delivery_status = 'sending'"); }
 catch (error) { console.error("Database/storage initialization failed; check environment configuration"); process.exit(1); }
 server.listen(port, "0.0.0.0", () => { console.log(`UzCam backend running on port ${port}`); void configureTelegramWebhook(); });
 const notificationTimer = setInterval(() => {
