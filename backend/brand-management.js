@@ -15,7 +15,7 @@ export function normalizeCatalogBrand(input,current=null){
   if(data.kind==='type'&&!keywords.length)throw fail('Mahsulotni aniqlaydigan kalit so‘zlarni kiriting');
   if(!config.iconNames.includes(data.icon))throw fail('Ikonkani tanlang');
   const logo=String(data.logo||'').trim();
-  if(logo&&!/^\/?uploads\/[a-f0-9-]+\.(png|jpg|webp)$/.test(logo)){
+  if(logo&&!Object.values(config.logoById).includes(logo)&&!/^\/?uploads\/[a-f0-9-]+\.(png|jpg|webp)$/.test(logo)){
     if(logo.length>1200||!/^https:\/\/[a-z0-9.-]+(?::[0-9]{1,5})?\/[^\s?#]*\.(png|jpe?g|webp)$/i.test(logo))throw fail('Logo uchun yuklangan PNG, JPG yoki WEBP rasmini tanlang');
   }
   const order=Number(data.order);
@@ -55,4 +55,17 @@ export async function deleteCatalogBrand(db,actor,id){
     await db.run("INSERT INTO audit_log(actor_id,action,entity_type,entity_id) VALUES (?,'delete','catalog_brand',?)",actor.id,id);
     return item;
   });
+}
+
+export async function ensureNeoCamSection(db){
+ return db.transaction(async()=>{
+  if(db.kind==='postgres')await db.get('SELECT pg_advisory_xact_lock(8256302)');
+  if(await db.get('SELECT value FROM settings WHERE key=?','catalog_neocam_added_v1'))return;
+  const brands=await listCatalogBrands(db,true);
+  const existing=brands.find(item=>item.id==='neocam'||config.normalize(item.name)==='neocam');
+  if(!existing){const neo={...config.defaults.find(item=>item.id==='neocam')};brands.push(neo);
+   await db.run('INSERT INTO settings(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=CURRENT_TIMESTAMP',settingKey,JSON.stringify(brands));
+  }
+  await db.run('INSERT INTO settings(key,value) VALUES (?,?) ON CONFLICT(key) DO NOTHING','catalog_neocam_added_v1','1');
+ });
 }
