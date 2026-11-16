@@ -97,7 +97,7 @@ export async function manageHeadWorker(db,actor,body,remove=false){
  await db.run('DELETE FROM worker_managers WHERE user_id=?',u.id);if(u.role==='worker')await db.run("UPDATE users SET role='customer' WHERE id=?",u.id);
  }else{
  if(u&&!['customer','worker'].includes(u.role))fail('Admin yoki Super Admin rolini bu yerdan almashtirib bo‘lmaydi',409);
- if(u&&await db.get('SELECT c.order_id FROM work_claims c JOIN orders o ON o.id=c.order_id LEFT JOIN service_jobs j ON j.order_id=c.order_id WHERE c.worker_id=? AND o.status<>'cancelled' AND (j.state IS NULL OR j.state<>'completed') LIMIT 1',u.id))fail('Ishlari bor ustani Bosh usta qilib tayinlashdan oldin ishlarini hal qiling',409);
+ if(u&&await db.get("SELECT c.order_id FROM work_claims c JOIN orders o ON o.id=c.order_id LEFT JOIN service_jobs j ON j.order_id=c.order_id WHERE c.worker_id=? AND o.status<>'cancelled' AND (j.state IS NULL OR j.state<>'completed') LIMIT 1",u.id))fail('Ishlari bor ustani Bosh usta qilib tayinlashdan oldin ishlarini hal qiling',409);
  if(!u){const name=String(body.fullName||'').trim().slice(0,100);if(!name)fail('Ism-familiya kiriting');await db.run("INSERT INTO users(telegram_id,full_name,role) VALUES (?,?,'worker')",tg,name);u=await db.get('SELECT id FROM users WHERE telegram_id=?',tg)}
  else await db.run("UPDATE users SET role='worker',is_active=1 WHERE id=?",u.id);
  await db.run('INSERT INTO worker_managers(user_id,created_by) VALUES (?,?) ON CONFLICT(user_id) DO NOTHING',u.id,actor.id);
