@@ -16,7 +16,7 @@ export async function getAvailability(db,workerId){
  return availability(await db.get('SELECT mode,busy_until FROM worker_availability WHERE worker_id=?',workerId));
 }
 export async function setAvailability(db,actor,target,mode,duration){
- if(!actor||(!['worker','super_admin'].includes(actor.role))||(actor.role==='worker'&&Number(actor.id)!==Number(target)))throw Object.assign(new Error('Ruxsat yo‘q'),{statusCode:403});
+ if(!actor||(!['worker','super_admin','head_worker'].includes(actor.role))||(actor.role==='worker'&&Number(actor.id)!==Number(target)))throw Object.assign(new Error('Ruxsat yo‘q'),{statusCode:403});
  if(!['available','busy'].includes(mode))throw Object.assign(new Error('Holat noto‘g‘ri'),{statusCode:400});
  const until=mode==='busy'?busyDeadline(duration):null;
  return db.transaction(async()=>{
