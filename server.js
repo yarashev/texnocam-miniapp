@@ -1,3 +1,4 @@
+import { initializeCustomerSupport, recordSupportMessage, listCustomers, customerOrders, listSupport, replySupport } from './backend/customer-support.js';
 import { initializeAvailability, getAvailability, setAvailability } from './backend/worker-availability.js';
 import { initializeServiceWorkflow, serviceAction, listServiceJobs, reviewMarkup } from './backend/service-workflow.js';
 import { listCatalogBrands, saveCatalogBrand, deleteCatalogBrand, ensureNeoCamSection } from './backend/brand-management.js';
@@ -199,6 +200,7 @@ async function handleTelegramUpdate(update) {
         return;
       }
       await telegramApi("copyMessage", { chat_id: link.customer_telegram_id, from_chat_id: chat.id, message_id: message.message_id });
+      await db.run("UPDATE support_inbox SET status='answered',reply_text=?,replied_at=CURRENT_TIMESTAMP WHERE customer_telegram_id=? AND admin_message_id=? AND status='open'",String(message.text||message.caption||'[Telegram orqali javob]').slice(0,2000),link.customer_telegram_id,message.reply_to_message.message_id);
       await telegramApi("sendMessage", { chat_id: chat.id, text: "Javob mijozga yuborildi." });
       return;
     }
@@ -272,9 +274,11 @@ async function handleTelegramUpdate(update) {
 
   const activeThread = await db.get("SELECT is_active FROM support_threads WHERE customer_telegram_id = ?", senderId);
   if (activeThread && activeThread.is_active && superAdminId) {
+    const supportMessage=await recordSupportMessage(db,message);
     try {
       await telegramApi("sendMessage", { chat_id: superAdminId, text: "📩 Mijoz xabari\nIsm: " + [message.from && message.from.first_name, message.from && message.from.last_name].filter(Boolean).join(" ") + "\nUsername: " + (message.from && message.from.username ? "@" + message.from.username : "yo‘q") + "\nTelegram ID: " + senderId + "\nQuyidagi xabarga Reply qilib javob yuboring." });
       const copied = await telegramApi("copyMessage", { chat_id: superAdminId, from_chat_id: chat.id, message_id: message.message_id });
+      if(supportMessage)await db.run("UPDATE support_inbox SET admin_message_id=? WHERE id=?",copied.message_id,supportMessage.id);
       await db.run("INSERT INTO support_message_links(admin_message_id, customer_telegram_id, created_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(admin_message_id) DO UPDATE SET customer_telegram_id=excluded.customer_telegram_id, created_at=CURRENT_TIMESTAMP", copied.message_id, senderId);
       await sendBotMenu(chat.id, "Xabaringiz adminga yetkazildi. Javobni shu bot orqali olasiz.");
     } catch (error) {
@@ -319,6 +323,25 @@ async function handleRequest(req, res) {
   if (pathname.startsWith("/api/")) {
 
 
+
+    if(pathname==='/api/admin/customers'&&req.method==='GET'){
+      const actor=await getAdminSession(req);if(actor?.role!=='super_admin'){sendJson(res,403,{error:'Faqat Super Admin mijozlarni ko‘radi'});return}
+      try{const params=new URL(req.url,'http://localhost').searchParams;sendJson(res,200,await listCustomers(db,actor,{q:params.get('q'),page:params.get('page'),recent:params.get('recent')==='1'}));return}catch(error){sendJson(res,error.statusCode||400,{error:error.message});return}
+    }
+    const customerHistoryMatch=pathname.match(/^\/api\/admin\/customers\/(\d+)\/orders$/);
+    if(customerHistoryMatch&&req.method==='GET'){
+      const actor=await getAdminSession(req);if(actor?.role!=='super_admin'){sendJson(res,403,{error:'Faqat Super Admin mijoz tarixini ko‘radi'});return}
+      sendJson(res,200,{orders:await customerOrders(db,actor,Number(customerHistoryMatch[1]))});return;
+    }
+    if(pathname==='/api/admin/support'&&req.method==='GET'){
+      const actor=await getAdminSession(req);if(!actor||!['admin','super_admin'].includes(actor.role)){sendJson(res,403,{error:'Admin ruxsati talab qilinadi'});return}
+      const params=new URL(req.url,'http://localhost').searchParams;sendJson(res,200,await listSupport(db,actor,{status:params.get('status'),page:params.get('page')}));return;
+    }
+    const supportReplyMatch=pathname.match(/^\/api\/admin\/support\/([a-f0-9-]{36})\/reply$/);
+    if(supportReplyMatch&&req.method==='POST'){
+      const actor=await getAdminSession(req);if(!actor||!['admin','super_admin'].includes(actor.role)){sendJson(res,403,{error:'Admin ruxsati talab qilinadi'});return}
+      try{sendJson(res,200,await replySupport(db,actor,supportReplyMatch[1],(await readJson(req)).text));return}catch(error){sendJson(res,error.statusCode||400,{error:error.message});return}
+    }
     if (pathname === "/api/catalog-brands" && req.method === "GET") {
       sendJson(res, 200, { brands: await listCatalogBrands(db) }); return;
     }
@@ -890,7 +913,7 @@ const server = http.createServer((req,res) => {
 });
 
 const port = Number(process.env.PORT || 3000);
-try { await db.get("SELECT 1 AS ready"); await initializeImageStorage(); await initializeServiceWorkflow(db); await initializeAvailability(db); await ensureNeoCamSection(db); await db.run("UPDATE customer_notifications SET delivery_status = 'pending' WHERE delivery_status = 'sending'"); }
+try { await db.get("SELECT 1 AS ready"); await initializeImageStorage(); await initializeServiceWorkflow(db); await initializeAvailability(db); await initializeCustomerSupport(db); await ensureNeoCamSection(db); await db.run("UPDATE customer_notifications SET delivery_status = 'pending' WHERE delivery_status = 'sending'"); }
 catch (error) { console.error("Database/storage initialization failed; check environment configuration"); process.exit(1); }
 server.listen(port, "0.0.0.0", () => { console.log(`UzCam backend running on port ${port}`); void configureTelegramWebhook(); });
 const notificationTimer = setInterval(() => {
