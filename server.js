@@ -1,3 +1,4 @@
+import { initializeWorkerManagement, effectiveWorkerRole, managedWorkers, saveManagedWorker, saveWorkerRates, changeManagedWorker, deleteManagedWorker, manageHeadWorker } from './backend/worker-management.js';
 import { initializeCustomerSupport, recordSupportMessage, listCustomers, customerOrders, listSupport, replySupport } from './backend/customer-support.js';
 import { initializeAvailability, getAvailability, setAvailability } from './backend/worker-availability.js';
 import { initializeServiceWorkflow, serviceAction, listServiceJobs, reviewMarkup } from './backend/service-workflow.js';
@@ -47,7 +48,7 @@ async function getAdminSession(req) {
   if (!session.id || session.exp < Date.now()) return null;
   const user = await db.get("SELECT id, telegram_id, username, full_name, phone, role, is_active FROM users WHERE telegram_id = ?", String(session.id));
   if (!user || !user.is_active || !["admin", "super_admin", "worker"].includes(user.role)) return null;
-  return user;
+  return effectiveWorkerRole(db,user);
 }
 async function readJson(req, maxBytes = 10000) {
   const chunks = []; let size = 0;
@@ -153,7 +154,7 @@ async function sendWorkerOffers(orderId) {
   const order=await db.get("SELECT o.id,o.order_number FROM orders o WHERE o.id=?",orderId);
   if(!order)return;
   const items=await db.all("SELECT p.name,oi.quantity FROM order_items oi JOIN products p ON p.id=oi.product_id WHERE oi.order_id=?",orderId);
-  const workers=await db.all("SELECT u.id,u.telegram_id FROM users u JOIN telegram_notification_preferences n ON n.user_id=u.id AND n.enabled=1 LEFT JOIN worker_availability a ON a.worker_id=u.id WHERE u.role='worker' AND u.is_active=1 AND (a.mode IS NULL OR a.mode='available' OR (a.busy_until IS NOT NULL AND a.busy_until<=CURRENT_TIMESTAMP))");
+  const workers=await db.all("SELECT u.id,u.telegram_id FROM users u JOIN telegram_notification_preferences n ON n.user_id=u.id AND n.enabled=1 LEFT JOIN worker_availability a ON a.worker_id=u.id WHERE u.role='worker' AND u.is_active=1 AND NOT EXISTS(SELECT 1 FROM worker_managers m WHERE m.user_id=u.id) AND (a.mode IS NULL OR a.mode='available' OR (a.busy_until IS NOT NULL AND a.busy_until<=CURRENT_TIMESTAMP))");
   const text="\u{1F527} Yangi xizmat buyurtmasi\n\nBuyurtma: "+order.order_number+"\nMahsulotlar: "+items.map(i=>i.name+"\u00d7"+i.quantity).join(', ')+"\n\nBirinchi qabul qilgan ustaga biriktiriladi.";
   for(const worker of workers){try{const sent=await telegramApi('sendMessage',{chat_id:worker.telegram_id,text,reply_markup:{inline_keyboard:[[ {text:'✅ Qabul qilish',callback_data:'claim:'+orderId} ]]}});await db.run("INSERT INTO audit_log(actor_id,action,entity_type,entity_id,details_json) VALUES (?, 'offer_sent', 'worker_offer', ?, ?)",worker.id,String(orderId),JSON.stringify({chatId:worker.telegram_id,messageId:sent.message_id}));}catch(error){console.error('Worker offer failed:',error.message)}}
 }
@@ -166,7 +167,7 @@ async function handleServiceCallback(callback){
  const match=String(callback.data||'').match(/^svc:(travelling|working|finish|star|confirm|problem|dispatch|review):(\d+)(?::([1-5]))?$/);
  if(!match)return;
  try{
-  const actor=await db.get("SELECT id,role FROM users WHERE telegram_id=? AND is_active=1",String(callback.from.id));
+  const actor=await db.get("SELECT id,CASE WHEN role='worker' AND EXISTS(SELECT 1 FROM worker_managers m WHERE m.user_id=users.id) THEN 'head_worker' ELSE role END AS role FROM users WHERE telegram_id=? AND is_active=1",String(callback.from.id));
   if(!actor)throw new Error('Profil topilmadi');
   const result=await serviceAction(db,actor,Number(match[2]),match[1],match[3]);
   await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:result.showDispatcher?'Dispetcherga xabar berish tugmasini bosing':'Saqlandi'});
@@ -177,7 +178,7 @@ async function handleServiceCallback(callback){
 }
 
 async function handleWorkerCallback(callback) {
- const senderId=String(callback.from?.id||''),data=String(callback.data||''),match=data.match(/^(claim|cancel):(\d+)$/);if(!match)return;const worker=await db.get("SELECT id,telegram_id,role,is_active FROM users WHERE telegram_id=?",senderId);if(!worker||worker.role!=='worker'||!worker.is_active){await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Sizda usta ruxsati yo‘q',show_alert:true});return}const orderId=Number(match[2]);if(match[1]==='claim'){const claimed=await db.transaction(async()=>{await db.run("UPDATE users SET is_active=is_active WHERE id=?",worker.id);const currentWorker=await db.get("SELECT is_active FROM users WHERE id=?",worker.id);if(!currentWorker?.is_active||(await getAvailability(db,worker.id)).mode==='busy')return {busy:true};const order=await db.get("SELECT id,order_number,payment_status FROM orders WHERE id=?",orderId);if(!order||order.payment_status!=='confirmed')return null;const result=await db.run("INSERT INTO work_claims(order_id,worker_id,claimed_at) VALUES (?,?,CURRENT_TIMESTAMP) ON CONFLICT(order_id) DO NOTHING",orderId,worker.id);return result.changes?order:null});if(claimed?.busy){await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Hozir bandsiz yoki faol emassiz. Yangi ish olish uchun holatingizni tekshiring.',show_alert:true});return}if(!claimed){await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Bu buyurtmani boshqa usta oldi',show_alert:true});return}const customer=await db.get("SELECT o.delivery_phone,o.delivery_address,u.full_name,u.username FROM orders o JOIN users u ON u.id=o.customer_id WHERE o.id=?",orderId);const customerLink=customer.username?'@'+String(customer.username).replace(/^@/,''):'Telegram username kiritilmagan';await telegramApi('sendMessage',{chat_id:worker.telegram_id,text:'\u{1F4CB} '+claimed.order_number+' buyurtma tafsilotlari\nMijoz: '+(customer.full_name||'Mijoz')+'\nTelefon: '+customer.delivery_phone+'\nTelegram: '+customerLink+'\nManzil: '+customer.delivery_address});const offers=await db.all("SELECT actor_id,details_json FROM audit_log WHERE entity_type='worker_offer' AND entity_id=? AND action='offer_sent'",String(orderId));for(const offer of offers){if(offer.actor_id===worker.id)continue;try{const meta=JSON.parse(offer.details_json);await telegramApi('editMessageReplyMarkup',{chat_id:meta.chatId,message_id:meta.messageId,reply_markup:{inline_keyboard:[]}});await telegramApi('sendMessage',{chat_id:meta.chatId,text:'ℹ️ Bu buyurtma boshqa usta tomonidan vaqtincha qabul qilindi.'});}catch{}}await telegramApi('editMessageText',{chat_id:callback.message.chat.id,message_id:callback.message.message_id,text:'✅ '+claimed.order_number+' sizga vaqtincha biriktirildi. 10 daqiqa ichida bekor qilishingiz mumkin.',reply_markup:{inline_keyboard:[[ {text:'Bekor qilish (10 daqiqa)',callback_data:'cancel:'+orderId} ],[{text:'Usta kabinetini ochish',web_app:{url:telegramAppUrl()+'assets/worker-cabinet.html?v=availability-20261113'}}] ]}});await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Buyurtma sizga biriktirildi'});return}const started=await db.get("SELECT state FROM service_jobs WHERE order_id=?",orderId);if(started){await telegramApi("answerCallbackQuery",{callback_query_id:callback.id,text:"Ish boshlangan. Dispetcherga murojaat qiling",show_alert:true});return}const claim=await db.get("SELECT worker_id,claimed_at FROM work_claims WHERE order_id=?",orderId);if(!claim||claim.worker_id!==worker.id||Date.now()-new Date(String(claim.claimed_at).replace(' ','T')+'Z').getTime()>10*60*1000){await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Bekor qilish muddati tugagan',show_alert:true});return}await db.run("DELETE FROM work_claims WHERE order_id=? AND worker_id=?",orderId,worker.id);await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Buyurtma qayta tarqatildi'});await telegramApi('editMessageText',{chat_id:callback.message.chat.id,message_id:callback.message.message_id,text:'↩️ Buyurtma bekor qilindi va boshqa ustalarga qayta yuborildi.'});await sendWorkerOffers(orderId);
+ const senderId=String(callback.from?.id||''),data=String(callback.data||''),match=data.match(/^(claim|cancel):(\d+)$/);if(!match)return;const worker=await db.get("SELECT id,telegram_id,role,is_active FROM users WHERE telegram_id=? AND NOT EXISTS(SELECT 1 FROM worker_managers m WHERE m.user_id=users.id)",senderId);if(!worker||worker.role!=='worker'||!worker.is_active){await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Sizda usta ruxsati yo‘q',show_alert:true});return}const orderId=Number(match[2]);if(match[1]==='claim'){const claimed=await db.transaction(async()=>{await db.run("UPDATE users SET is_active=is_active WHERE id=?",worker.id);const currentWorker=await db.get("SELECT is_active FROM users WHERE id=?",worker.id);if(!currentWorker?.is_active||(await getAvailability(db,worker.id)).mode==='busy')return {busy:true};const order=await db.get("SELECT id,order_number,payment_status FROM orders WHERE id=?",orderId);if(!order||order.payment_status!=='confirmed')return null;const result=await db.run("INSERT INTO work_claims(order_id,worker_id,claimed_at) VALUES (?,?,CURRENT_TIMESTAMP) ON CONFLICT(order_id) DO NOTHING",orderId,worker.id);return result.changes?order:null});if(claimed?.busy){await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Hozir bandsiz yoki faol emassiz. Yangi ish olish uchun holatingizni tekshiring.',show_alert:true});return}if(!claimed){await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Bu buyurtmani boshqa usta oldi',show_alert:true});return}const customer=await db.get("SELECT o.delivery_phone,o.delivery_address,u.full_name,u.username FROM orders o JOIN users u ON u.id=o.customer_id WHERE o.id=?",orderId);const customerLink=customer.username?'@'+String(customer.username).replace(/^@/,''):'Telegram username kiritilmagan';await telegramApi('sendMessage',{chat_id:worker.telegram_id,text:'\u{1F4CB} '+claimed.order_number+' buyurtma tafsilotlari\nMijoz: '+(customer.full_name||'Mijoz')+'\nTelefon: '+customer.delivery_phone+'\nTelegram: '+customerLink+'\nManzil: '+customer.delivery_address});const offers=await db.all("SELECT actor_id,details_json FROM audit_log WHERE entity_type='worker_offer' AND entity_id=? AND action='offer_sent'",String(orderId));for(const offer of offers){if(offer.actor_id===worker.id)continue;try{const meta=JSON.parse(offer.details_json);await telegramApi('editMessageReplyMarkup',{chat_id:meta.chatId,message_id:meta.messageId,reply_markup:{inline_keyboard:[]}});await telegramApi('sendMessage',{chat_id:meta.chatId,text:'ℹ️ Bu buyurtma boshqa usta tomonidan vaqtincha qabul qilindi.'});}catch{}}await telegramApi('editMessageText',{chat_id:callback.message.chat.id,message_id:callback.message.message_id,text:'✅ '+claimed.order_number+' sizga vaqtincha biriktirildi. 10 daqiqa ichida bekor qilishingiz mumkin.',reply_markup:{inline_keyboard:[[ {text:'Bekor qilish (10 daqiqa)',callback_data:'cancel:'+orderId} ],[{text:'Usta kabinetini ochish',web_app:{url:telegramAppUrl()+'assets/worker-cabinet.html?v=availability-20261113'}}] ]}});await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Buyurtma sizga biriktirildi'});return}const started=await db.get("SELECT state FROM service_jobs WHERE order_id=?",orderId);if(started){await telegramApi("answerCallbackQuery",{callback_query_id:callback.id,text:"Ish boshlangan. Dispetcherga murojaat qiling",show_alert:true});return}const claim=await db.get("SELECT worker_id,claimed_at FROM work_claims WHERE order_id=?",orderId);if(!claim||claim.worker_id!==worker.id||Date.now()-new Date(String(claim.claimed_at).replace(' ','T')+'Z').getTime()>10*60*1000){await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Bekor qilish muddati tugagan',show_alert:true});return}await db.run("DELETE FROM work_claims WHERE order_id=? AND worker_id=?",orderId,worker.id);await telegramApi('answerCallbackQuery',{callback_query_id:callback.id,text:'Buyurtma qayta tarqatildi'});await telegramApi('editMessageText',{chat_id:callback.message.chat.id,message_id:callback.message.message_id,text:'↩️ Buyurtma bekor qilindi va boshqa ustalarga qayta yuborildi.'});await sendWorkerOffers(orderId);
 }
 async function handleTelegramUpdate(update) {
   if(update.callback_query){if(String(update.callback_query.data||'').startsWith('svc:'))await handleServiceCallback(update.callback_query);else await handleWorkerCallback(update.callback_query);return;}
@@ -342,6 +343,25 @@ async function handleRequest(req, res) {
       const actor=await getAdminSession(req);if(!actor||!['admin','super_admin'].includes(actor.role)){sendJson(res,403,{error:'Admin ruxsati talab qilinadi'});return}
       try{sendJson(res,200,await replySupport(db,actor,supportReplyMatch[1],(await readJson(req)).text));return}catch(error){sendJson(res,error.statusCode||400,{error:error.message});return}
     }
+
+    if(pathname==='/api/worker-management/managers'){
+      const actor=await getAdminSession(req);if(actor?.role!=='super_admin'){sendJson(res,403,{error:'Faqat Super Admin'});return}
+      try{if(req.method==='GET'){sendJson(res,200,{managers:await db.all("SELECT u.telegram_id,u.full_name,u.is_active FROM worker_managers m JOIN users u ON u.id=m.user_id ORDER BY u.full_name")});return}
+      if(req.method==='POST'||req.method==='DELETE'){sendJson(res,200,await manageHeadWorker(db,actor,await readJson(req),req.method==='DELETE'));return}
+      sendJson(res,405,{error:'Amal noto‘g‘ri'});return}catch(error){sendJson(res,error.statusCode||400,{error:error.message});return}
+    }
+    const managementMatch=pathname.match(/^\/api\/worker-management\/workers(?:\/(\d{5,20})(?:\/(rates|active))?)?$/);
+    if(managementMatch){
+      const actor=await getAdminSession(req);if(!actor||!['super_admin','head_worker'].includes(actor.role)){sendJson(res,403,{error:'Faqat Bosh usta yoki Super Admin'});return}
+      try{
+       const tg=managementMatch[1],action=managementMatch[2];
+       if(req.method==='GET'&&!tg){sendJson(res,200,await managedWorkers(db,actor));return}
+       if(req.method==='POST'&&!tg){sendJson(res,201,await saveManagedWorker(db,actor,await readJson(req)));return}
+       if(req.method==='PUT'&&tg){const body=await readJson(req);sendJson(res,200,action==='rates'?await saveWorkerRates(db,actor,tg,body.rates):action==='active'?await changeManagedWorker(db,actor,tg,body.isActive):await saveManagedWorker(db,actor,body,tg));return}
+       if(req.method==='DELETE'&&tg&&!action){sendJson(res,200,await deleteManagedWorker(db,actor,tg));return}
+       sendJson(res,405,{error:'Amal noto‘g‘ri'});return;
+      }catch(error){sendJson(res,error.statusCode||400,{error:error.message});return}
+    }
     if (pathname === "/api/catalog-brands" && req.method === "GET") {
       sendJson(res, 200, { brands: await listCatalogBrands(db) }); return;
     }
@@ -420,10 +440,10 @@ async function handleRequest(req, res) {
     if(pathname==='/api/worker/availability' && req.method==='POST'){
      try {
       const body=await readJson(req),tg=verifyTelegramInitData(String(body.initData||''));
-      const actor=tg?.id?await db.get("SELECT id,role FROM users WHERE telegram_id=? AND is_active=1",String(tg.id)):await getAdminSession(req);
-      if(!actor||!['worker','super_admin'].includes(actor.role)){sendJson(res,403,{error:'Usta yoki Super Admin ruxsati kerak'});return}
+      const actor=tg?.id?await db.get("SELECT id,CASE WHEN role='worker' AND EXISTS(SELECT 1 FROM worker_managers m WHERE m.user_id=users.id) THEN 'head_worker' ELSE role END AS role FROM users WHERE telegram_id=? AND is_active=1",String(tg.id)):await getAdminSession(req);
+      if(!actor||!['worker','super_admin','head_worker'].includes(actor.role)){sendJson(res,403,{error:'Usta yoki Super Admin ruxsati kerak'});return}
       let target=actor.id;
-      if(actor.role==='super_admin'){const user=await db.get("SELECT id FROM users WHERE telegram_id=? AND role='worker'",String(body.telegramId||''));if(!user){sendJson(res,404,{error:'Usta topilmadi'});return}target=user.id}
+      if(['super_admin','head_worker'].includes(actor.role)){const user=await db.get("SELECT id FROM users WHERE telegram_id=? AND role='worker' AND NOT EXISTS(SELECT 1 FROM worker_managers m WHERE m.user_id=users.id)",String(body.telegramId||''));if(!user){sendJson(res,404,{error:'Usta topilmadi'});return}target=user.id}
       sendJson(res,200,{ok:true,availability:body.mode===undefined?await getAvailability(db,target):await setAvailability(db,actor,target,body.mode,body.duration)});return;
      }catch(error){sendJson(res,error.statusCode||400,{error:error.message});return}
     }
@@ -435,7 +455,7 @@ async function handleRequest(req, res) {
     if(pathname==='/api/service/jobs' && req.method==='POST'){
       try {const body=await readJson(req),tg=verifyTelegramInitData(String(body.initData||''));
        if(!tg?.id){sendJson(res,401,{error:'Telegram orqali kiring'});return}
-       const actor=await db.get("SELECT id,role FROM users WHERE telegram_id=? AND is_active=1",String(tg.id));
+       const actor=await db.get("SELECT id,CASE WHEN role='worker' AND EXISTS(SELECT 1 FROM worker_managers m WHERE m.user_id=users.id) THEN 'head_worker' ELSE role END AS role FROM users WHERE telegram_id=? AND is_active=1",String(tg.id));
        if(!actor){sendJson(res,403,{error:'Profil topilmadi'});return}
        sendJson(res,200,{role:actor.role,jobs:await listServiceJobs(db,actor)});return;
       }catch(error){sendJson(res,error.statusCode||400,{error:error.message});return}
@@ -444,13 +464,13 @@ async function handleRequest(req, res) {
     if(serviceActionMatch && req.method==='POST'){
       try{const body=await readJson(req),tg=verifyTelegramInitData(String(body.initData||''));
        if(!tg?.id){sendJson(res,401,{error:'Telegram orqali kiring'});return}
-       const actor=await db.get("SELECT id,role FROM users WHERE telegram_id=? AND is_active=1",String(tg.id));
+       const actor=await db.get("SELECT id,CASE WHEN role='worker' AND EXISTS(SELECT 1 FROM worker_managers m WHERE m.user_id=users.id) THEN 'head_worker' ELSE role END AS role FROM users WHERE telegram_id=? AND is_active=1",String(tg.id));
        if(!actor){sendJson(res,403,{error:'Profil topilmadi'});return}
        sendJson(res,200,{ok:true,job:await serviceAction(db,actor,Number(serviceActionMatch[1]),body.action,body.rating)});return;
       }catch(error){sendJson(res,error.statusCode||400,{error:error.message});return}
     }
     if (pathname === "/api/workers" && req.method === "GET") {
-      const workers = await db.all("SELECT u.telegram_id, u.full_name, wp.experience_years, wp.phone, wp.service_region, wp.service_city, wp.service_district, wp.telegram_username, wp.photo_url, wp.service_prices, wp.description, COALESCE(r.rating_average, 0) AS rating_average, COALESCE(r.rating_count, 0) AS rating_count FROM worker_profiles wp JOIN users u ON u.id = wp.user_id LEFT JOIN (SELECT worker_id, ROUND(AVG(rating), 1) AS rating_average, COUNT(*) AS rating_count FROM (SELECT worker_id,rating FROM worker_ratings UNION ALL SELECT worker_id,rating FROM service_jobs WHERE state='completed' AND rating IS NOT NULL) all_ratings GROUP BY worker_id) r ON r.worker_id = wp.user_id WHERE u.role = 'worker' AND u.is_active = 1 AND wp.is_public = 1 ORDER BY u.full_name");
+      const workers = await db.all("SELECT u.telegram_id, u.full_name, wp.experience_years, wp.phone, wp.service_region, wp.service_city, wp.service_district, wp.telegram_username, wp.photo_url, wp.service_prices, wp.description, COALESCE(r.rating_average, 0) AS rating_average, COALESCE(r.rating_count, 0) AS rating_count FROM worker_profiles wp JOIN users u ON u.id = wp.user_id LEFT JOIN (SELECT worker_id, ROUND(AVG(rating), 1) AS rating_average, COUNT(*) AS rating_count FROM (SELECT worker_id,rating FROM worker_ratings UNION ALL SELECT worker_id,rating FROM service_jobs WHERE state='completed' AND rating IS NOT NULL) all_ratings GROUP BY worker_id) r ON r.worker_id = wp.user_id WHERE u.role = 'worker' AND u.is_active = 1 AND wp.is_public = 1 AND NOT EXISTS(SELECT 1 FROM worker_managers m WHERE m.user_id=u.id) ORDER BY u.full_name");
       sendJson(res, 200, { workers }); return;
     }
     const workerRatingMatch = pathname.match(/^\/api\/workers\/(\d{5,20})\/rating$/);
@@ -520,7 +540,7 @@ async function handleRequest(req, res) {
       if (!actor || actor.role !== "super_admin") { sendJson(res, 403, { error: "Faqat Super Admin xodimlarni boshqaradi" }); return; }
       if (req.method === "GET") {
         const staff = await db.all("SELECT u.id, u.telegram_id, u.username, u.full_name, u.role, u.is_active, u.created_at, COALESCE(wp.experience_years, 0) AS experience_years, COALESCE(wp.phone, u.phone, '') AS phone, COALESCE(wp.service_region, '') AS service_region, COALESCE(wp.service_city, '') AS service_city, COALESCE(wp.service_district, '') AS service_district, COALESCE(wp.telegram_username, '') AS telegram_username, COALESCE(wp.photo_url, '') AS photo_url, COALESCE(wp.service_prices, '') AS service_prices, COALESCE(wp.description, '') AS description, COALESCE(wp.is_public, 1) AS is_public FROM users u LEFT JOIN worker_profiles wp ON wp.user_id = u.id WHERE u.role IN ('super_admin','admin','worker') ORDER BY CASE u.role WHEN 'super_admin' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END, u.full_name, u.telegram_id");
-        for(const worker of staff)if(worker.role==='worker')worker.availability=await getAvailability(db,worker.id);sendJson(res, 200, { staff }); return;
+        for(const worker of staff){if(worker.role==='worker')worker.availability=await getAvailability(db,worker.id);const effective=await effectiveWorkerRole(db,worker);worker.role=effective.role;}sendJson(res, 200, { staff }); return;
       }
       if (req.method === "POST") {
         try {
@@ -534,7 +554,8 @@ async function handleRequest(req, res) {
           const requestedPublic = Boolean(workerProfile?.isPublic);
           const profileComplete = true;
           if (telegramId === String(process.env.SUPER_ADMIN_TELEGRAM_ID || "")) { sendJson(res, 409, { error: "Super Admin akkauntini bu yerdan o‘zgartirib bo‘lmaydi" }); return; }
-          const existingStaff = await db.get("SELECT role FROM users WHERE telegram_id = ?", telegramId);
+          const existingStaff = await db.get("SELECT id,role FROM users WHERE telegram_id = ?", telegramId);
+          if(existingStaff&&await db.get("SELECT user_id FROM worker_managers WHERE user_id=?",existingStaff.id)){sendJson(res,409,{error:"Bosh usta ruxsatini maxsus bo‘limdan boshqaring"});return}
           if (existingStaff && existingStaff.role === "super_admin") { sendJson(res, 409, { error: "Boshqa Super Admin akkauntini bu yerdan o‘zgartirib bo‘lmaydi" }); return; }
           await db.run("INSERT INTO users(telegram_id, full_name, role) VALUES (?, ?, ?) ON CONFLICT(telegram_id) DO UPDATE SET full_name = CASE WHEN excluded.full_name <> '' THEN excluded.full_name ELSE users.full_name END, role = excluded.role, is_active = 1, updated_at = CURRENT_TIMESTAMP", telegramId, fullName, role);
           const user = await db.get("SELECT id, telegram_id, username, full_name, role, is_active, created_at FROM users WHERE telegram_id = ?", telegramId);
@@ -554,6 +575,7 @@ async function handleRequest(req, res) {
       try {
         const body = await readJson(req);
         const current = await db.get("SELECT id, role, is_active FROM users WHERE telegram_id = ?", telegramId);
+        if(current&&await db.get("SELECT user_id FROM worker_managers WHERE user_id=?",current.id)){sendJson(res,409,{error:"Bosh usta ruxsatini maxsus bo‘limdan boshqaring"});return}
         if (!current || !["admin", "worker"].includes(current.role)) { sendJson(res, 404, { error: "Xodim topilmadi" }); return; }
         const role = body.role === undefined ? current.role : String(body.role);
         const isActive = body.isActive === undefined ? current.is_active : (body.isActive === true || body.isActive === 1 ? 1 : body.isActive === false || body.isActive === 0 ? 0 : -1);
@@ -835,7 +857,7 @@ async function handleRequest(req, res) {
         const payload = Buffer.from(JSON.stringify({ id: telegramId, exp: Date.now() + 2 * 60 * 60 * 1000 })).toString("base64url");
         const signature = createHmac("sha256", process.env.TELEGRAM_BOT_TOKEN).update(payload).digest("base64url");
         res.setHeader("Set-Cookie", `uzcam_session=${payload}.${signature}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=7200`);
-        sendJson(res, 200, { user: sessionUser(user) }); return;
+        sendJson(res, 200, { user: sessionUser(await effectiveWorkerRole(db,user)) }); return;
       } catch { sendJson(res, 400, { error: "Profil so‘rovini o‘qib bo‘lmadi" }); return; }
     }
     if (pathname === "/api/session" && req.method === "GET") {
@@ -913,7 +935,7 @@ const server = http.createServer((req,res) => {
 });
 
 const port = Number(process.env.PORT || 3000);
-try { await db.get("SELECT 1 AS ready"); await initializeImageStorage(); await initializeServiceWorkflow(db); await initializeAvailability(db); await initializeCustomerSupport(db); await ensureNeoCamSection(db); await db.run("UPDATE customer_notifications SET delivery_status = 'pending' WHERE delivery_status = 'sending'"); }
+try { await db.get("SELECT 1 AS ready"); await initializeImageStorage(); await initializeServiceWorkflow(db); await initializeAvailability(db); await initializeWorkerManagement(db); await initializeCustomerSupport(db); await ensureNeoCamSection(db); await db.run("UPDATE customer_notifications SET delivery_status = 'pending' WHERE delivery_status = 'sending'"); }
 catch (error) { console.error("Database/storage initialization failed; check environment configuration"); process.exit(1); }
 server.listen(port, "0.0.0.0", () => { console.log(`UzCam backend running on port ${port}`); void configureTelegramWebhook(); });
 const notificationTimer = setInterval(() => {
