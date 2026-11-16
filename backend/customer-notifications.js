@@ -21,8 +21,8 @@ export async function dispatchCustomerNotifications(database, sendTelegram, opti
     `SELECT n.id, n.user_id, n.message, n.event_key, n.order_id, u.telegram_id
        FROM customer_notifications n
        JOIN users u ON u.id = n.user_id AND u.is_active = 1
-       JOIN telegram_notification_preferences p ON p.user_id = u.id AND p.enabled = 1
-      WHERE n.delivery_status = 'pending'
+       LEFT JOIN telegram_notification_preferences p ON p.user_id = u.id
+      WHERE n.delivery_status = 'pending' AND (p.enabled = 1 OR n.event_key LIKE 'support:reply:%')
         AND n.attempts < 8
         AND (n.next_attempt_at IS NULL OR n.next_attempt_at <= ?)
       ORDER BY n.created_at, n.id LIMIT ?`,
@@ -46,6 +46,7 @@ export async function dispatchCustomerNotifications(database, sendTelegram, opti
         "UPDATE customer_notifications SET delivery_status = 'sent', sent_at = CURRENT_TIMESTAMP, last_error = NULL WHERE id = ?",
         row.id
       );
+      if(String(row.event_key||'').startsWith('support:reply:'))await database.run("UPDATE support_inbox SET status='answered',replied_at=CURRENT_TIMESTAMP WHERE reply_event_key=? AND status='reply_queued'",row.event_key);
       sent++;
     } catch (error) {
       const current = await database.get("SELECT attempts FROM customer_notifications WHERE id = ?", row.id);
