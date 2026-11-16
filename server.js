@@ -404,6 +404,11 @@ async function handleRequest(req, res) {
       sendJson(res,200,{ok:true,availability:body.mode===undefined?await getAvailability(db,target):await setAvailability(db,actor,target,body.mode,body.duration)});return;
      }catch(error){sendJson(res,error.statusCode||400,{error:error.message});return}
     }
+    if(pathname==='/api/admin/service-jobs' && req.method==='GET'){
+      const actor=await getAdminSession(req);
+      if(!actor||!['admin','super_admin'].includes(actor.role)){sendJson(res,403,{error:'Admin ruxsati talab qilinadi'});return}
+      sendJson(res,200,{jobs:await listServiceJobs(db,actor)});return;
+    }
     if(pathname==='/api/service/jobs' && req.method==='POST'){
       try {const body=await readJson(req),tg=verifyTelegramInitData(String(body.initData||''));
        if(!tg?.id){sendJson(res,401,{error:'Telegram orqali kiring'});return}
