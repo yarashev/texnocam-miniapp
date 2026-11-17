@@ -25,6 +25,37 @@ async function startServer(directory, telegramLogPath) {
   child.kill();throw new Error('Local server failed: '+log);
 }
 
+test('admin completion API enforces saved permissions and persists payment settings across restart',async t=>{
+  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'uzcam-admin-completion-')),log=path.join(directory,'telegram.jsonl');
+  let running=await startServer(directory,log);t.after(async()=>{if(running)await running.stop()});
+  const db=new DatabaseSync(path.join(directory,'texnocam.sqlite'));t.after(()=>db.close());
+  db.prepare("INSERT INTO users(telegram_id,full_name,role) VALUES ('91000600','Test Admin','admin')").run();
+  const login=async id=>{const r=await fetch(running.base+'/api/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:initData(id)})});assert.equal(r.status,200);return r.headers.get('set-cookie').split(';')[0]};
+  let superCookie=await login(superId);const adminCookie=await login('91000600');
+  const call=(url,method='GET',body,cookie=superCookie)=>fetch(running.base+url,{method,headers:{cookie,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+  assert.equal((await fetch(running.base+'/api/settings/payment')).status,403);
+  assert.equal((await call('/api/admin/dashboard','GET',undefined,adminCookie)).status,200);
+  const permissionResult=await (await call('/api/admin/permissions/91000600')).json();
+  assert.equal((await call('/api/admin/permissions/91000600','PUT',{permissions:{...permissionResult.permissions,'payments.confirm':false}},adminCookie)).status,403);
+  const permissions={...permissionResult.permissions,'payments.confirm':false,'reports.export':false,'catalog.write':false};
+  assert.equal((await call('/api/admin/permissions/91000600','PUT',{permissions})).status,200);
+  assert.equal((await call('/api/admin/orders/999999/payment','PATCH',{action:'confirm'},adminCookie)).status,403);
+  assert.equal((await call('/api/admin/products','POST',{},adminCookie)).status,403);
+  assert.equal((await call('/api/admin/orders/export','GET',undefined,adminCookie)).status,403);
+  assert.equal((await call('/api/admin/products','GET',undefined,adminCookie)).status,200);
+  const session=await (await call('/api/session','GET',undefined,adminCookie)).json();assert.equal(session.user.permissions['payments.confirm'],false);
+  const qrBase64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jH+0AAAAASUVORK5CYII=';
+  const save=await call('/api/settings/payment','PUT',{cardNumber:'8600000000000000',cardHolder:'Test',qrImage:'',qrBase64});assert.equal(save.status,200);const payment=await save.json();
+  const publicSettings=await (await fetch(running.base+'/api/payment-settings')).json();assert.equal(publicSettings.cardHolder,'Test');
+  const image=await fetch(running.base+payment.qrImage);assert.equal(image.status,200);assert.equal(image.headers.get('content-type'),'image/png');assert(Buffer.from(await image.arrayBuffer()).equals(Buffer.from(qrBase64,'base64')));
+  const report=await call('/api/admin/orders/export');assert.equal(report.status,200);assert.match(report.headers.get('content-type'),/text\/csv/);
+  await running.stop();running=null;running=await startServer(directory,log);superCookie=await login(superId);
+  assert.equal((await (await fetch(running.base+'/api/payment-settings')).json()).qrImage,payment.qrImage);
+  assert.equal((await call('/api/admin/orders/export','GET',undefined,adminCookie)).status,403);
+  const second=await call('/api/settings/payment','PUT',{cardNumber:'8600000000000000',qrImage:payment.qrImage,qrBase64});assert.equal(second.status,200);
+  assert.equal((await fetch(running.base+payment.qrImage)).status,404);
+});
+
 test('worker offers hide customer contact until a worker successfully claims',async t=>{
   const directory=fs.mkdtempSync(path.join(os.tmpdir(),'uzcam-worker-privacy-'));
   const telegramLogPath=path.join(directory,'telegram.jsonl');

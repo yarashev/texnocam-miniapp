@@ -16,7 +16,8 @@ function database(){
   };
 }
 test('catalog includes requested sections and matches punctuation/case aliases',()=>{
-  assert.equal(config.defaults.length,13);
+  assert.equal(config.defaults.length,14);
+  assert.ok(config.matchesSection({brand:'NeoCam'},config.defaults.find(item=>item.id==='neocam')));
   const section=name=>config.defaults.find(item=>item.name===name);
   assert.ok(config.matchesSection({brand:'Hilook'},section('HiLook')));
   assert.ok(config.matchesSection({brand:'Zkteco'},section('ZKTeco')));

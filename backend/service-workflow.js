@@ -1,8 +1,11 @@
 import { enqueueCustomerNotification } from './customer-notifications.js';
+import { randomUUID } from 'node:crypto';
+import { attachPermissions, can, initializeAdminCompletion } from './admin-completion.js';
 
 export const labels = { accepted:'Qabul qilindi', travelling:'Yo‘lga chiqdi', working:'Bajarilmoqda', awaiting_customer:'Mijoz tasdig‘i kutilmoqda', disputed:'Dispetcher ko‘rib chiqmoqda', completed:'Yakunlandi' };
 const fail = (message, statusCode=409) => { throw Object.assign(new Error(message), {statusCode}); };
 export async function initializeServiceWorkflow(db) {
+  await initializeAdminCompletion(db);
   await db.run(`CREATE TABLE IF NOT EXISTS service_jobs (
     order_id INTEGER PRIMARY KEY REFERENCES orders(id), worker_id INTEGER NOT NULL REFERENCES users(id),
     state TEXT NOT NULL DEFAULT 'accepted', selected_rating INTEGER, rating INTEGER,
@@ -55,7 +58,8 @@ export async function serviceAction(db, actor, orderId, action, value) {
       const contact=await db.get('SELECT full_name,telegram_id,phone FROM users WHERE id=?',order.customer_id);
       const worker=await db.get('SELECT full_name,telegram_id FROM users WHERE id=?',order.worker_id);
       const admins=await db.all("SELECT id FROM users WHERE role IN ('admin','super_admin') AND is_active=1");
-      for(const admin of admins)await enqueueCustomerNotification(db,{userId:admin.id,orderId,eventKey:'service:dispute:'+orderId+':'+admin.id,title:'Dispetcherga murojaat',message:'⚠️ '+order.order_number+' — mijoz muammo haqida xabar berdi.\nMijoz: '+contact.full_name+' (Telegram ID: '+contact.telegram_id+')\nTelefon: '+(order.delivery_phone||contact.phone||'—')+'\nUsta: '+worker.full_name+' (Telegram ID: '+worker.telegram_id+')'});
+      const cycle=randomUUID();
+      for(const admin of admins){const permissionActor=await attachPermissions(db,{...admin,role:(await db.get('SELECT role FROM users WHERE id=?',admin.id)).role});if(!can(permissionActor,'dispatch.manage'))continue;await enqueueCustomerNotification(db,{userId:admin.id,orderId,eventKey:'service:dispute:'+orderId+':'+cycle+':'+admin.id,title:'Dispetcherga murojaat',message:'⚠️ '+order.order_number+' — mijoz muammo haqida xabar berdi.\nMijoz: '+contact.full_name+' (Telegram ID: '+contact.telegram_id+')\nTelefon: '+(order.delivery_phone||contact.phone||'—')+'\nUsta: '+worker.full_name+' (Telegram ID: '+worker.telegram_id+')'});}
     }
     await db.run("INSERT INTO audit_log(actor_id,action,entity_type,entity_id,details_json) VALUES (?,?,'service_job',?,?)",actor.id,action,String(orderId),JSON.stringify({from:job.state,to:next,rating:next==='completed'?rating:null}));
     return {order_id:orderId,state:next,selected_rating:rating,rating:next==='completed'?rating:null,order_number:order.order_number};
@@ -71,5 +75,6 @@ export async function listServiceJobs(db,actor){
     WHERE ${predicate} AND o.payment_status='confirmed' AND o.status<>'cancelled' ORDER BY o.created_at DESC LIMIT 100`,
     ...(["admin","super_admin"].includes(actor.role)?[]:[actor.id]));
 }
+
 
 

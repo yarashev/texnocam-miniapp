@@ -1,3 +1,4 @@
+import { initializeAdminCompletion, attachPermissions, can, requiredPermissions, adminPermissions, resolveServiceDispute, exportOrders, paymentSettings, savePaymentSettings, paymentQr, exchangeSettings, saveExchangeOptions, refreshExchange, autoRefreshExchange } from './backend/admin-completion.js';
 import { initializeWorkerManagement, effectiveWorkerRole, managedWorkers, saveManagedWorker, saveWorkerRates, changeManagedWorker, deleteManagedWorker, manageHeadWorker } from './backend/worker-management.js';
 import { initializeCustomerSupport, recordSupportMessage, listCustomers, customerOrders, listSupport, replySupport } from './backend/customer-support.js';
 import { initializeAvailability, getAvailability, setAvailability } from './backend/worker-availability.js';
@@ -48,7 +49,7 @@ async function getAdminSession(req) {
   if (!session.id || session.exp < Date.now()) return null;
   const user = await db.get("SELECT id, telegram_id, username, full_name, phone, role, is_active FROM users WHERE telegram_id = ?", String(session.id));
   if (!user || !user.is_active || !["admin", "super_admin", "worker"].includes(user.role)) return null;
-  return effectiveWorkerRole(db,user);
+  return attachPermissions(db,await effectiveWorkerRole(db,user));
 }
 async function readJson(req, maxBytes = 10000) {
   const chunks = []; let size = 0;
@@ -111,7 +112,7 @@ async function getHomeContent() {
   try { return await normalizeHomeContent(JSON.parse(row.value)); } catch { return DEFAULT_HOME_CONTENT; }
 }
 
-function sessionUser(user) { return { id: user.telegram_id, username: user.username || "", fullName: user.full_name || "", phone: user.phone || "", role: user.role }; }
+function sessionUser(user) { return { id: user.telegram_id, username: user.username || "", fullName: user.full_name || "", phone: user.phone || "", role: user.role, permissions: user.permissions || {} }; }
 
 
 function telegramWebhookSecret() {
@@ -322,6 +323,33 @@ async function handleRequest(req, res) {
   }
 
   if (pathname.startsWith("/api/")) {
+
+    const required=requiredPermissions(pathname,req.method);
+    if(required.length){const actor=await getAdminSession(req);if(required.some(key=>!can(actor,key))){sendJson(res,403,{error:'Bu amal uchun ruxsat yo‘q'});return}}
+    if(pathname==='/api/payment-settings'&&req.method==='GET'){
+      sendJson(res,200,await paymentSettings(db));return;
+    }
+    const qrMatch=pathname.match(new RegExp("^/api/payment-qr/([a-f0-9-]{36})$"));
+    if(qrMatch&&req.method==='GET'){const qr=await paymentQr(db);if(!qr||qr.id!==qrMatch[1]){sendJson(res,404,{error:'QR yangilangan. To‘lov sahifasini qayta oching'});return}res.writeHead(200,{'Content-Type':qr.type,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(Buffer.from(qr.base64,'base64'));return}
+    const permissionMatch=pathname.match(new RegExp("^/api/admin/permissions/([0-9]{5,20})$"));
+    if(permissionMatch){try{const actor=await getAdminSession(req);if(!['GET','PUT'].includes(req.method)){sendJson(res,405,{error:'Amal noto‘g‘ri'});return}sendJson(res,200,await adminPermissions(db,actor,permissionMatch[1],req.method==='PUT'?(await readJson(req)).permissions:undefined));return}catch(e){sendJson(res,e.statusCode||400,{error:e.message});return}}
+    const resolutionMatch=pathname.match(new RegExp("^/api/admin/service-jobs/([0-9]+)/resolve$"));
+    if(resolutionMatch&&req.method==='POST'){try{sendJson(res,200,await resolveServiceDispute(db,await getAdminSession(req),Number(resolutionMatch[1]),(await readJson(req)).note));return}catch(e){sendJson(res,e.statusCode||400,{error:e.message});return}}
+    if(pathname==='/api/admin/orders/export'&&req.method==='GET'){
+      try{const csv=await exportOrders(db,await getAdminSession(req),new URL(req.url,'http://localhost').searchParams);res.writeHead(200,{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="uzcam-orders.csv"','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(csv);return}catch(e){sendJson(res,e.statusCode||400,{error:e.message});return}
+    }
+    if(['/api/settings/payment','/api/settings/exchange','/api/settings/exchange/refresh'].includes(pathname)){
+      const actor=await getAdminSession(req);if(actor?.role!=='super_admin'){sendJson(res,403,{error:'Faqat Super Admin'});return}
+      try{
+        if(pathname==='/api/settings/payment'&&req.method==='GET'){sendJson(res,200,await paymentSettings(db));return}
+        if(pathname==='/api/settings/payment'&&req.method==='PUT'){sendJson(res,200,await savePaymentSettings(db,actor,await readJson(req,4500000)));return}
+        if(pathname==='/api/settings/exchange'&&req.method==='GET'){sendJson(res,200,await exchangeSettings(db));return}
+        if(pathname==='/api/settings/exchange'&&req.method==='PUT'){sendJson(res,200,await saveExchangeOptions(db,actor,await readJson(req)));return}
+        if(pathname==='/api/settings/exchange/refresh'&&req.method==='POST'){sendJson(res,200,await refreshExchange(db,actor));return}
+        sendJson(res,405,{error:'Amal noto‘g‘ri'});return;
+      }catch(e){sendJson(res,e.statusCode||400,{error:e.message});return}
+    }
+
 
 
 
@@ -857,7 +885,7 @@ async function handleRequest(req, res) {
         const payload = Buffer.from(JSON.stringify({ id: telegramId, exp: Date.now() + 2 * 60 * 60 * 1000 })).toString("base64url");
         const signature = createHmac("sha256", process.env.TELEGRAM_BOT_TOKEN).update(payload).digest("base64url");
         res.setHeader("Set-Cookie", `uzcam_session=${payload}.${signature}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=7200`);
-        sendJson(res, 200, { user: sessionUser(await effectiveWorkerRole(db,user)) }); return;
+        sendJson(res, 200, { user: sessionUser(await attachPermissions(db,await effectiveWorkerRole(db,user))) }); return;
       } catch { sendJson(res, 400, { error: "Profil so‘rovini o‘qib bo‘lmadi" }); return; }
     }
     if (pathname === "/api/session" && req.method === "GET") {
@@ -935,7 +963,7 @@ const server = http.createServer((req,res) => {
 });
 
 const port = Number(process.env.PORT || 3000);
-try { await db.get("SELECT 1 AS ready"); await initializeImageStorage(); await initializeServiceWorkflow(db); await initializeAvailability(db); await initializeWorkerManagement(db); await initializeCustomerSupport(db); await ensureNeoCamSection(db); await db.run("UPDATE customer_notifications SET delivery_status = 'pending' WHERE delivery_status = 'sending'"); }
+try { await db.get("SELECT 1 AS ready"); await initializeImageStorage(); await initializeServiceWorkflow(db); await initializeAdminCompletion(db); await initializeAvailability(db); await initializeWorkerManagement(db); await initializeCustomerSupport(db); await ensureNeoCamSection(db); await db.run("UPDATE customer_notifications SET delivery_status = 'pending' WHERE delivery_status = 'sending'"); }
 catch (error) { console.error("Database/storage initialization failed; check environment configuration"); process.exit(1); }
 server.listen(port, "0.0.0.0", () => { console.log(`UzCam backend running on port ${port}`); void configureTelegramWebhook(); });
 const notificationTimer = setInterval(() => {
@@ -945,3 +973,5 @@ notificationTimer.unref();
 const workerClaimTimer=setInterval(()=>{void finalizeWorkerClaims().catch(error=>console.error('Worker claim finalizer failed:',error.message));},15000);
 workerClaimTimer.unref();
 for(const signal of ["SIGINT","SIGTERM"]) process.once(signal,()=>{server.close(()=>{void db.close().finally(()=>process.exit(0));});setTimeout(()=>process.exit(1),10000).unref();});
+
+const exchangeTimer=setInterval(()=>{void autoRefreshExchange(db).catch(error=>console.error('CBU refresh:',error.message));},60000);exchangeTimer.unref();
