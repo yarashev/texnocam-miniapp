@@ -26,6 +26,12 @@ window.UzCamCheckoutPayment=(()=>{
       const money=Number(prepared.total).toLocaleString('uz-UZ')+' so‘m';
       host.querySelectorAll('[data-checkout-total]').forEach(el=>el.textContent=money);
       const note=host.querySelector('#checkoutAmountNotice');if(note)note.textContent='Buyurtma '+prepared.orderNumber+'. To‘lov summasi: '+money+'. Bu summa serverda saqlandi va katalog narxi o‘zgarsa ham o‘zgarmaydi.';
+      if(prepared.submitted){
+        if(note)note.textContent='Buyurtma '+prepared.orderNumber+' avval yuborilgan. Summa: '+money+'. Qayta to‘lov qilmang.';
+        const hint=host.querySelector('.payment-hint');if(hint)hint.textContent='Saqlangan buyurtma natijasini pastdagi tugma orqali ko‘ring.';
+        status.textContent=prepared.paymentStatus==='confirmed'?'To‘lov tasdiqlangan.':'Buyurtma saqlangan. To‘lov holatini admin tekshiradi.';
+        frame.replaceChildren(status);button.textContent='Saqlangan buyurtmani ko‘rish';button.dataset.checkoutReady='1';button.disabled=false;return;
+      }
       const response=await fetch('/api/payment-settings',{cache:'no-store'}),data=await response.json();if(!response.ok)throw Error(data.error||'Rekvizitlar olinmadi');
       if(!button.isConnected)return;
       frame.replaceChildren();let valid=false;
