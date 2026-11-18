@@ -25,6 +25,26 @@ async function startServer(directory, telegramLogPath) {
   child.kill();throw new Error('Local server failed: '+log);
 }
 
+test('checkout HTTP retries preserve the payment total and order through server restart',async t=>{
+  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'uzcam-checkout-')),log=path.join(directory,'telegram.jsonl');
+  let running=await startServer(directory,log);t.after(async()=>{if(running)await running.stop()});
+  const db=new DatabaseSync(path.join(directory,'texnocam.sqlite'));t.after(()=>db.close());
+  const product=db.prepare('SELECT id,sale_price_uzs FROM products WHERE is_active=1 AND deleted_at IS NULL ORDER BY id LIMIT 1').get(),key='91e02d30-81e6-49e2-b380-dc5164265ab1';
+  const order={items:[{id:product.id,quantity:2}],total:1,deliveryMethod:'address',phone:'+998900000000',address:'Checkout test'};
+  const post=async(path,body)=>{const r=await fetch(running.base+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return{status:r.status,data:await r.json()}};
+  const body={initData:initData('91005001'),idempotencyKey:key,order};
+  assert.equal((await post('/api/checkout',{...body,idempotencyKey:undefined})).status,426);
+  assert.equal((await post('/api/checkout',{...body,initData:'invalid'})).status,401);
+  const prepared=await post('/api/checkout',body);assert.equal(prepared.status,201);assert.equal(prepared.data.total,Number(product.sale_price_uzs)*2);
+  db.prepare('UPDATE products SET sale_price_uzs=sale_price_uzs+50000 WHERE id=?').run(product.id);
+  const repeats=await Promise.all([post('/api/checkout',body),post('/api/checkout',body)]);assert(repeats.every(r=>r.status===200&&r.data.orderNumber===prepared.data.orderNumber));
+  await running.stop();running=null;running=await startServer(directory,log);
+  const submits=await Promise.all([post('/api/orders',body),post('/api/orders',body)]);assert(submits.every(r=>r.data.orderNumber===prepared.data.orderNumber&&r.data.total===prepared.data.total));assert(submits.some(r=>r.status===200));
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM orders').get().n,1);assert.equal(db.prepare('SELECT COUNT(*) AS n FROM payments').get().n,1);
+  assert.equal(db.prepare('SELECT payment_status FROM orders').get().payment_status,'proof_submitted');
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM customer_notifications WHERE event_key LIKE 'order:%:created'").get().n,1);
+});
+
 test('admin completion API enforces saved permissions and persists payment settings across restart',async t=>{
   const directory=fs.mkdtempSync(path.join(os.tmpdir(),'uzcam-admin-completion-')),log=path.join(directory,'telegram.jsonl');
   let running=await startServer(directory,log);t.after(async()=>{if(running)await running.stop()});

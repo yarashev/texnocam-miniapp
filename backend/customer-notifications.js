@@ -22,7 +22,7 @@ export async function dispatchCustomerNotifications(database, sendTelegram, opti
        FROM customer_notifications n
        JOIN users u ON u.id = n.user_id AND u.is_active = 1
        LEFT JOIN telegram_notification_preferences p ON p.user_id = u.id
-      WHERE n.delivery_status = 'pending' AND (p.enabled = 1 OR n.event_key LIKE 'support:reply:%')
+      WHERE n.delivery_status = 'pending' AND (p.enabled = 1 OR n.event_key LIKE 'support:reply:%' OR n.event_key LIKE 'order:admin:%')
         AND n.attempts < 8
         AND (n.next_attempt_at IS NULL OR n.next_attempt_at <= ?)
       ORDER BY n.created_at, n.id LIMIT ?`,
