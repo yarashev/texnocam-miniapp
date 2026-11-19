@@ -1,4 +1,5 @@
 import { enqueueCustomerNotification } from './customer-notifications.js';
+import {utcTimeMillis} from './utc-time.js';
 import { randomUUID } from 'node:crypto';
 import { attachPermissions, can, initializeAdminCompletion } from './admin-completion.js';
 
@@ -31,7 +32,7 @@ export async function serviceAction(db, actor, orderId, action, value) {
     if(['travelling','working','finish'].includes(action)&&!isWorker)fail('Bu ish sizga biriktirilmagan',403);
     if(['star','confirm','problem','dispatch','review'].includes(action)&&!isCustomer)fail('Faqat buyurtma egasi tasdiqlaydi',403);
     if(!['travelling','working','finish','star','confirm','problem','dispatch','review'].includes(action))fail('Amal noto‘g‘ri',400);
-    const claimedAt=order.claimed_at instanceof Date ? order.claimed_at.getTime() : Date.parse(String(order.claimed_at).replace(' ','T').replace(/Z?$/,'Z'));
+    const claimedAt=utcTimeMillis(order.claimed_at);
     if(!Number.isFinite(claimedAt)||Date.now()-claimedAt<600000)fail('Biriktirish uchun 10 daqiqalik muddat tugashini kuting');
     await db.run("INSERT INTO service_jobs(order_id,worker_id,state) VALUES (?,?,'accepted') ON CONFLICT(order_id) DO NOTHING",orderId,order.worker_id);
     const job=await db.get('SELECT * FROM service_jobs WHERE order_id=?',orderId);
@@ -67,13 +68,14 @@ export async function serviceAction(db, actor, orderId, action, value) {
 }
 export async function listServiceJobs(db,actor){
   const predicate=actor.role==='worker'?'c.worker_id=?':["admin","super_admin"].includes(actor.role)?'1=1':'o.customer_id=?';
-  return db.all(`SELECT o.id,o.order_number,o.delivery_phone,o.delivery_address,o.customer_id,c.worker_id,c.claimed_at,
+  const jobs=await db.all(`SELECT o.id,o.order_number,o.delivery_phone,o.delivery_address,o.customer_id,c.worker_id,c.claimed_at,
     COALESCE(j.state,'accepted') AS service_state,j.rating,j.selected_rating,
     u.full_name AS customer_name,u.username AS customer_username,w.full_name AS worker_name
     FROM orders o JOIN work_claims c ON c.order_id=o.id LEFT JOIN service_jobs j ON j.order_id=o.id
     JOIN users u ON u.id=o.customer_id JOIN users w ON w.id=c.worker_id
     WHERE ${predicate} AND o.payment_status='confirmed' AND o.status<>'cancelled' ORDER BY o.created_at DESC LIMIT 100`,
     ...(["admin","super_admin"].includes(actor.role)?[]:[actor.id]));
+  return jobs.map(job=>{const at=utcTimeMillis(job.claimed_at);return {...job,claimed_at:Number.isFinite(at)?new Date(at).toISOString():job.claimed_at}});
 }
 
 

@@ -1,3 +1,4 @@
+import {initializeNotificationDelivery} from '../backend/notification-delivery.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
@@ -6,7 +7,7 @@ async function setup(){
  const sql=new DatabaseSync(':memory:');
  sql.exec("CREATE TABLE users(id INTEGER PRIMARY KEY,role TEXT,full_name TEXT,telegram_id TEXT,phone TEXT,is_active INTEGER); CREATE TABLE orders(id INTEGER PRIMARY KEY,customer_id INTEGER,payment_status TEXT,status TEXT,order_number TEXT,delivery_phone TEXT,updated_at TEXT); CREATE TABLE work_claims(order_id INTEGER PRIMARY KEY,worker_id INTEGER,claimed_at TEXT); CREATE TABLE audit_log(actor_id INTEGER,action TEXT,entity_type TEXT,entity_id TEXT,details_json TEXT); CREATE TABLE customer_notifications(user_id INTEGER,order_id INTEGER,event_key TEXT UNIQUE,title TEXT,message TEXT,delivery_status TEXT,next_attempt_at TEXT); INSERT INTO users VALUES(1,'customer','Mijoz','100001','',1),(2,'worker','Usta','100002','',1),(3,'admin','Admin','100003','',1); INSERT INTO orders VALUES(10,1,'confirmed','paid','TEST-10','+998901234567',CURRENT_TIMESTAMP); INSERT INTO work_claims VALUES(10,2,datetime('now','-11 minutes'));");
  const db={run:async(q,...p)=>sql.prepare(q).run(...p),get:async(q,...p)=>sql.prepare(q).get(...p),all:async(q,...p)=>sql.prepare(q).all(...p),transaction:async(fn)=>{sql.exec('BEGIN');try{const r=await fn();sql.exec('COMMIT');return r}catch(e){sql.exec('ROLLBACK');throw e}}};
- await initializeServiceWorkflow(db);return {db,sql};
+ await initializeNotificationDelivery(db);await initializeServiceWorkflow(db);return {db,sql};
 }
 const worker={id:2,role:'worker'},customer={id:1,role:'customer'};
 test('only assigned worker and order customer may act',async()=>{const {db}=await setup();await assert.rejects(serviceAction(db,{id:3,role:'worker'},10,'working'),/biriktirilmagan/);await serviceAction(db,worker,10,'working');await serviceAction(db,worker,10,'finish');await assert.rejects(serviceAction(db,{id:9,role:'customer'},10,'star',5),/egasi/);});

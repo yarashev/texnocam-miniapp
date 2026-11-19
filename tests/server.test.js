@@ -55,6 +55,14 @@ test('admin completion API enforces saved permissions and persists payment setti
   const call=(url,method='GET',body,cookie=superCookie)=>fetch(running.base+url,{method,headers:{cookie,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
   assert.equal((await fetch(running.base+'/api/settings/payment')).status,403);
   assert.equal((await call('/api/admin/dashboard','GET',undefined,adminCookie)).status,200);
+  assert.equal((await fetch(running.base+'/api/admin/delivery-status')).status,403);
+  assert.equal((await call('/api/admin/delivery-status','GET',undefined,adminCookie)).status,403);
+  const delivery=await call('/api/admin/delivery-status');assert.equal(delivery.status,200);assert.equal(typeof (await delivery.json()).counts.pending,'number');
+  const owner=db.prepare('SELECT id FROM users WHERE telegram_id=?').get(superId);
+  const failedId=Number(db.prepare("INSERT INTO customer_notifications(user_id,event_key,title,message,delivery_status,attempts,last_error) VALUES (?,'test:manual-retry','Test','Test','failed',8,'Temporary failure')").run(owner.id).lastInsertRowid);
+  assert.equal((await call('/api/admin/delivery-status/'+failedId+'/retry','POST',{},adminCookie)).status,403);
+  assert.equal((await call('/api/admin/delivery-status/'+failedId+'/retry','POST',{})).status,200);
+  assert.equal(db.prepare('SELECT attempts FROM customer_notifications WHERE id=?').get(failedId).attempts,0);
   const permissionResult=await (await call('/api/admin/permissions/91000600')).json();
   assert.equal((await call('/api/admin/permissions/91000600','PUT',{permissions:{...permissionResult.permissions,'payments.confirm':false}},adminCookie)).status,403);
   const permissions={...permissionResult.permissions,'payments.confirm':false,'reports.export':false,'catalog.write':false};
